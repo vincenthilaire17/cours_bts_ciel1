@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>TP 3 : PICO-REFLEXE - BTS CIEL</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <style>
+  @page {
+      margin: 1.5cm;
+      size: A4;
+  }
+  body {
+      font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+      line-height: 1.5;
+      color: #1a1a1a;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 10px;
+  }
+  h1, h2, h3, h4 {
+      color: #0b3c5d;
+  }
+  h1 {
+      font-size: 20pt;
+      border-bottom: 2px solid #0b3c5d;
+      padding-bottom: 6px;
+      margin-bottom: 12px;
+  }
+  h2 {
+      font-size: 15pt;
+      margin-top: 18px;
+      margin-bottom: 8px;
+  }
+  h3 {
+      font-size: 12pt;
+      margin-top: 14px;
+      border-left: 4px solid #328cc1;
+      padding-left: 8px;
+  }
+  table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 14px 0;
+      font-size: 10pt;
+  }
+  th, td {
+      border: 1px solid #c9d1d9;
+      padding: 7px 10px;
+      text-align: left;
+  }
+  th {
+      background-color: #f0f4f8;
+      color: #0b3c5d;
+  }
+  tr:nth-child(even) {
+      background-color: #fbfbfb;
+  }
+  pre {
+      background-color: #f6f8fa;
+      border: 1px solid #d0d7de;
+      border-radius: 6px;
+      padding: 10px;
+      font-size: 9.5pt;
+      line-height: 1.4;
+      overflow-x: auto;
+      font-family: Consolas, 'Courier New', monospace;
+  }
+  code {
+      background-color: #f0f2f5;
+      padding: 2px 4px;
+      border-radius: 3px;
+      font-size: 9.5pt;
+      font-family: Consolas, 'Courier New', monospace;
+  }
+  hr {
+      border: 0;
+      border-top: 1px solid #d0d7de;
+      margin: 16px 0;
+  }
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">TP 3 : PICO-REFLEXE - BTS CIEL</h1>
+</header>
+<h1
+id="bts-ciel-1re-année-systèmes-numériques-électronique-embarquée">BTS
+CIEL — 1re Année | Systèmes Numériques &amp; Électronique Embarquée</h1>
+<h2 id="tp-3-pico-réflexe-le-duel-arcade-système-anti-triche">TP 3 :
+PICO-RÉFLEXE — Le Duel Arcade &amp; Système Anti-Triche</h2>
+<p><strong>Durée : 3h00</strong> | <strong>Cible : Raspberry Pi Pico
+(RP2040) — MicroPython</strong> | <strong>Travail en binôme</strong></p>
+<hr />
+<h3 id="objectifs-compétences-du-référentiel-bts-ciel">Objectifs &amp;
+Compétences du Référentiel BTS CIEL</h3>
+<ul>
+<li><strong>C1 - Modéliser un comportement logiciel</strong> :
+Structurer un algorithme embarqué sous forme de <strong>Machine à États
+Finis (FSM - Finite State Machine)</strong>.</li>
+<li><strong>C2 - Développer une solution logicielle en
+MicroPython</strong> :
+<ul>
+<li>Dépasser les limites bloquantes de <code>time.sleep()</code> grâce à
+la gestion du temps réel avec <code>time.ticks_ms()</code> et
+<code>time.ticks_diff()</code>.</li>
+<li>Manipuler le hasard avec le module <code>random</code>.</li>
+<li>Stocker et analyser des grandeurs physiques dynamiques à l’aide de
+<strong>listes Python</strong> et de fonctions d’agrégation
+(<code>min</code>, <code>len</code>, <code>sum</code>).</li>
+</ul></li>
+<li><strong>C3 - Mettre en œuvre les périphériques matériels</strong> :
+<ul>
+<li>Synchroniser Entrées TOR (bouton anti-rebond), Entrées Analogiques
+(potentiomètre de difficulté), et Sorties TOR/PWM (LEDs + Buzzer).</li>
+</ul></li>
+</ul>
+<hr />
+<h3 id="contexte-cahier-des-charges">1. Contexte &amp; Cahier des
+Charges</h3>
+<p>L’équipe e-sport du lycée souhaite tester les réflexes visuels et
+moteurs de ses candidats lors des sélections officielles. Vous devez
+concevoir et programmer un banc de test interactif autonome nommé
+<strong>« PICO-RÉFLEXE »</strong>.</p>
+<pre><code>                +-----------------------------------------+
+                |          PICO-RÉFLEXE ARCADE            |
+                |                                         |
+   [Potentiomètre]        [LED Verte]  (GO ! &lt; 250ms)     |
+   (Difficulté)           [LED Jaune]  (Moyen &lt; 400ms)    |
+   GP26 (ADC0)            [LED Rouge]  (Lent / Triche)    |
+                          GP15 / GP14 / GP13              |
+                                                          |
+     [Buzzer PWM]                [Bouton Joueur]          |
+     GP16                        GP18 (PULL_DOWN)         |
+                +-----------------------------------------+</code></pre>
+<h4 id="cahier-des-charges-fonctionnel">Cahier des charges fonctionnel
+:</h4>
+<ol type="1">
+<li><strong>Phase d’Armement</strong> : Le joueur règle la difficulté
+via le potentiomètre. Un appui sur le bouton arme le système (bip
+d’avertissement).</li>
+<li><strong>Attente Aléatoire &amp; Anti-Triche</strong> : Le système
+patiente un délai imprévisible (entre 2 et 5 secondes). <strong>Si le
+joueur appuie pendant cette attente (anticipation/triche), le buzzer
+déclenche une alarme stridente, la LED rouge clignote et la manche est
+annulée.</strong></li>
+<li><strong>Le “TOP” Réflexe</strong> : La LED verte s’allume subitement
+et un bip aigu retentit. Le chronomètre démarre instantanément à la
+milliseconde près.</li>
+<li><strong>Acquisition du Réflexe</strong> : Dès que le joueur appuie
+sur le bouton :
+<ul>
+<li>Le temps de réaction est calculé et affiché dans la console Thonny
+(REPL).</li>
+<li>Les LEDs indiquent le niveau de performance (Verte = Ninja, Jaune =
+Acceptable, Rouge = Trop lent).</li>
+</ul></li>
+<li><strong>Session de 5 Manches &amp; Bilan</strong> : Au bout de 5
+manches, le système affiche les statistiques complètes de la session
+(meilleur temps, temps moyen, nombre de pénalités pour triche).</li>
+</ol>
+<hr />
+<h3 id="rappel-du-câblage-matériel">2. Rappel du Câblage Matériel</h3>
+<p>Vérifiez votre montage issu du TP précédent sur la plaque d’essai
+(<em>breadboard</em>) :</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Composant</th>
+<th style="text-align: left;">Broche Pico</th>
+<th style="text-align: left;">Configuration MicroPython</th>
+<th style="text-align: left;">Rôle fonctionnel</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>LED Verte</strong></td>
+<td style="text-align: left;"><code>GP15</code></td>
+<td style="text-align: left;"><code>Pin(15, Pin.OUT)</code></td>
+<td style="text-align: left;">Signal TOP départ / Niveau Excellent (&lt;
+250 ms)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>LED Jaune</strong></td>
+<td style="text-align: left;"><code>GP14</code></td>
+<td style="text-align: left;"><code>Pin(14, Pin.OUT)</code></td>
+<td style="text-align: left;">Témoin d’attente / Niveau Moyen (250-400
+ms)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>LED Rouge</strong></td>
+<td style="text-align: left;"><code>GP13</code></td>
+<td style="text-align: left;"><code>Pin(13, Pin.OUT)</code></td>
+<td style="text-align: left;">Alerte Triche / Niveau Faible (&gt; 400
+ms)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Bouton Joueur</strong></td>
+<td style="text-align: left;"><code>GP18</code></td>
+<td
+style="text-align: left;"><code>Pin(18, Pin.IN, Pin.PULL_DOWN)</code></td>
+<td style="text-align: left;">Validation joueur (0 = relâché, 1 =
+pressé)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Buzzer Piézo</strong></td>
+<td style="text-align: left;"><code>GP16</code></td>
+<td style="text-align: left;"><code>PWM(Pin(16))</code></td>
+<td style="text-align: left;">Retours sonores (bip TOP, alarme
+triche)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Potentiomètre</strong></td>
+<td style="text-align: left;"><code>GP26 (ADC0)</code></td>
+<td style="text-align: left;"><code>ADC(Pin(26))</code></td>
+<td style="text-align: left;">Réglage du seuil de tolérance
+temporel</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3
+id="partie-1-en-finir-avec-le-blocage-chronométrage-haute-précision-45-min">PARTIE
+1 : En finir avec le blocage — Chronométrage haute précision (45
+min)</h3>
+<h4 id="problématique">Problématique</h4>
+<p>Jusqu’ici, vous utilisiez <code>time.sleep(secondes)</code> pour
+temporiser. Cependant, <code>time.sleep()</code> <strong>fige
+complètement le microcontrôleur</strong> : pendant une pause, le
+processeur est aveugle : il ne lit aucun bouton et ne mesure rien.</p>
+<p>Pour mesurer un temps en temps réel, MicroPython propose deux
+fonctions matérielles : * <code>t0 = time.ticks_ms()</code> : relève la
+valeur d’un compteur interne en millisecondes. *
+<code>delta = time.ticks_diff(t1, t0)</code> : calcule avec précision la
+durée écoulée entre deux relevés <code>t0</code> et <code>t1</code>
+(gérant automatiquement les dépassements de compteur 32 bits).</p>
+<h4 id="exercice-1.1-découverte-de-time.ticks_ms">Exercice 1.1 —
+Découverte de <code>time.ticks_ms()</code></h4>
+<p>Saisissez et testez le script d’expérimentation suivant :</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> machine <span class="im">import</span> Pin</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> time</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>led_verte <span class="op">=</span> Pin(<span class="dv">15</span>, Pin.OUT)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>bouton <span class="op">=</span> Pin(<span class="dv">18</span>, Pin.IN, Pin.PULL_DOWN)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">&quot;Appuyez sur le bouton dès que la LED verte s&#39;allume...&quot;</span>)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>time.sleep(<span class="dv">2</span>)  <span class="co"># Pause fixe d&#39;attente</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>led_verte.value(<span class="dv">1</span>)</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>t_depart <span class="op">=</span> time.ticks_ms()  <span class="co"># Déclenchement du chronomètre</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Attente active de l&#39;appui sur le bouton</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> bouton.value() <span class="op">==</span> <span class="dv">0</span>:</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">pass</span>  <span class="co"># Boucle rapide : on attend que l&#39;utilisateur appuie</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>t_arrivee <span class="op">=</span> time.ticks_ms()</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>led_verte.value(<span class="dv">0</span>)</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>duree <span class="op">=</span> time.ticks_diff(t_arrivee, t_depart)</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f&quot;Bravo ! Temps de réaction mesuré : </span><span class="sc">{</span>duree<span class="sc">}</span><span class="ss"> ms&quot;</span>)</span></code></pre></div>
+<p><strong>Questions d’analyse :</strong> 1. Quel est le rôle de la
+boucle <code>while bouton.value() == 0: pass</code> ? 2. Pourquoi
+<code>time.sleep(2)</code> rend-il ce jeu immédiatement prévisible et
+facile pour le joueur ? 3. Que se passe-t-il si un joueur maintient le
+bouton enfoncé avant même que la LED verte ne s’allume ? Comment
+corriger ce problème ?</p>
+<hr />
+<h3 id="partie-2-laléatoire-le-système-anti-triche-45-min">PARTIE 2 :
+L’Aléatoire &amp; Le Système Anti-Triche (45 min)</h3>
+<p>Pour rendre le test équitable, le délai d’attente avant le signal
+doit être <strong>imprévisible</strong>. De plus, nous devons
+sanctionner les joueurs qui appuient trop tôt !</p>
+<h4 id="le-module-random">Le module <code>random</code></h4>
+<p>En Python, <code>random.uniform(a, b)</code> renvoie un nombre
+flottant aléatoire compris entre <code>a</code> et <code>b</code>.
+Exemple : <code>delai = random.uniform(2.0, 5.0)</code> génère une durée
+aléatoire entre 2 et 5 secondes.</p>
+<h4 id="exercice-2.1-détection-de-faux-départ">Exercice 2.1 — Détection
+de faux départ</h4>
+<p>Pour surveiller le bouton <em>pendant</em> l’attente sans bloquer le
+processeur, nous découpons l’attente en millisecondes :</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> random</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> attendre_depart_avec_surveillance(duree_secondes):</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co">    Attend la durée spécifiée tout en surveillant le bouton.</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co">    Renvoie True si le joueur a triché (appui prématuré), False sinon.</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co">    &quot;&quot;&quot;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    duree_ms <span class="op">=</span> <span class="bu">int</span>(duree_secondes <span class="op">*</span> <span class="dv">1000</span>)</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    t_debut <span class="op">=</span> time.ticks_ms()</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> time.ticks_diff(time.ticks_ms(), t_debut) <span class="op">&lt;</span> duree_ms:</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> bouton.value() <span class="op">==</span> <span class="dv">1</span>:</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="va">True</span>  <span class="co"># Faux départ détecté !</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>        time.sleep_ms(<span class="dv">1</span>)  <span class="co"># Petite pause de 1 ms pour stabiliser</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="va">False</span>  <span class="co"># Aucun faux départ</span></span></code></pre></div>
+<h4 id="travail-à-réaliser">Travail à réaliser :</h4>
+<ol type="1">
+<li>Créez une fonction <code>alerte_triche()</code> qui :
+<ul>
+<li>Allume la <strong>LED Rouge</strong> pendant 1,5 seconde.</li>
+<li>Fait retentir le buzzer à une fréquence basse et stridente (ex: 180
+Hz avec <code>duty_u16(45000)</code>).</li>
+<li>Affiche dans la console :
+<code>"[PÉNALITÉ] Faux départ ! Ne pressez pas avant le signal !"</code>.</li>
+</ul></li>
+<li>Intégrez cette vérification dans votre boucle de jeu :
+<ul>
+<li>Si <code>attendre_depart_avec_surveillance()</code> renvoie
+<code>True</code>, déclenchez l’alerte triche et annulez la manche.</li>
+<li>Sinon, allumez la LED Verte, donnez le TOP et mesurez le temps de
+réaction.</li>
+</ul></li>
+</ol>
+<hr />
+<h3
+id="partie-3-structures-de-données-listes-traitement-statistique-45-min">PARTIE
+3 : Structures de Données — Listes &amp; Traitement Statistique (45
+min)</h3>
+<p>En informatique embarquée, il est indispensable de manipuler des
+collections de données (historique de mesures, buffers de capteurs).</p>
+<h4 id="manipulation-des-listes-en-python">Manipulation des listes en
+Python</h4>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>scores <span class="op">=</span> []              <span class="co"># Déclaration d&#39;une liste vide</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>scores.append(<span class="dv">285</span>)       <span class="co"># Ajout d&#39;une mesure (285 ms)</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>scores.append(<span class="dv">310</span>)       <span class="co"># Ajout d&#39;une deuxième mesure</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>nb_essais <span class="op">=</span> <span class="bu">len</span>(scores)  <span class="co"># Renvoie 2</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>meilleur <span class="op">=</span> <span class="bu">min</span>(scores)   <span class="co"># Renvoie le temps minimum (le meilleur réflexe)</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>moyenne <span class="op">=</span> <span class="bu">sum</span>(scores) <span class="op">/</span> <span class="bu">len</span>(scores)  <span class="co"># Moyenne arithmétique</span></span></code></pre></div>
+<h4 id="travail-à-réaliser-1">Travail à réaliser :</h4>
+<ol type="1">
+<li>Écrivez une fonction <code>analyser_performance(liste_scores)</code>
+qui :
+<ul>
+<li>Affiche le tableau récapitulatif des temps de chaque manche.</li>
+<li>Affiche le record personnel avec <code>min()</code>.</li>
+<li>Affiche le temps moyen calculé avec <code>sum()</code> et
+<code>len()</code>.</li>
+</ul></li>
+<li><strong>Indication visuelle par le Bargraphe de LEDs</strong> :
+Créez une fonction <code>retour_leds(temps_ms)</code> :
+<ul>
+<li>Si <code>temps_ms &lt; 250</code> : Allume la LED Verte (Niveau
+E-sport / Pilote).</li>
+<li>Si <code>250 &lt;= temps_ms &lt;= 400</code> : Allume la LED Jaune
+(Réflexe standard).</li>
+<li>Si <code>temps_ms &gt; 400</code> : Allume la LED Rouge (Réflexe
+insuffisant).</li>
+</ul></li>
+</ol>
+<hr />
+<h3
+id="partie-4-architecture-avancée-machine-à-états-finis-fsm-potentiomètre-45-min">PARTIE
+4 : Architecture Avancée — Machine à États Finis (FSM) &amp;
+Potentiomètre (45 min)</h3>
+<h4
+id="pourquoi-une-machine-à-états-finis-en-finir-avec-le-code-spaghetti">4.1
+Pourquoi une Machine à États Finis ? (En finir avec le code
+“Spaghetti”)</h4>
+<p>Dans les parties 1, 2 et 3, vous avez développé des briques
+fonctionnelles séparées. Si vous tentez de les assembler naïvement en
+empilant des boucles <code>while</code> et des conditions booléennes
+(<code>en_train_de_jouer = True</code>, <code>a_triche = False</code>,
+<code>attente = True</code>…), vous créerez ce que les développeurs
+appellent du <strong>code spaghetti</strong> : un programme rigide,
+difficile à déboguer et sujet à des blocages imprévus.</p>
+<p>La méthode professionnelle en informatique embarquée consiste à
+modéliser le comportement du système à l’aide d’une <strong>Machine à
+États Finis (FSM - <em>Finite State Machine</em>)</strong> : *
+<strong>Un état unique à la fois</strong> : Le système se trouve à
+chaque instant dans un état précis et exclusif (<code>VEILLE</code>,
+<code>ATTENTE</code>, <code>CHRONO</code>, <code>TRICHE</code>…). *
+<strong>Une boucle maîtresse limpide</strong> : La boucle
+<code>while True:</code> principale aiguille simplement l’exécution vers
+le bloc de l’état actif (<code>if etat == ... elif etat == ...</code>).
+* <strong>Deux règles d’or par état</strong> : 1. Exécuter l’action liée
+à l’état (ex: allumer une LED, déclencher un son). 2. Vérifier la
+condition d’événement pour basculer vers un nouvel état
+(transition).</p>
+<pre><code>                      +----------------------------------------------------+
+                      |                                                    |
+                      v                                                    |
+                [ETAT_VEILLE] ---&gt; (Appui Bouton) ---&gt; [ETAT_ARMEMENT]     |
+                                                             |             |
+                                                             v             |
+                                                [ETAT_ATTENTE_ALEATOIRE]   |
+                                                  |              |         |
+                                   (Appui anticipé|              | (Délai) |
+                                       = Triche)  v              v         |
+                                           [ETAT_TRICHE]   [ETAT_CHRONO]   |
+                                                  |              |         |
+                                                  |              | (Appui) |
+                                                  v              v         |
+                                                [ETAT_EVALUATION] ---------+</code></pre>
+<h4 id="tableau-descriptif-des-états-du-système">4.2 Tableau descriptif
+des États du Système</h4>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">État</th>
+<th style="text-align: left;">Action réalisée dans l’état</th>
+<th style="text-align: left;">Événement déclenchant la transition</th>
+<th style="text-align: left;">Nouvel État cible</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong><code>ETAT_VEILLE</code>
+(0)</strong></td>
+<td style="text-align: left;">LED Jaune allumée. Lecture continue du
+potentiomètre (difficulté).</td>
+<td style="text-align: left;">Le joueur appuie sur le bouton pour
+démarrer la manche.</td>
+<td style="text-align: left;"><code>ETAT_ARMEMENT</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>ETAT_ARMEMENT</code>
+(1)</strong></td>
+<td style="text-align: left;">Émission d’un bip sonore d’avertissement.
+Calcul du délai aléatoire (2 à 5s).</td>
+<td style="text-align: left;">Horodatage effectué avec succès.</td>
+<td style="text-align: left;"><code>ETAT_ATTENTE_ALEATOIRE</code></td>
+</tr>
+<tr>
+<td
+style="text-align: left;"><strong><code>ETAT_ATTENTE_ALEATOIRE</code>
+(2)</strong></td>
+<td style="text-align: left;">Extinction des LEDs. Surveillance du temps
+écoulé ET du bouton.</td>
+<td style="text-align: left;">• Appui avant la fin du délai (Faux départ
+!)<br>• Délai aléatoire écoulé normalement</td>
+<td style="text-align: left;">• <code>ETAT_TRICHE</code><br>•
+<code>ETAT_CHRONO_REACTION</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>ETAT_CHRONO_REACTION</code>
+(3)</strong></td>
+<td style="text-align: left;">LED Verte allumée, bip aigu “TOP”. Mesure
+du temps écoulé en ms.</td>
+<td style="text-align: left;">• Le joueur appuie sur le bouton<br>•
+Temps limite dépassé (temps &gt; seuil potentiomètre)</td>
+<td style="text-align: left;"><code>ETAT_EVALUATION</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>ETAT_TRICHE</code>
+(4)</strong></td>
+<td style="text-align: left;">LED Rouge allumée, son strident d’alarme
+(180 Hz) pendant 1s.</td>
+<td style="text-align: left;">Fin de la sanction d’alarme.</td>
+<td style="text-align: left;"><code>ETAT_EVALUATION</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>ETAT_EVALUATION</code>
+(5)</strong></td>
+<td style="text-align: left;">Enregistrement du score dans la liste.
+Allumage de la LED de niveau. Manche suivante.</td>
+<td style="text-align: left;">• Si manche ≤ 5<br>• Si manche &gt; 5</td>
+<td style="text-align: left;">• <code>ETAT_VEILLE</code><br>•
+<code>ETAT_FIN_SESSION</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>ETAT_FIN_SESSION</code>
+(6)</strong></td>
+<td style="text-align: left;">Affichage du bilan complet dans la console
+(meilleur temps, moyenne, triches). Mélodie de fin.</td>
+<td style="text-align: left;">Appui bouton pour relancer une nouvelle
+partie de 5 manches.</td>
+<td style="text-align: left;"><code>ETAT_VEILLE</code></td>
+</tr>
+</tbody>
+</table>
+<h4 id="le-potentiomètre-conversion-mathématique-de-la-difficulté">4.3
+Le Potentiomètre : Conversion mathématique de la difficulté</h4>
+<p>Le potentiomètre sur <code>GP26 (ADC0)</code> fournit une mesure
+brute comprise entre <code>0</code> (0V) et <code>65535</code> (3.3V).
+Nous voulons transformer cette valeur en un <strong>seuil de temps
+limite toléré</strong> compris entre <strong>300 ms</strong> (mode
+difficile / athlète) et <strong>900 ms</strong> (mode facile / débutant)
+:</p>
+<p><span class="math display">$$\text{seuil\_max\_ms} = 300 + \left(
+\frac{\text{valeur\_adc}}{65535} \times 600 \right)$$</span></p>
+<ul>
+<li>Si le potentiomètre est à gauche (<code>valeur_adc = 0</code>) :
+<span class="math inline">300 + 0 = <strong>300</strong> ms</span>.</li>
+<li>Si le potentiomètre est au milieu (<code>valeur_adc = 32768</code>)
+: <span class="math inline">300 + 300 = <strong>600</strong>
+ms</span>.</li>
+<li>Si le potentiomètre est à droite (<code>valeur_adc = 65535</code>) :
+<span class="math inline">300 + 600 = <strong>900</strong>
+ms</span>.</li>
+</ul>
+<p>Si le joueur ne réagit pas avant ce temps limite, la manche est
+considérée comme perdue (trop lent !).</p>
+<hr />
+<h4 id="travail-demandé-compléter-la-machine-à-états">4.4 Travail
+Demandé : Compléter la Machine à États</h4>
+<p>Voici le squelette de départ de l’application. Les <strong>deux
+premiers états</strong> (<code>ETAT_VEILLE</code> et
+<code>ETAT_ARMEMENT</code>) vous sont fournis à titre de modèle
+d’architecture.</p>
+<p><strong>Consigne :</strong> Complétez le programme en implémentant
+les états suivants (<code>ETAT_ATTENTE_ALEATOIRE</code>,
+<code>ETAT_CHRONO_REACTION</code>, <code>ETAT_TRICHE</code>,
+<code>ETAT_EVALUATION</code>, <code>ETAT_FIN_SESSION</code>) en
+réutilisant et adaptant le code des parties 1, 2 et 3.</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> machine <span class="im">import</span> Pin, PWM, ADC</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> time</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> random</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co"># --- CONFIGURATION MATÉRIELLE ---</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>led_verte <span class="op">=</span> Pin(<span class="dv">15</span>, Pin.OUT)</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>led_jaune <span class="op">=</span> Pin(<span class="dv">14</span>, Pin.OUT)</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>led_rouge <span class="op">=</span> Pin(<span class="dv">13</span>, Pin.OUT)</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>bouton <span class="op">=</span> Pin(<span class="dv">18</span>, Pin.IN, Pin.PULL_DOWN)</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>pot <span class="op">=</span> ADC(Pin(<span class="dv">26</span>))</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>buzzer <span class="op">=</span> PWM(Pin(<span class="dv">16</span>))</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>buzzer.duty_u16(<span class="dv">0</span>)</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="co"># --- DÉFINITION DES ÉTATS DE LA MACHINE ---</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>ETAT_VEILLE            <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>ETAT_ARMEMENT          <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>ETAT_ATTENTE_ALEATOIRE <span class="op">=</span> <span class="dv">2</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>ETAT_CHRONO_REACTION   <span class="op">=</span> <span class="dv">3</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>ETAT_TRICHE            <span class="op">=</span> <span class="dv">4</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>ETAT_EVALUATION        <span class="op">=</span> <span class="dv">5</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>ETAT_FIN_SESSION       <span class="op">=</span> <span class="dv">6</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a><span class="co"># --- FONCTIONS UTILITAIRES ---</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> eteindre_leds():</span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>    led_verte.value(<span class="dv">0</span>)</span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>    led_jaune.value(<span class="dv">0</span>)</span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>    led_rouge.value(<span class="dv">0</span>)</span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> bip(frequence, duree_ms, duty<span class="op">=</span><span class="dv">30000</span>):</span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>    buzzer.freq(frequence)</span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>    buzzer.duty_u16(duty)</span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>    time.sleep_ms(duree_ms)</span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>    buzzer.duty_u16(<span class="dv">0</span>)</span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> lire_seuil_difficulte():</span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Convertit la valeur ADC en seuil temporel (300 à 900 ms).&quot;&quot;&quot;</span></span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>    valeur_adc <span class="op">=</span> pot.read_u16()</span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">int</span>(<span class="dv">300</span> <span class="op">+</span> (valeur_adc <span class="op">/</span> <span class="fl">65535.0</span>) <span class="op">*</span> <span class="dv">600</span>)</span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> attendre_relachement_bouton():</span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;Empêche les déclenchements parasites si le bouton reste enfoncé.&quot;&quot;&quot;</span></span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> bouton.value() <span class="op">==</span> <span class="dv">1</span>:</span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>        time.sleep_ms(<span class="dv">10</span>)</span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a><span class="co"># --- PROGRAMME PRINCIPAL ---</span></span>
+<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a>etat <span class="op">=</span> ETAT_VEILLE</span>
+<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a>scores <span class="op">=</span> []</span>
+<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a>nb_triches <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a>manche <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a>delai_ms <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a>t_debut_attente <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a>t_top <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a>seuil_limite <span class="op">=</span> <span class="dv">600</span></span>
+<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-55"><a href="#cb6-55" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">&quot;=== SYSTÈME PICO-RÉFLEXE INITIALISÉ ===&quot;</span>)</span>
+<span id="cb6-56"><a href="#cb6-56" aria-hidden="true" tabindex="-1"></a>eteindre_leds()</span>
+<span id="cb6-57"><a href="#cb6-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-58"><a href="#cb6-58" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="va">True</span>:</span>
+<span id="cb6-59"><a href="#cb6-59" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ------------------------------------------------------------------</span></span>
+<span id="cb6-60"><a href="#cb6-60" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ÉTAT 0 : VEILLE (FOURNI EN EXEMPLE)</span></span>
+<span id="cb6-61"><a href="#cb6-61" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ------------------------------------------------------------------</span></span>
+<span id="cb6-62"><a href="#cb6-62" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> etat <span class="op">==</span> ETAT_VEILLE:</span>
+<span id="cb6-63"><a href="#cb6-63" aria-hidden="true" tabindex="-1"></a>        seuil_limite <span class="op">=</span> lire_seuil_difficulte()</span>
+<span id="cb6-64"><a href="#cb6-64" aria-hidden="true" tabindex="-1"></a>        led_jaune.value(<span class="dv">1</span>)  <span class="co"># Témoin d&#39;attente</span></span>
+<span id="cb6-65"><a href="#cb6-65" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb6-66"><a href="#cb6-66" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> bouton.value() <span class="op">==</span> <span class="dv">1</span>:</span>
+<span id="cb6-67"><a href="#cb6-67" aria-hidden="true" tabindex="-1"></a>            attendre_relachement_bouton()</span>
+<span id="cb6-68"><a href="#cb6-68" aria-hidden="true" tabindex="-1"></a>            led_jaune.value(<span class="dv">0</span>)</span>
+<span id="cb6-69"><a href="#cb6-69" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="ss">f&quot;</span><span class="ch">\n</span><span class="ss">--- Manche </span><span class="sc">{</span>manche<span class="sc">}</span><span class="ss">/5 | Difficulté max : </span><span class="sc">{</span>seuil_limite<span class="sc">}</span><span class="ss"> ms ---&quot;</span>)</span>
+<span id="cb6-70"><a href="#cb6-70" aria-hidden="true" tabindex="-1"></a>            etat <span class="op">=</span> ETAT_ARMEMENT  <span class="co"># Transition vers l&#39;état suivant</span></span>
+<span id="cb6-71"><a href="#cb6-71" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-72"><a href="#cb6-72" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ------------------------------------------------------------------</span></span>
+<span id="cb6-73"><a href="#cb6-73" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ÉTAT 1 : ARMEMENT (FOURNI EN EXEMPLE)</span></span>
+<span id="cb6-74"><a href="#cb6-74" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ------------------------------------------------------------------</span></span>
+<span id="cb6-75"><a href="#cb6-75" aria-hidden="true" tabindex="-1"></a>    <span class="cf">elif</span> etat <span class="op">==</span> ETAT_ARMEMENT:</span>
+<span id="cb6-76"><a href="#cb6-76" aria-hidden="true" tabindex="-1"></a>        bip(<span class="dv">440</span>, <span class="dv">150</span>)  <span class="co"># Bip d&#39;armement (La 440 Hz)</span></span>
+<span id="cb6-77"><a href="#cb6-77" aria-hidden="true" tabindex="-1"></a>        delai_ms <span class="op">=</span> <span class="bu">int</span>(random.uniform(<span class="fl">2.0</span>, <span class="fl">5.0</span>) <span class="op">*</span> <span class="dv">1000</span>)</span>
+<span id="cb6-78"><a href="#cb6-78" aria-hidden="true" tabindex="-1"></a>        t_debut_attente <span class="op">=</span> time.ticks_ms()</span>
+<span id="cb6-79"><a href="#cb6-79" aria-hidden="true" tabindex="-1"></a>        etat <span class="op">=</span> ETAT_ATTENTE_ALEATOIRE  <span class="co"># Transition immédiate</span></span>
+<span id="cb6-80"><a href="#cb6-80" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-81"><a href="#cb6-81" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ------------------------------------------------------------------</span></span>
+<span id="cb6-82"><a href="#cb6-82" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ÉTAT 2 : ATTENTE ALÉATOIRE &amp; ANTI-TRICHE (À COMPLÉTER)</span></span>
+<span id="cb6-83"><a href="#cb6-83" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ------------------------------------------------------------------</span></span>
+<span id="cb6-84"><a href="#cb6-84" aria-hidden="true" tabindex="-1"></a>    <span class="cf">elif</span> etat <span class="op">==</span> ETAT_ATTENTE_ALEATOIRE:</span>
+<span id="cb6-85"><a href="#cb6-85" aria-hidden="true" tabindex="-1"></a>        <span class="co"># </span><span class="al">TODO</span><span class="co"> : Si le bouton est pressé avant la fin du délai :</span></span>
+<span id="cb6-86"><a href="#cb6-86" aria-hidden="true" tabindex="-1"></a>        <span class="co">#        -&gt; incrémenter nb_triches, ajouter None aux scores, passer à ETAT_TRICHE</span></span>
+<span id="cb6-87"><a href="#cb6-87" aria-hidden="true" tabindex="-1"></a>        <span class="co"># </span><span class="al">TODO</span><span class="co"> : Si le délai est écoulé (ticks_diff &gt;= delai_ms) :</span></span>
+<span id="cb6-88"><a href="#cb6-88" aria-hidden="true" tabindex="-1"></a>        <span class="co">#        -&gt; passer à ETAT_CHRONO_REACTION</span></span>
+<span id="cb6-89"><a href="#cb6-89" aria-hidden="true" tabindex="-1"></a>        <span class="cf">pass</span></span>
+<span id="cb6-90"><a href="#cb6-90" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-91"><a href="#cb6-91" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ------------------------------------------------------------------</span></span>
+<span id="cb6-92"><a href="#cb6-92" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ÉTAT 3 : CHRONOMÉTRAGE DU RÉFLEXE (À COMPLÉTER)</span></span>
+<span id="cb6-93"><a href="#cb6-93" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ------------------------------------------------------------------</span></span>
+<span id="cb6-94"><a href="#cb6-94" aria-hidden="true" tabindex="-1"></a>    <span class="cf">elif</span> etat <span class="op">==</span> ETAT_CHRONO_REACTION:</span>
+<span id="cb6-95"><a href="#cb6-95" aria-hidden="true" tabindex="-1"></a>        <span class="co"># </span><span class="al">TODO</span><span class="co"> : Allumer la LED verte, émettre le bip TOP (880 Hz)</span></span>
+<span id="cb6-96"><a href="#cb6-96" aria-hidden="true" tabindex="-1"></a>        <span class="co"># </span><span class="al">TODO</span><span class="co"> : Mesurer la durée d&#39;appui ou détecter si temps &gt; seuil_limite</span></span>
+<span id="cb6-97"><a href="#cb6-97" aria-hidden="true" tabindex="-1"></a>        <span class="co"># </span><span class="al">TODO</span><span class="co"> : Enregistrer le temps dans scores, appeler retour_leds()</span></span>
+<span id="cb6-98"><a href="#cb6-98" aria-hidden="true" tabindex="-1"></a>        <span class="co"># </span><span class="al">TODO</span><span class="co"> : Passer à ETAT_EVALUATION</span></span>
+<span id="cb6-99"><a href="#cb6-99" aria-hidden="true" tabindex="-1"></a>        <span class="cf">pass</span></span>
+<span id="cb6-100"><a href="#cb6-100" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-101"><a href="#cb6-101" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ------------------------------------------------------------------</span></span>
+<span id="cb6-102"><a href="#cb6-102" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ÉTAT 4 : GESTION DE LA TRICHE (À COMPLÉTER)</span></span>
+<span id="cb6-103"><a href="#cb6-103" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ------------------------------------------------------------------</span></span>
+<span id="cb6-104"><a href="#cb6-104" aria-hidden="true" tabindex="-1"></a>    <span class="cf">elif</span> etat <span class="op">==</span> ETAT_TRICHE:</span>
+<span id="cb6-105"><a href="#cb6-105" aria-hidden="true" tabindex="-1"></a>        <span class="co"># </span><span class="al">TODO</span><span class="co"> : Déclencher alerte_triche() (LED rouge + buzzer strident)</span></span>
+<span id="cb6-106"><a href="#cb6-106" aria-hidden="true" tabindex="-1"></a>        <span class="co"># </span><span class="al">TODO</span><span class="co"> : Passer à ETAT_EVALUATION</span></span>
+<span id="cb6-107"><a href="#cb6-107" aria-hidden="true" tabindex="-1"></a>        <span class="cf">pass</span></span>
+<span id="cb6-108"><a href="#cb6-108" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-109"><a href="#cb6-109" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ------------------------------------------------------------------</span></span>
+<span id="cb6-110"><a href="#cb6-110" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ÉTAT 5 : ÉVALUATION ET MANCHE SUIVANTE (À COMPLÉTER)</span></span>
+<span id="cb6-111"><a href="#cb6-111" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ------------------------------------------------------------------</span></span>
+<span id="cb6-112"><a href="#cb6-112" aria-hidden="true" tabindex="-1"></a>    <span class="cf">elif</span> etat <span class="op">==</span> ETAT_EVALUATION:</span>
+<span id="cb6-113"><a href="#cb6-113" aria-hidden="true" tabindex="-1"></a>        <span class="co"># </span><span class="al">TODO</span><span class="co"> : Incrémenter manche de 1</span></span>
+<span id="cb6-114"><a href="#cb6-114" aria-hidden="true" tabindex="-1"></a>        <span class="co"># </span><span class="al">TODO</span><span class="co"> : Si manche &lt;= 5 -&gt; repasser à ETAT_VEILLE</span></span>
+<span id="cb6-115"><a href="#cb6-115" aria-hidden="true" tabindex="-1"></a>        <span class="co"># </span><span class="al">TODO</span><span class="co"> : Sinon -&gt; passer à ETAT_FIN_SESSION</span></span>
+<span id="cb6-116"><a href="#cb6-116" aria-hidden="true" tabindex="-1"></a>        <span class="cf">pass</span></span>
+<span id="cb6-117"><a href="#cb6-117" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-118"><a href="#cb6-118" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ------------------------------------------------------------------</span></span>
+<span id="cb6-119"><a href="#cb6-119" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ÉTAT 6 : BILAN DE FIN DE SESSION (À COMPLÉTER)</span></span>
+<span id="cb6-120"><a href="#cb6-120" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ------------------------------------------------------------------</span></span>
+<span id="cb6-121"><a href="#cb6-121" aria-hidden="true" tabindex="-1"></a>    <span class="cf">elif</span> etat <span class="op">==</span> ETAT_FIN_SESSION:</span>
+<span id="cb6-122"><a href="#cb6-122" aria-hidden="true" tabindex="-1"></a>        <span class="co"># </span><span class="al">TODO</span><span class="co"> : Afficher le récapitulatif (meilleur temps, moyenne, triches)</span></span>
+<span id="cb6-123"><a href="#cb6-123" aria-hidden="true" tabindex="-1"></a>        <span class="co"># </span><span class="al">TODO</span><span class="co"> : Réinitialiser manche = 1, scores = [], nb_triches = 0</span></span>
+<span id="cb6-124"><a href="#cb6-124" aria-hidden="true" tabindex="-1"></a>        <span class="co"># </span><span class="al">TODO</span><span class="co"> : Attendre appui bouton pour relancer -&gt; repasser à ETAT_VEILLE</span></span>
+<span id="cb6-125"><a href="#cb6-125" aria-hidden="true" tabindex="-1"></a>        <span class="cf">pass</span></span>
+<span id="cb6-126"><a href="#cb6-126" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-127"><a href="#cb6-127" aria-hidden="true" tabindex="-1"></a>    time.sleep_ms(<span class="dv">5</span>)  <span class="co"># Cadence régulière de la boucle</span></span></code></pre></div>
+<hr />
+<h3 id="défis-bonus-pour-les-binômes-avancés">🚀 Défis Bonus (Pour les
+binômes avancés)</h3>
+<ul>
+<li><strong>Défi 1 (Interruption Matérielle <code>IRQ</code>)</strong> :
+Remplacez la scrutation active du bouton dans le chrono par une
+interruption matérielle :
+<code>bouton.irq(trigger=Pin.IRQ_RISING, handler=reponse_joueur)</code>
+Justifiez pourquoi cette approche élimine la gigue temporelle
+(<em>jitter</em>).</li>
+<li><strong>Défi 2 (Mode Duel 2 Joueurs)</strong> : Ajoutez un deuxième
+bouton poussoir sur la broche <code>GP19</code>. Le premier joueur qui
+appuie fait retentir sa note et gagne le duel !</li>
+</ul>
+<hr />
+<h3 id="grille-dévaluation-pratique-sur-20-points">📝 Grille
+d’Évaluation Pratique (sur 20 points)</h3>
+<table>
+<colgroup>
+<col style="width: 22%" />
+<col style="width: 22%" />
+<col style="width: 27%" />
+<col style="width: 27%" />
+</colgroup>
+<thead>
+<tr>
+<th style="text-align: left;">Critère</th>
+<th style="text-align: left;">Description</th>
+<th style="text-align: center;">Barème</th>
+<th style="text-align: center;">Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Précision Temporelle</strong></td>
+<td style="text-align: left;">Utilisation correcte de
+<code>time.ticks_ms()</code> et <code>time.ticks_diff()</code>,
+affichage précis.</td>
+<td style="text-align: center;">4 pts</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Système Anti-Triche</strong></td>
+<td style="text-align: left;">Temporisation aléatoire non-bloquante et
+détection immédiate des faux départs.</td>
+<td style="text-align: center;">4 pts</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Traitement des
+Données</strong></td>
+<td style="text-align: left;">Stockage dans une liste, calculs exacts
+(<code>min</code>, moyenne) et retour visuel LEDs.</td>
+<td style="text-align: center;">4 pts</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Architecture FSM &amp;
+ADC</strong></td>
+<td style="text-align: left;">Complétion rigoureuse des états 2 à 6 et
+réglage du seuil via le potentiomètre.</td>
+<td style="text-align: center;">4 pts</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Qualité &amp; Rigueur du
+Code</strong></td>
+<td style="text-align: left;">Nommage clair, commentaires techniques,
+indentation, modularité des fonctions.</td>
+<td style="text-align: center;">2 pts</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Autonomie &amp;
+Démarche</strong></td>
+<td style="text-align: left;">Prise d’initiative, validation méthodique,
+bonus éventuel.</td>
+<td style="text-align: center;">2 pts</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Total</strong></td>
+<td style="text-align: left;"></td>
+<td style="text-align: center;"><strong>/ 20</strong></td>
+<td style="text-align: center;"></td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>
