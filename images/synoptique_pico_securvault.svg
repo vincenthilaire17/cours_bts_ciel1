@@ -1,0 +1,270 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 570" width="100%" height="100%" style="background:#0b1329; border-radius:10px; font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <defs>
+    <!-- Filtres d'ombre -->
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="2" dy="4" stdDeviation="4" flood-color="#000000" flood-opacity="0.4"/>
+    </filter>
+    <filter id="glow-blue" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    
+    <!-- Marqueurs de flèches -->
+    <marker id="arrow-orange" markerWidth="10" markerHeight="10" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#f59e0b" />
+    </marker>
+    <marker id="arrow-green" markerWidth="10" markerHeight="10" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#10b981" />
+    </marker>
+    <marker id="arrow-blue" markerWidth="10" markerHeight="10" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#38bdf8" />
+    </marker>
+    
+    <!-- Dégradés -->
+    <linearGradient id="grad-pico" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#044e3f"/>
+      <stop offset="100%" stop-color="#022c24"/>
+    </linearGradient>
+    <linearGradient id="grad-card" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+  </defs>
+
+  <!-- BANDEAU TITRE -->
+  <rect x="20" y="15" width="940" height="40" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="490" y="40" font-size="14.5" font-weight="bold" fill="#f8fafc" text-anchor="middle" letter-spacing="1">
+    CÂBLAGE GROVE SHIELD PI PICO &amp; MULTI-BUS — PICO-SECURVAULT
+  </text>
+
+  <!-- ============================================================== -->
+  <!-- CARTE CENTRALE : RASPBERRY PI PICO SUR GROVE SHIELD            -->
+  <!-- ============================================================== -->
+  <g id="pico-board" filter="url(#shadow)">
+    <rect x="340" y="75" width="300" height="415" rx="14" fill="url(#grad-pico)" stroke="#10b981" stroke-width="2.5"/>
+    
+    <!-- Connecteur Micro-USB -->
+    <rect x="445" y="67" width="90" height="16" rx="3" fill="#cbd5e1" stroke="#64748b" stroke-width="1.5"/>
+    <text x="490" y="78" font-size="8" font-weight="bold" fill="#334155" text-anchor="middle">USB 5V (VBUS)</text>
+    
+    <!-- Commutateur 3V3 / 5V du Shield (en haut à droite) -->
+    <rect x="560" y="85" width="65" height="22" rx="4" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/>
+    <text x="592" y="99" font-size="7.5" font-weight="bold" fill="#fbbf24" text-anchor="middle">SWITCH: 3V3 !</text>
+
+    <!-- Puce RP2040 -->
+    <rect x="435" y="195" width="110" height="110" rx="8" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5"/>
+    <circle cx="450" cy="210" r="4" fill="#38bdf8" opacity="0.7"/>
+    <text x="490" y="235" font-size="12" font-weight="bold" fill="#f8fafc" text-anchor="middle">RP2040</text>
+    <text x="490" y="253" font-size="9" fill="#94a3b8" text-anchor="middle">Dual Cortex-M0+</text>
+    <text x="490" y="269" font-size="9" fill="#38bdf8" text-anchor="middle">Grove Shield v1.0</text>
+    <text x="490" y="290" font-size="8.5" font-weight="bold" fill="#cbd5e1" text-anchor="middle">MicroPython</text>
+
+    <!-- Titre Carte -->
+    <text x="490" y="125" font-size="14" font-weight="bold" fill="#f0fdf4" text-anchor="middle">GROVE SHIELD PI PICO</text>
+    <text x="490" y="142" font-size="9.5" fill="#a7f3d0" text-anchor="middle">Brochage Plug &amp; Play Seeed</text>
+
+    <!-- Connecteurs Gauche du Shield -->
+    <!-- Port UART0 (Broches GP0 TX / GP1 RX) -->
+    <rect x="340" y="150" width="55" height="32" rx="4" fill="#b45309"/>
+    <text x="367" y="166" font-size="9" font-weight="bold" fill="#ffffff" text-anchor="middle">UART0</text>
+    <text x="367" y="176" font-size="7.5" fill="#fef3c7" text-anchor="middle">GP0 / GP1</text>
+
+    <!-- Port A1 (Broches A0=GP26 et A1=GP27) -->
+    <rect x="340" y="325" width="55" height="52" rx="4" fill="#047857"/>
+    <text x="367" y="343" font-size="9" font-weight="bold" fill="#ffffff" text-anchor="middle">Port A1</text>
+    <text x="367" y="356" font-size="7.5" fill="#d1fae5" text-anchor="middle">A0 = GP26</text>
+    <text x="367" y="369" font-size="7.5" fill="#d1fae5" text-anchor="middle">A1 = GP27</text>
+
+    <!-- Connecteur Droite du Shield -->
+    <!-- Port I2C0 (GP8 SDA / GP9 SCL) -->
+    <rect x="585" y="230" width="55" height="46" rx="4" fill="#0284c7"/>
+    <text x="612" y="248" font-size="9" font-weight="bold" fill="#ffffff" text-anchor="middle">Port I2C0</text>
+    <text x="612" y="260" font-size="8" fill="#e0f2fe" text-anchor="middle">GP8 (SDA)</text>
+    <text x="612" y="270" font-size="8" fill="#e0f2fe" text-anchor="middle">GP9 (SCL)</text>
+
+    <!-- Alimentations Internes (Bas) -->
+    <rect x="400" y="435" width="180" height="35" rx="6" fill="#1e293b" stroke="#475569" stroke-width="1"/>
+    <text x="490" y="450" font-size="9" font-weight="bold" fill="#ef4444" text-anchor="middle">VCC (3.3V) &amp; GND intégrés</text>
+    <text x="490" y="463" font-size="8" fill="#94a3b8" text-anchor="middle">Câbles Grove 4 fils normalisés</text>
+  </g>
+
+  <!-- ============================================================== -->
+  <!-- ENTRÉES OPÉRATEUR (GAUCHE)                                      -->
+  <!-- ============================================================== -->
+
+  <!-- MODULE 1 : CLAVIER CAPACITIF UART -->
+  <g id="mod-keypad" filter="url(#shadow)">
+    <rect x="35" y="90" width="235" height="145" rx="10" fill="url(#grad-card)" stroke="#f59e0b" stroke-width="1.8"/>
+    <rect x="35" y="90" width="235" height="28" rx="10" fill="#b45309"/>
+    <text x="152" y="109" font-size="11" font-weight="bold" fill="#ffffff" text-anchor="middle">CLAVIER TACTILE 12T</text>
+    
+    <text x="45" y="135" font-size="9" font-weight="bold" fill="#fbbf24">Branchement : Port UART0</text>
+    <text x="45" y="150" font-size="8.5" fill="#94a3b8">Liaison Série : <tspan fill="#f59e0b" font-weight="bold">UART0 (GP0/GP1)</tspan></text>
+    <text x="45" y="165" font-size="8.5" fill="#94a3b8">Data reçue : <tspan fill="#f8fafc">str ('1', '2' ... '*', '#')</tspan></text>
+    
+    <!-- Clavier stylisé -->
+    <rect x="175" y="127" width="80" height="95" rx="4" fill="#0f172a" stroke="#475569" stroke-width="1"/>
+    <g fill="#fbbf24" font-size="7.5" font-weight="bold" text-anchor="middle">
+      <text x="188" y="143">1</text><text x="215" y="143">2</text><text x="242" y="143">3</text>
+      <text x="188" y="165">4</text><text x="215" y="165">5</text><text x="242" y="165">6</text>
+      <text x="188" y="187">7</text><text x="215" y="187">8</text><text x="242" y="187">9</text>
+      <text x="188" y="209">*</text><text x="215" y="209">0</text><text x="242" y="209">#</text>
+    </g>
+
+    <text x="45" y="220" font-size="8" fill="#64748b">Câble Grove standard 4 broches</text>
+  </g>
+
+  <!-- LIGNE UART CLAVIER -> PICO PORT UART0 -->
+  <path d="M270,166 L332,166" fill="none" stroke="#f59e0b" stroke-width="3" stroke-dasharray="6,3" marker-end="url(#arrow-orange)"/>
+  <rect x="276" y="152" width="55" height="15" rx="3" fill="#1e293b" stroke="#f59e0b" stroke-width="1"/>
+  <text x="303" y="163" font-size="7.5" font-weight="bold" fill="#fbbf24" text-anchor="middle">TX → RX</text>
+
+  <!-- MODULE 2 : THUMB JOYSTICK ADC -->
+  <g id="mod-joystick" filter="url(#shadow)">
+    <rect x="35" y="270" width="235" height="145" rx="10" fill="url(#grad-card)" stroke="#10b981" stroke-width="1.8"/>
+    <rect x="35" y="270" width="235" height="28" rx="10" fill="#047857"/>
+    <text x="152" y="289" font-size="11" font-weight="bold" fill="#ffffff" text-anchor="middle">THUMB JOYSTICK</text>
+    
+    <text x="45" y="315" font-size="9" font-weight="bold" fill="#34d399">Branchement : Port A1</text>
+    <text x="45" y="330" font-size="8.5" fill="#94a3b8">Entrées : <tspan fill="#10b981" font-weight="bold">A0 (GP26) et A1 (GP27)</tspan></text>
+    <text x="45" y="344" font-size="8.5" fill="#94a3b8">Data reçue : <tspan fill="#f8fafc">int (0..65535)</tspan></text>
+    <text x="45" y="358" font-size="8.5" fill="#94a3b8">Direction : <tspan fill="#34d399">str ('DROITE', 'GAUCHE'...)</tspan></text>
+    
+    <!-- Joystick stylisé -->
+    <circle cx="215" cy="375" r="26" fill="#0f172a" stroke="#475569" stroke-width="1.5"/>
+    <line x1="215" y1="352" x2="215" y2="398" stroke="#334155" stroke-width="1"/>
+    <line x1="192" y1="375" x2="238" y2="375" stroke="#334155" stroke-width="1"/>
+    <circle cx="218" cy="372" r="14" fill="#10b981" opacity="0.8" stroke="#ffffff" stroke-width="1"/>
+
+    <text x="45" y="398" font-size="8" fill="#64748b">1 seul câble Grove sur le Port A1</text>
+  </g>
+
+  <!-- LIGNE JOYSTICK -> PICO PORT A1 -->
+  <path d="M270,351 L332,351" fill="none" stroke="#10b981" stroke-width="3" marker-end="url(#arrow-green)"/>
+  <rect x="276" y="340" width="55" height="15" rx="3" fill="#1e293b" stroke="#10b981" stroke-width="1"/>
+  <text x="303" y="351" font-size="7.5" font-weight="bold" fill="#34d399" text-anchor="middle">Port A1</text>
+
+  <!-- ============================================================== -->
+  <!-- BUS I2C PARTAGÉ (COLONNE DROITE)                              -->
+  <!-- ============================================================== -->
+
+  <!-- DORSALE PRINCIPALE DU BUS I2C (PORT I2C0) -->
+  <path d="M640,253 L675,253 L675,115 L705,115" fill="none" stroke="#38bdf8" stroke-width="3.5" marker-end="url(#arrow-blue)"/>
+  <path d="M675,200 L705,200" fill="none" stroke="#38bdf8" stroke-width="3.5" marker-end="url(#arrow-blue)"/>
+  <path d="M675,305 L705,305" fill="none" stroke="#38bdf8" stroke-width="3.5" marker-end="url(#arrow-blue)"/>
+  <path d="M675,253 L675,410 L705,410" fill="none" stroke="#38bdf8" stroke-width="3.5" marker-end="url(#arrow-blue)"/>
+
+  <!-- Nœuds de dérivation sur la dorsale I2C -->
+  <circle cx="675" cy="115" r="5" fill="#38bdf8"/>
+  <circle cx="675" cy="200" r="5" fill="#38bdf8"/>
+  <circle cx="675" cy="253" r="5" fill="#38bdf8"/>
+  <circle cx="675" cy="305" r="5" fill="#38bdf8"/>
+  <circle cx="675" cy="410" r="5" fill="#38bdf8"/>
+
+  <rect x="645" y="225" width="60" height="16" rx="3" fill="#0369a1" filter="url(#glow-blue)"/>
+  <text x="675" y="236" font-size="8" font-weight="bold" fill="#ffffff" text-anchor="middle">Port I2C0</text>
+
+  <!-- 1. ESCLAVE I2C : AFFICHEUR LCD 16x2 (0x3E) -->
+  <g id="mod-lcd" filter="url(#shadow)">
+    <rect x="710" y="75" width="235" height="80" rx="8" fill="url(#grad-card)" stroke="#38bdf8" stroke-width="1.8"/>
+    <rect x="710" y="75" width="235" height="22" rx="8" fill="#0284c7"/>
+    <text x="795" y="90" font-size="10" font-weight="bold" fill="#ffffff">AFFICHEUR LCD 16x2</text>
+    <rect x="875" y="77" width="65" height="17" rx="3" fill="#0f172a"/>
+    <text x="907" y="89" font-size="8.5" font-weight="bold" fill="#38bdf8" text-anchor="middle">Addr: 0x3E</text>
+
+    <!-- Écran LCD simulé -->
+    <rect x="720" y="103" width="145" height="44" rx="3" fill="#0284c7" opacity="0.2" stroke="#38bdf8" stroke-width="1"/>
+    <text x="725" y="120" font-family="Courier, monospace" font-size="8.5" font-weight="bold" fill="#38bdf8">SECURVAULT PRETS</text>
+    <text x="725" y="136" font-family="Courier, monospace" font-size="8.5" font-weight="bold" fill="#38bdf8">APPROCHEZ OU PIN</text>
+
+    <text x="875" y="118" font-size="8" fill="#94a3b8">Branchement :</text>
+    <text x="875" y="132" font-size="8" font-weight="bold" fill="#38bdf8">Port I2C0</text>
+  </g>
+
+  <!-- 2. ESCLAVE I2C : MATRICE LED 8x8 HT16K33 (0x70) -->
+  <g id="mod-matrix" filter="url(#shadow)">
+    <rect x="710" y="165" width="235" height="85" rx="8" fill="url(#grad-card)" stroke="#ef4444" stroke-width="1.8"/>
+    <rect x="710" y="165" width="235" height="22" rx="8" fill="#b91c1c"/>
+    <text x="795" y="180" font-size="10" font-weight="bold" fill="#ffffff">MATRICE LED 8x8</text>
+    <rect x="875" y="167" width="65" height="17" rx="3" fill="#0f172a"/>
+    <text x="907" y="179" font-size="8.5" font-weight="bold" fill="#fca5a5" text-anchor="middle">Addr: 0x70</text>
+
+    <!-- Mini matrice 8x8 rouge avec cadenas -->
+    <rect x="720" y="193" width="50" height="50" rx="4" fill="#1e1b4b" stroke="#ef4444" stroke-width="1"/>
+    <g fill="#ef4444">
+      <circle cx="737" cy="203" r="2"/><circle cx="743" cy="203" r="2"/><circle cx="749" cy="203" r="2"/>
+      <circle cx="734" cy="209" r="2"/><circle cx="752" cy="209" r="2"/>
+      <circle cx="734" cy="215" r="2"/><circle cx="740" cy="215" r="2"/><circle cx="746" cy="215" r="2"/><circle cx="752" cy="215" r="2"/>
+      <circle cx="734" cy="221" r="2"/><circle cx="740" cy="221" r="2"/><circle cx="746" cy="221" r="2"/><circle cx="752" cy="221" r="2"/>
+      <circle cx="734" cy="227" r="2"/><circle cx="740" cy="227" r="2"/><circle cx="746" cy="227" r="2"/><circle cx="752" cy="227" r="2"/>
+      <circle cx="734" cy="233" r="2"/><circle cx="740" cy="233" r="2"/><circle cx="746" cy="233" r="2"/><circle cx="752" cy="233" r="2"/>
+    </g>
+
+    <text x="780" y="208" font-size="8.5" font-weight="bold" fill="#fca5a5">Driver : HT16K33</text>
+    <text x="780" y="222" font-size="8" fill="#94a3b8">Branchement :</text>
+    <text x="780" y="235" font-size="8" font-weight="bold" fill="#38bdf8">Port I2C0</text>
+  </g>
+
+  <!-- 3. ESCLAVE I2C : TIME OF FLIGHT VL53L0X (0x29) -->
+  <g id="mod-tof" filter="url(#shadow)">
+    <rect x="710" y="260" width="235" height="85" rx="8" fill="url(#grad-card)" stroke="#8b5cf6" stroke-width="1.8"/>
+    <rect x="710" y="260" width="235" height="22" rx="8" fill="#6d28d9"/>
+    <text x="795" y="275" font-size="10" font-weight="bold" fill="#ffffff">TÉLÉMÈTRE LASER ToF</text>
+    <rect x="875" y="262" width="65" height="17" rx="3" fill="#0f172a"/>
+    <text x="907" y="274" font-size="8.5" font-weight="bold" fill="#c4b5fd" text-anchor="middle">Addr: 0x29</text>
+
+    <!-- Faisceau laser simulé -->
+    <rect x="720" y="290" width="40" height="45" rx="4" fill="#2e1065" stroke="#8b5cf6" stroke-width="1"/>
+    <circle cx="740" cy="312" r="6" fill="#c4b5fd"/>
+    <line x1="740" y1="312" x2="760" y2="305" stroke="#a78bfa" stroke-width="1.5" stroke-dasharray="2,2"/>
+    <line x1="740" y1="312" x2="760" y2="320" stroke="#a78bfa" stroke-width="1.5" stroke-dasharray="2,2"/>
+
+    <text x="775" y="302" font-size="8.5" font-weight="bold" fill="#c4b5fd">Capteur : VL53L0X</text>
+    <text x="775" y="316" font-size="8" fill="#94a3b8">Branchement : <tspan fill="#38bdf8" font-weight="bold">Port I2C0</tspan></text>
+    <text x="775" y="330" font-size="8" fill="#94a3b8">Data : <tspan fill="#f8fafc">int (distance en mm)</tspan></text>
+  </g>
+
+  <!-- 4. ESCLAVE I2C : ACCÉLÉROMÈTRE MMA7660 (0x4C) -->
+  <g id="mod-accel" filter="url(#shadow)">
+    <rect x="710" y="355" width="235" height="85" rx="8" fill="url(#grad-card)" stroke="#f43f5e" stroke-width="1.8"/>
+    <rect x="710" y="355" width="235" height="22" rx="8" fill="#be123c"/>
+    <text x="795" y="370" font-size="10" font-weight="bold" fill="#ffffff">ACCÉLÉROMÈTRE 3 AXES</text>
+    <rect x="875" y="357" width="65" height="17" rx="3" fill="#0f172a"/>
+    <text x="907" y="369" font-size="8.5" font-weight="bold" fill="#fecdd3" text-anchor="middle">Addr: 0x4C</text>
+
+    <!-- Axes 3D simulés -->
+    <rect x="720" y="385" width="40" height="45" rx="4" fill="#4c0519" stroke="#f43f5e" stroke-width="1"/>
+    <line x1="740" y1="415" x2="740" y2="392" stroke="#f43f5e" stroke-width="2" marker-end="url(#arrow-orange)"/>
+    <line x1="740" y1="415" x2="755" y2="415" stroke="#10b981" stroke-width="2" marker-end="url(#arrow-green)"/>
+    <line x1="740" y1="415" x2="728" y2="423" stroke="#38bdf8" stroke-width="2"/>
+
+    <text x="775" y="398" font-size="8.5" font-weight="bold" fill="#fda4af">Capteur : MMA7660FC</text>
+    <text x="775" y="412" font-size="8" fill="#94a3b8">Branchement : <tspan fill="#38bdf8" font-weight="bold">Port I2C0</tspan></text>
+    <text x="775" y="426" font-size="8" fill="#94a3b8">Data : <tspan fill="#f8fafc">tuple (ax, ay, az)</tspan></text>
+  </g>
+
+  <!-- ============================================================== -->
+  <!-- LÉGENDE DES LIAISONS & CONNECTEURS GROVE (BAS)                 -->
+  <!-- ============================================================== -->
+  <rect x="20" y="505" width="940" height="50" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+  
+  <g font-size="9.5" font-weight="bold" transform="translate(35, 535)">
+    <!-- Item UART -->
+    <line x1="0" y1="-5" x2="25" y2="-5" stroke="#f59e0b" stroke-width="3" stroke-dasharray="4,2"/>
+    <circle cx="12" cy="-5" r="4" fill="#f59e0b"/>
+    <text x="32" y="-1" fill="#fef3c7">Port UART0 (GP0/GP1, 9600 bps)</text>
+
+    <!-- Item ADC -->
+    <line x1="260" y1="-5" x2="285" y2="-5" stroke="#10b981" stroke-width="3"/>
+    <circle cx="272" cy="-5" r="4" fill="#10b981"/>
+    <text x="292" y="-1" fill="#d1fae5">Port A1 (A0=GP26, A1=GP27)</text>
+
+    <!-- Item I2C -->
+    <line x1="530" y1="-5" x2="555" y2="-5" stroke="#38bdf8" stroke-width="3"/>
+    <circle cx="542" cy="-5" r="4" fill="#38bdf8"/>
+    <text x="562" y="-1" fill="#e0f2fe">Port I2C0 (GP8=SDA, GP9=SCL)</text>
+
+    <!-- Item Power -->
+    <text x="815" y="-1" fill="#fbbf24">⚡ Switch Shield : 3V3</text>
+  </g>
+</svg>

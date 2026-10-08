@@ -2,11 +2,101 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Lien vers TP3</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BTS CIEL 1re Année — Travaux Pratiques Raspberry Pi Pico</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+            max-width: 820px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        h1 {
+            color: #0b3c5d;
+            border-bottom: 2px solid #0b3c5d;
+            padding-bottom: 10px;
+        }
+        p.subtitle {
+            color: #64748b;
+            font-size: 1.1em;
+            margin-top: -5px;
+        }
+        .tp-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 18px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .tp-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+        }
+        .tp-card h2 {
+            margin: 0 0 8px 0;
+            font-size: 1.25em;
+        }
+        .tp-card a {
+            color: #1d4ed8;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .tp-card a:hover {
+            text-decoration: underline;
+        }
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            font-size: 0.8em;
+            font-weight: 600;
+            border-radius: 4px;
+            background: #e0f2fe;
+            color: #0369a1;
+            margin-right: 6px;
+        }
+        .badge-time {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .badge-purple {
+            background: #f3e8ff;
+            color: #7e22ce;
+        }
+        .desc {
+            color: #475569;
+            font-size: 0.95em;
+            margin: 8px 0 0 0;
+            line-height: 1.45;
+        }
+    </style>
 </head>
 <body>
 
-    <a href="TP_Pico_Reflexe_Arcade_BTS_CIEL.html">tp3</a>
+    <h1>BTS CIEL — 1<sup>re</sup> Année</h1>
+    <p class="subtitle">Activités Pratiques MicroPython &amp; Systèmes Embarqués sur Raspberry Pi Pico (RP2040)</p>
+
+    <div class="tp-card">
+        <span class="badge">TP 3</span>
+        <span class="badge badge-time">Durée : 3h00</span>
+        <h2><a href="TP_Pico_Reflexe_Arcade_BTS_CIEL.html">TP 3 : PICO-RÉFLEXE — Le Duel Arcade &amp; Système Anti-Triche</a></h2>
+        <p class="desc">Chronométrage haute précision non bloquant avec <code>time.ticks_ms()</code>, génération aléatoire, anti-triche, listes statistiques et Machine à États Finis (FSM).</p>
+    </div>
+
+    <div class="tp-card">
+        <span class="badge">TP 4</span>
+        <span class="badge badge-time">Durée : 3h00</span>
+        <span class="badge badge-purple">Multi-Bus &amp; Bibliothèques</span>
+        <h2><a href="TP4_Pico_SecurVault_BTS_CIEL.html">TP 4 : PICO-SECURVAULT — Console de Sécurité Multi-Bus, Bibliothèques &amp; Machine à États</a></h2>
+        <p class="desc">
+            Rétro-ingénierie documentaire (Wikis Seeed Studio &amp; Doc officielle MicroPython RP2). Communication multi-bus (UART, ADC, bus I2C à 4 esclaves).
+            Intégration de bibliothèques existantes (télémètre laser ToF <code>VL53L0X</code>, accéléromètre anti-sabotage <code>MMA7660</code>).
+            Coordination par Machine à États Finis (FSM) à 7 états avec gestion temporelle non-bloquante.
+        </p>
+    </div>
 
 </body>
 </html>

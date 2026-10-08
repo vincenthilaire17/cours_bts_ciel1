@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>TP 4 : PICO-SECURVAULT — BTS CIEL (3h)</title>
+  <style>
+    /* Styles de base et typographie */
+    html {
+      color: #1a1a1a;
+      background-color: #fcfcfd;
+      -webkit-text-size-adjust: 100%;
+    }
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.55;
+      color: #1f2937;
+      max-width: 950px;
+      margin: 0 auto;
+      padding: 24px 20px 60px 20px;
+    }
+    @page {
+      margin: 1.5cm;
+      size: A4;
+    }
+    @media print {
+      body {
+        max-width: 100%;
+        padding: 0;
+        font-size: 10pt;
+        color: #000;
+        background: transparent;
+      }
+      .no-print {
+        display: none !important;
+      }
+      a {
+        text-decoration: underline;
+        color: #000;
+      }
+      pre, blockquote, table, .img-card {
+        page-break-inside: avoid;
+      }
+      h1, h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+
+    /* En-têtes */
+    h1, h2, h3, h4 {
+      color: #0b3c5d;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+    h1 {
+      font-size: 20pt;
+      border-bottom: 3px solid #0b3c5d;
+      padding-bottom: 8px;
+      margin-top: 10px;
+      margin-bottom: 12px;
+    }
+    h2 {
+      font-size: 14.5pt;
+      margin-top: 26px;
+      margin-bottom: 10px;
+      color: #1d4ed8;
+      border-left: 5px solid #1d4ed8;
+      padding-left: 10px;
+    }
+    h3 {
+      font-size: 12pt;
+      margin-top: 18px;
+      margin-bottom: 8px;
+      border-left: 4px solid #328cc1;
+      padding-left: 8px;
+      color: #0b3c5d;
+    }
+    h4 {
+      font-size: 10.5pt;
+      margin-top: 14px;
+      margin-bottom: 6px;
+      color: #374151;
+    }
+
+    p {
+      margin: 0.85em 0;
+    }
+
+    /* Liens */
+    a {
+      color: #1d4ed8;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+
+    /* Badges & Encadrés */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      font-size: 8.5pt;
+      font-weight: 600;
+      border-radius: 4px;
+      background-color: #e0f2fe;
+      color: #0369a1;
+      margin-right: 4px;
+    }
+    .badge-orange {
+      background-color: #ffedd5;
+      color: #c2410c;
+    }
+    .badge-green {
+      background-color: #dcfce7;
+      color: #15803d;
+    }
+    .badge-purple {
+      background-color: #f3e8ff;
+      color: #7e22ce;
+    }
+    .callout {
+      margin: 14px 0;
+      padding: 12px 16px;
+      border-radius: 6px;
+      border-left: 4px solid #328cc1;
+      background-color: #f0f7fb;
+      font-size: 9.5pt;
+    }
+    .callout-warn {
+      border-left-color: #f59e0b;
+      background-color: #fffbeb;
+    }
+    .callout-tip {
+      border-left-color: #10b981;
+      background-color: #f0fdf4;
+    }
+    .callout-purple {
+      border-left-color: #8b5cf6;
+      background-color: #faf5ff;
+    }
+
+    /* Tableaux */
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 14px 0;
+      font-size: 9.5pt;
+    }
+    th, td {
+      border: 1px solid #d1d5db;
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background-color: #f0f4f8;
+      color: #0b3c5d;
+      font-weight: 600;
+    }
+    tr:nth-child(even) {
+      background-color: #f9fafb;
+    }
+    td.center, th.center {
+      text-align: center;
+    }
+
+    /* Boîtes de réponse élèves */
+    .student-answer {
+      background-color: #ffffff;
+      border: 1px dashed #9ca3af;
+      border-radius: 4px;
+      padding: 8px 12px;
+      margin: 6px 0 12px 0;
+      color: #4b5563;
+      font-style: italic;
+      min-height: 24px;
+    }
+
+    /* Code et blocs préformatés */
+    code {
+      background-color: #f1f5f9;
+      color: #0f172a;
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-size: 9pt;
+      font-family: Consolas, 'Courier New', monospace;
+    }
+    pre {
+      background-color: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 12px;
+      font-size: 9pt;
+      line-height: 1.45;
+      overflow-x: auto;
+      font-family: Consolas, 'Courier New', monospace;
+      margin: 12px 0;
+    }
+    pre code {
+      background-color: transparent;
+      padding: 0;
+      border-radius: 0;
+      color: inherit;
+    }
+
+    /* Coloration syntaxique */
+    .kw { color: #007020; font-weight: bold; }
+    .dt { color: #902000; }
+    .dv { color: #40a070; }
+    .bn { color: #40a070; }
+    .st { color: #c2410c; }
+    .co { color: #64748b; font-style: italic; }
+    .fu { color: #0369a1; font-weight: 600; }
+    .op { color: #475569; }
+    .bu { color: #7c3aed; }
+
+    hr {
+      border: 0;
+      border-top: 1px solid #e2e8f0;
+      margin: 24px 0;
+    }
+
+    /* Header document */
+    .header-box {
+      background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+    }
+    .header-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      font-size: 9.5pt;
+      margin-top: 8px;
+      color: #334155;
+    }
+    .header-meta span {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .doc-banner {
+      background-color: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 6px;
+      padding: 12px 16px;
+      margin: 16px 0;
+      font-size: 9.5pt;
+    }
+
+    .img-grid {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin: 16px 0;
+    }
+    .img-card {
+      flex: 1 1 400px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    .img-card img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+    }
+    .img-caption {
+      font-size: 8.5pt;
+      color: #64748b;
+      margin-top: 6px;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+<div class="header-box">
+  <div style="font-size: 11pt; font-weight: bold; color: #0b3c5d; letter-spacing: 0.5px;">
+    BTS CIEL — 1<sup>re</sup> ANNÉE | CYBERSÉCURITÉ, INFORMATIQUE &amp; ÉLECTRONIQUE EMBARQUÉE
+  </div>
+  <h1 style="border-bottom: none; margin: 6px 0 0 0; padding: 0; font-size: 18pt;">
+    TP 4 : PICO-SECURVAULT — Console de Sécurité sur Grove Shield &amp; Machine à États
+  </h1>
+  <div class="header-meta">
+    <span>⏱️ <strong>Durée :</strong> 3h00</span>
+    <span>🎯 <strong>Cible :</strong> Raspberry Pi Pico (RP2040) + Grove Shield v1.0</span>
+    <span>👥 <strong>Modalité :</strong> Travail en binôme</span>
+    <span>📚 <strong>Prérequis :</strong> Fonctions Python, <code>time.ticks_ms()</code></span>
+  </div>
+</div>
+
+<!-- RESSOURCE OFFICIELLE MICROPYTHON EN DÉBUT DE TP -->
+<div class="doc-banner">
+  <strong style="color: #1d4ed8; font-size: 10.5pt;">📖 Documentation Officielle de Référence MicroPython (RP2040) :</strong><br>
+  Avant de débuter, ouvrez dans votre navigateur la documentation officielle MicroPython pour le microcontrôleur RP2 :<br>
+  👉 <a href="https://docs.micropython.org/en/latest/rp2/quickref.html" target="_blank" style="font-weight: bold; text-decoration: underline;">
+    https://docs.micropython.org/en/latest/rp2/quickref.html (MicroPython RP2 Quick Reference)
+  </a><br>
+  <span style="font-size: 8.5pt; color: #475569;">
+    Cette référence vous permet de vérifier la syntaxe standard des modules embarqués : <code>machine.Pin</code>, <code>machine.ADC</code>, <code>machine.I2C</code>, <code>machine.UART</code> et <code>time.ticks_ms()</code>.
+  </span>
+</div>
+
+<h3>Objectifs Pédagogiques BTS CIEL</h3>
+<ul>
+  <li><span class="badge">C1</span> <strong>Exploitation de la documentation matérielle</strong> : Identifier les ports physiques du <em>Grove Shield for Pi Pico</em> (UART, Analogique, I2C) et extraire les adresses I2C des composants à partir de leurs fiches techniques Seeed Studio.</li>
+  <li><span class="badge badge-purple">C2</span> <strong>Validation unitaire par codes exemples</strong> : Tester individuellement chaque capteur et actionneur, afficher les messages reçus et identifier leurs types de données MicroPython (<code>str</code>, <code>int</code>, <code>tuple</code>).</li>
+  <li><span class="badge">C3</span> <strong>Intégration de bibliothèques tierces existantes</strong> : Déployer et instancier des bibliothèques MicroPython (<code>vl53l0x.py</code> et <code>mma7660.py</code>) sur la mémoire flash du Pico.</li>
+  <li><span class="badge badge-green">C4</span> <strong>Modélisation et programmation par Machine à États (FSM)</strong> : Coordonner le comportement complet du système sans blocage logiciel grâce à une boucle cadencée et des temporisations non-bloquantes.</li>
+</ul>
+
+<hr />
+
+<h2>1. Le Banc d'Essai : Grove Shield for Pi Pico</h2>
+<p>
+  Pour interconnecter vos capteurs et actionneurs rapidement et sans erreur de câblage sur breadboard, nous utilisons le <strong>Grove Shield for Pi Pico v1.0</strong> de Seeed Studio.
+</p>
+
+<div class="img-grid">
+  <div class="img-card">
+    <img src="images/grove_shield_pi_pico_top.png" alt="Grove Shield for Pi Pico - Vue de dessus avec sérigraphie" />
+    <div class="img-caption">Vue de dessus : sérigraphie des connecteurs (I2C0, I2C1, A0..A2, UART0, D16..D20)</div>
+  </div>
+  <div class="img-card">
+    <img src="images/grove_shield_pi_pico_iso.png" alt="Grove Shield for Pi Pico - Vue isométrique" />
+    <div class="img-caption">Vue isométrique : connecteurs Grove 4 broches et switch d'alimentation</div>
+  </div>
+</div>
+
+<div class="callout callout-warn">
+  <strong>⚠️ RÈGLE DE SÉCURITÉ IMPORTANTE — COMMUTATEUR DE TENSION (SWITCH) :</strong><br>
+  Repérez le petit commutateur glissière situé en haut à gauche du shield (marqué <code>5V / 3V3</code>).<br>
+  Le Raspberry Pi Pico fonctionne avec des niveaux logiques <strong>3.3V</strong>.
+  <strong>Vérifiez impérativement que ce commutateur est positionné sur <code>3V3</code> avant toute mise sous tension !</strong>
+</div>
+
+<h3>Synoptique d'interconnexion du système</h3>
+<div style="margin: 18px 0; text-align: center;">
+  <img src="images/synoptique_pico_securvault.svg" alt="Synoptique de câblage sur Grove Shield" style="width: 100%; max-width: 940px; height: auto; border-radius: 8px; box-shadow: 0 4px 14px rgba(0,0,0,0.2);" />
+  <div style="font-size: 8.5pt; color: #64748b; margin-top: 6px; font-style: italic;">
+    Figure 1 : Implantation des liaisons et connecteurs sur le Grove Shield for Pi Pico
+  </div>
+</div>
+
+<hr />
+
+<h2>PARTIE 1 : Étude de la Documentation &amp; Branchements (35 min)</h2>
+
+<p>
+  En observant attentivement les sérigraphies du shield et les fiches wikis des composants, complétez les informations nécessaires au raccordement et à la configuration.
+</p>
+
+<h3>1.1 Où brancher les composants sur le Shield ?</h3>
+<p>Associez chaque module Grove au bon connecteur sur le shield :</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Module Grove</th>
+      <th>Type de signal / Bus</th>
+      <th>Port sur le Grove Shield</th>
+      <th>Broches Pico (RP2040) associées</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Clavier Tactile 12 touches</strong></td>
+      <td>Liaison Série Asynchrone</td>
+      <td><strong>Port <code>UART0</code></strong></td>
+      <td><code>GP0 (TX)</code> et <code>GP1 (RX)</code></td>
+    </tr>
+    <tr>
+      <td><strong>Thumb Joystick 2 axes</strong></td>
+      <td>2 Tensions Analogiques (X et Y)</td>
+      <td><strong>Port <code>A1</code></strong></td>
+      <td><code>GP26 (A0=Axe X)</code> et <code>GP27 (A1=Axe Y)</code></td>
+    </tr>
+    <tr>
+      <td><strong>Afficheur LCD 16x2</strong></td>
+      <td>Bus I2C</td>
+      <td><strong>Port <code>I2C0</code></strong></td>
+      <td><code>GP8 (SDA)</code> et <code>GP9 (SCL)</code></td>
+    </tr>
+    <tr>
+      <td><strong>Matrice LED 8x8</strong></td>
+      <td>Bus I2C</td>
+      <td><strong>Port <code>I2C0</code></strong> (via Hub I2C)</td>
+      <td><code>GP8 (SDA)</code> et <code>GP9 (SCL)</code></td>
+    </tr>
+    <tr>
+      <td><strong>Télémètre Laser ToF (VL53L0X)</strong></td>
+      <td>Bus I2C</td>
+      <td><strong>Port <code>I2C0</code></strong> (via Hub I2C)</td>
+      <td><code>GP8 (SDA)</code> et <code>GP9 (SCL)</code></td>
+    </tr>
+    <tr>
+      <td><strong>Accéléromètre 3 Axes (MMA7660)</strong></td>
+      <td>Bus I2C</td>
+      <td><strong>Port <code>I2C0</code></strong> (via Hub I2C)</td>
+      <td><code>GP8 (SDA)</code> et <code>GP9 (SCL)</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout callout-tip">
+  <strong>Astuce de branchement :</strong>
+  Les 4 modules I2C partagent tous le même port <code>I2C0</code> (GP8/GP9).
+  Utilisez un petit module <em>Grove I2C Hub</em> (duplicateur 4 ports) relié au connecteur <code>I2C0</code> du shield.
+</div>
+
+<h3>1.2 Recherche des Adresses I2C dans les Fiches Constructeur</h3>
+<p>
+  Consultez les pages documentaires officielles Seeed Studio fournies et relevez l'<strong>adresse matérielle hexadécimale</strong> de chaque composant I2C. Vous en aurez besoin pour renseigner les codes exemples !
+</p>
+
+<ul>
+  <li>📖 <strong>Afficheur LCD 16x2 :</strong> <a href="https://wiki.seeedstudio.com/Grove-16x2_LCD_Series/" target="_blank">https://wiki.seeedstudio.com/Grove-16x2_LCD_Series/</a><br>
+    Adresse I2C du LCD : <div class="student-answer">Adresse hexadécimale : 0x____</div>
+  </li>
+  <li>📖 <strong>Matrice LED 8x8 avec driver HT16K33 :</strong> <a href="https://wiki.seeedstudio.com/Grove-Red_LED_Matrix_w_Driver/" target="_blank">https://wiki.seeedstudio.com/Grove-Red_LED_Matrix_w_Driver/</a><br>
+    Adresse I2C par défaut de la matrice : <div class="student-answer">Adresse hexadécimale : 0x____</div>
+  </li>
+  <li>📖 <strong>Télémètre Laser ToF VL53L0X :</strong> <a href="https://wiki.seeedstudio.com/Grove-Time_of_Flight_Distance_Sensor-VL53L0X/" target="_blank">https://wiki.seeedstudio.com/Grove-Time_of_Flight_Distance_Sensor-VL53L0X/</a><br>
+    Adresse I2C du VL53L0X : <div class="student-answer">Adresse hexadécimale : 0x____</div>
+  </li>
+  <li>📖 <strong>Accéléromètre 3 axes MMA7660FC :</strong> <a href="https://wiki.seeedstudio.com/Grove-3-Axis_Digital_Accelerometer-1.5g/" target="_blank">https://wiki.seeedstudio.com/Grove-3-Axis_Digital_Accelerometer-1.5g/</a><br>
+    Adresse I2C du MMA7660 : <div class="student-answer">Adresse hexadécimale : 0x____</div>
+  </li>
+</ul>
+
+<hr />
+
+<h2>PARTIE 2 : Validation Unitaire par Codes Exemples (55 min)</h2>
+
+<p>
+  Pour chaque composant, vous disposez d'un code exemple prêt à tester.
+  Votre mission consiste à :
+  1. Compléter l'adresse I2C (repérée par <code>0x__</code>).
+  2. Exécuter le script et observer dans la console Thonny les <strong>messages affichés</strong> ainsi que le <strong>type des données retournées</strong>.
+</p>
+
+<h3>2.1 Composant 1 : Clavier Tactile 12 Touches (Port UART0)</h3>
+<p>
+  Ce composant est branché sur le port <code>UART0</code> (GP0 TX / GP1 RX).
+  Téléversez et lancez ce script :
+</p>
+
+<pre><code class="language-python"><span class="im">from</span> machine <span class="im">import</span> UART, Pin
+<span class="im">import</span> time
+
+<span class="co"># Port UART0 du Grove Shield : TX sur GP0, RX sur GP1 à 9600 bauds</span>
+uart_clavier = UART(<span class="dv">0</span>, baudrate=<span class="dv">9600</span>, tx=Pin(<span class="dv">0</span>), rx=Pin(<span class="dv">1</span>))
+
+<span class="co"># Table de conversion des octets reçus en caractères</span>
+MAP_TOUCHES = {
+    <span class="bn">0xE1</span>: <span class="st">'1'</span>, <span class="bn">0xE2</span>: <span class="st">'2'</span>, <span class="bn">0xE3</span>: <span class="st">'3'</span>,
+    <span class="bn">0xE4</span>: <span class="st">'4'</span>, <span class="bn">0xE5</span>: <span class="st">'5'</span>, <span class="bn">0xE6</span>: <span class="st">'6'</span>,
+    <span class="bn">0xE7</span>: <span class="st">'7'</span>, <span class="bn">0xE8</span>: <span class="st">'8'</span>, <span class="bn">0xE9</span>: <span class="st">'9'</span>,
+    <span class="bn">0xEA</span>: <span class="st">'*'</span>, <span class="bn">0xEB</span>: <span class="st">'0'</span>, <span class="bn">0xEC</span>: <span class="st">'#'</span>
+}
+
+<span class="kw">def</span> <span class="fu">lire_touche_clavier</span>():
+    <span class="cf">if</span> uart_clavier.any():
+        octet_recu = uart_clavier.read(<span class="dv">1</span>)[<span class="dv">0</span>]
+        <span class="cf">return</span> MAP_TOUCHES.get(octet_recu, <span class="va">None</span>)
+    <span class="cf">return</span> <span class="va">None</span>
+
+<span class="bu">print</span>(<span class="st">"Touchez les touches du clavier tactile..."</span>)
+<span class="cf">while</span> <span class="va">True</span>:
+    touche = lire_touche_clavier()
+    <span class="cf">if</span> touche:
+        <span class="co"># AFFICHAGE DU MESSAGE ET DU TYPE DE DONNÉE REÇUE</span>
+        <span class="bu">print</span>(<span class="ss">f"Touche pressée : '</span><span class="sc">{</span>touche<span class="sc">}</span><span class="ss">' | Type de donnée : </span><span class="sc">{</span><span class="bu">type</span>(touche)<span class="sc">}</span><span class="ss">"</span>)
+    time.sleep_ms(<span class="dv">50</span>)
+</code></pre>
+
+<div class="student-answer">
+  <strong>Question d'analyse :</strong> Quel est le type de donnée retourné par la variable <code>touche</code> (int, str, float, bool) ? Relevez la ligne exacte affichée dans la console lors de l'appui sur '5' et '#' :<br>
+  Type de donnée : ____________________ | Exemple de print console : ________________________________________
+</div>
+
+<h3>2.2 Composant 2 : Thumb Joystick (Port A1)</h3>
+<p>
+  Le joystick est relié au port <code>A1</code> du shield. Il fournit deux grandeurs analogiques lues par l'ADC du Pico sur <code>GP26</code> et <code>GP27</code>.
+</p>
+
+<pre><code class="language-python"><span class="im">from</span> machine <span class="im">import</span> ADC, Pin
+<span class="im">import</span> time
+
+joy_x = ADC(Pin(<span class="dv">26</span>))  <span class="co"># Broche A0 du port A1</span>
+joy_y = ADC(Pin(<span class="dv">27</span>))  <span class="co"># Broche A1 du port A1</span>
+
+<span class="kw">def</span> <span class="fu">lire_direction_joystick</span>():
+    val_x = joy_x.read_u16()
+    val_y = joy_y.read_u16()
+    
+    <span class="cf">if</span> val_x &gt; <span class="dv">52000</span>:
+        direction = <span class="st">"DROITE"</span>
+    <span class="cf">elif</span> val_x &lt; <span class="dv">14000</span>:
+        direction = <span class="st">"GAUCHE"</span>
+    <span class="cf">elif</span> val_y &gt; <span class="dv">52000</span>:
+        direction = <span class="st">"HAUT"</span>
+    <span class="cf">elif</span> val_y &lt; <span class="dv">14000</span>:
+        direction = <span class="st">"BAS"</span>
+    <span class="cf">else</span>:
+        direction = <span class="st">"CENTRE"</span>
+        
+    <span class="cf">return</span> val_x, val_y, direction
+
+<span class="cf">while</span> <span class="va">True</span>:
+    x, y, dir_texte = lire_direction_joystick()
+    <span class="co"># AFFICHAGE DES MESURES, DE LA DIRECTION ET DE LEURS TYPES</span>
+    <span class="bu">print</span>(<span class="ss">f"X=</span><span class="sc">{</span>x<span class="sc">}</span><span class="ss"> (</span><span class="sc">{</span><span class="bu">type</span>(x)<span class="sc">}</span><span class="ss">) | Y=</span><span class="sc">{</span>y<span class="sc">}</span><span class="ss"> | Direction : '</span><span class="sc">{</span>dir_texte<span class="sc">}</span><span class="ss">' (</span><span class="sc">{</span><span class="bu">type</span>(dir_texte)<span class="sc">}</span><span class="ss">)"</span>)
+    time.sleep_ms(<span class="dv">300</span>)
+</code></pre>
+
+<div class="student-answer">
+  <strong>Question d'analyse :</strong> Quel est le type de donnée des coordonnées <code>x</code> et <code>y</code> ? Quel est le type de donnée de <code>dir_texte</code> ? Que vaut la mesure quand le joystick est au repos ?<br>
+  Type de x/y : __________________ | Type de dir_texte : __________________ | Valeur au repos : ~________________
+</div>
+
+<h3>2.3 Composant 3 : Afficheur LCD 16x2 (Port I2C0)</h3>
+<p>
+  Complétez l'adresse <code>ADDR_LCD</code> avec la valeur trouvée en Partie 1 (<code>0x__</code>) puis testez l'affichage :
+</p>
+
+<pre><code class="language-python"><span class="im">from</span> machine <span class="im">import</span> I2C, Pin
+<span class="im">import</span> time
+
+i2c = I2C(<span class="dv">0</span>, sda=Pin(<span class="dv">8</span>), scl=Pin(<span class="dv">9</span>), freq=<span class="dv">100000</span>)
+
+<span class="co"># TODO : Renseignez l'adresse I2C du LCD trouvée dans la doc Seeed</span>
+ADDR_LCD = <span class="bn">0x__</span>  <span class="co"># &lt;--- À COMPLÉTER (ex: 0x3E)</span>
+
+<span class="kw">def</span> <span class="fu">lcd_commande</span>(cmd):
+    i2c.writeto(ADDR_LCD, <span class="bu">bytes</span>([<span class="bn">0x80</span>, cmd]))
+
+<span class="kw">def</span> <span class="fu">lcd_init</span>():
+    time.sleep_ms(<span class="dv">50</span>)
+    lcd_commande(<span class="bn">0x28</span>)  <span class="co"># 2 lignes 5x8</span>
+    lcd_commande(<span class="bn">0x0C</span>)  <span class="co"># Affichage ON, curseur OFF</span>
+    lcd_commande(<span class="bn">0x01</span>)  <span class="co"># Effacer</span>
+    time.sleep_ms(<span class="dv">2</span>)
+    lcd_commande(<span class="bn">0x06</span>)
+
+<span class="kw">def</span> <span class="fu">lcd_effacer</span>():
+    lcd_commande(<span class="bn">0x01</span>)
+    time.sleep_ms(<span class="dv">2</span>)
+
+<span class="kw">def</span> <span class="fu">lcd_afficher_texte</span>(texte, ligne=<span class="dv">0</span>, colonne=<span class="dv">0</span>):
+    adresse_ram = <span class="bn">0x80</span> + (<span class="bn">0x40</span> * ligne) + colonne
+    lcd_commande(adresse_ram)
+    <span class="cf">for</span> car <span class="kw">in</span> texte:
+        i2c.writeto(ADDR_LCD, <span class="bu">bytes</span>([<span class="bn">0x40</span>, <span class="bu">ord</span>(car)]))
+
+lcd_init()
+lcd_afficher_texte(<span class="st">"BTS CIEL - 1ERE "</span>, ligne=<span class="dv">0</span>, colonne=<span class="dv">0</span>)
+lcd_afficher_texte(<span class="st">"SECURVAULT OK ! "</span>, ligne=<span class="dv">1</span>, colonne=<span class="dv">0</span>)
+<span class="bu">print</span>(<span class="st">"Message envoyé sur le LCD avec succès !"</span>)
+</code></pre>
+
+<h3>2.4 Composant 4 : Matrice 8x8 &amp; Dessin du Cadenas en Ligne (Port I2C0)</h3>
+
+<div class="callout callout-tip">
+  <strong>🛠️ Outil Web Recommandé pour Dessiner le Cadenas :</strong><br>
+  Pour concevoir facilement vos icônes (cadenas fermé, cadenas ouvert, croix d'erreur) sans aucun calcul binaire, utilisez l'éditeur graphique :<br>
+  👉 <a href="https://xantorohara.github.io/led-matrix-editor/" target="_blank" style="font-weight: bold; text-decoration: underline; font-size: 10pt;">
+    https://xantorohara.github.io/led-matrix-editor/ (LED Matrix Editor)
+  </a><br>
+  <span style="font-size: 8.5pt; color: #475569;">
+    Allumez les pixels pour dessiner votre cadenas, choisissez le format <code>Hex</code> et copiez les 8 octets directement dans la liste Python ci-dessous !
+  </span>
+</div>
+
+<p>Complétez l'adresse <code>ADDR_MATRICE = 0x__</code> et testez l'affichage du cadenas :</p>
+
+<pre><code class="language-python"><span class="co"># TODO : Renseignez l'adresse I2C de la matrice trouvée dans la doc (ex: 0x70)</span>
+ADDR_MATRICE = <span class="bn">0x__</span>
+
+<span class="co"># Motif 8x8 généré sur https://xantorohara.github.io/led-matrix-editor/</span>
+ICONE_CADENAS_FERME = [
+    <span class="bn">0x18</span>, <span class="bn">0x24</span>, <span class="bn">0x24</span>, <span class="bn">0x7E</span>, <span class="bn">0x7E</span>, <span class="bn">0x7E</span>, <span class="bn">0x7E</span>, <span class="bn">0x00</span>
+]
+
+<span class="kw">def</span> <span class="fu">matrice_init</span>():
+    i2c.writeto(ADDR_MATRICE, <span class="bu">bytes</span>([<span class="bn">0x21</span>]))  <span class="co"># Oscillateur interne activé</span>
+    i2c.writeto(ADDR_MATRICE, <span class="bu">bytes</span>([<span class="bn">0x81</span>]))  <span class="co"># Affichage allumé</span>
+    i2c.writeto(ADDR_MATRICE, <span class="bu">bytes</span>([<span class="bn">0xEF</span>]))  <span class="co"># Luminosité max</span>
+
+<span class="kw">def</span> <span class="fu">matrice_afficher</span>(motif):
+    tampon = <span class="bu">bytearray</span>(<span class="dv">17</span>)
+    tampon[<span class="dv">0</span>] = <span class="bn">0x00</span>
+    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">8</span>):
+        tampon[<span class="dv">1</span> + i * <span class="dv">2</span>] = motif[i]
+        tampon[<span class="dv">2</span> + i * <span class="dv">2</span>] = <span class="bn">0x00</span>
+    i2c.writeto(ADDR_MATRICE, tampon)
+
+matrice_init()
+matrice_afficher(ICONE_CADENAS_FERME)
+<span class="bu">print</span>(<span class="st">"Cadenas affiché sur la matrice 8x8 !"</span>)
+</code></pre>
+
+<h3>2.5 Composant 5 : Télémètre Laser ToF avec la Bibliothèque <code>vl53l0x.py</code> (Port I2C0)</h3>
+<p>
+  Enregistrez sur le Pico le fichier fourni [<code>vl53l0x.py</code>](file:///c:/Users/Lycee/Documents/GitHub/cours_bts_ciel1/vl53l0x.py).
+  Renseignez son adresse I2C et lancez la mesure :
+</p>
+
+<pre><code class="language-python"><span class="im">from</span> vl53l0x <span class="im">import</span> VL53L0X
+<span class="im">import</span> time
+
+<span class="co"># TODO : Complétez l'adresse I2C du VL53L0X (ex: 0x29)</span>
+ADDR_TOF = <span class="bn">0x__</span>
+
+capteur_tof = VL53L0X(i2c, address=ADDR_TOF)
+
+<span class="cf">while</span> <span class="va">True</span>:
+    distance_mm = capteur_tof.ping()
+    <span class="bu">print</span>(<span class="ss">f"Distance mesurée : </span><span class="sc">{</span>distance_mm<span class="sc">}</span><span class="ss"> mm | Type : </span><span class="sc">{</span><span class="bu">type</span>(distance_mm)<span class="sc">}</span><span class="ss">"</span>)
+    <span class="cf">if</span> distance_mm &lt; <span class="dv">300</span>:
+        <span class="bu">print</span>(<span class="st">"  --> Approche détectée (< 30 cm) !"</span>)
+    time.sleep_ms(<span class="dv">200</span>)
+</code></pre>
+
+<h3>2.6 Composant 6 : Accéléromètre avec la Bibliothèque <code>mma7660.py</code> (Port I2C0)</h3>
+<p>
+  Enregistrez sur le Pico le fichier fourni [<code>mma7660.py</code>](file:///c:/Users/Lycee/Documents/GitHub/cours_bts_ciel1/mma7660.py).
+  Renseignez son adresse I2C et observez la détection de secousse :
+</p>
+
+<pre><code class="language-python"><span class="im">from</span> mma7660 <span class="im">import</span> MMA7660
+<span class="im">import</span> time
+
+<span class="co"># TODO : Complétez l'adresse I2C du MMA7660 (ex: 0x4C)</span>
+ADDR_ACCEL = <span class="bn">0x__</span>
+
+accel = MMA7660(i2c, address=ADDR_ACCEL)
+
+<span class="cf">while</span> <span class="va">True</span>:
+    ax, ay, az = accel.get_xyz()
+    choc = accel.est_secoue(seuil_delta=<span class="fl">0.35</span>)
+    <span class="cf">if</span> choc:
+        <span class="bu">print</span>(<span class="ss">f"[ALERTE] Secousse détectée ! (Choc={choc}, Type={type(choc)})"</span>)
+    <span class="cf">else</span>:
+        <span class="bu">print</span>(<span class="ss">f"Accélérations stables : X=</span><span class="sc">{</span>ax<span class="sc">:.2f}</span><span class="ss">, Y=</span><span class="sc">{</span>ay<span class="sc">:.2f}</span><span class="ss">, Z=</span><span class="sc">{</span>az<span class="sc">:.2f}</span><span class="ss">"</span>)
+    time.sleep_ms(<span class="dv">250</span>)
+</code></pre>
+
+<hr />
+
+<h2>PARTIE 3 : Assemblage du Système par Machine à États Finis (FSM) (70 min)</h2>
+
+<p>
+  Maintenant que chaque brique matérielle est validée, nous assemblons le programme global du coffre-fort <strong>PICO-SECURVAULT</strong>.
+  Comme vu au TP 3, le microcontrôleur exécute une <strong>Machine à États Finis</strong> limpide : un état actif à la fois, aucune boucle bloquante.
+</p>
+
+<h3>Graphe des États du Système</h3>
+<pre class="diagram" style="background:#0f172a; color:#38bdf8; padding:12px; border-radius:6px; font-size:8.5pt;"><code>                                  +---------------------------------------------------------+
+                                  |                                                         |
+                                  v                                                         |
+                           [ETAT_VEILLE] (0)                                                |
+                           /               \                                                |
+          (Approche ToF &lt; 300mm)         (Touche Clavier)                                   |
+                         \                 /                                                |
+                          v               v                                                 |
+                        [ETAT_SAISIE_PIN] (1) &lt;---+ (Chiffre '0'-'9' ou '*')                |
+                                  |               |                                         |
+                             (Touche '#')---------+                                         |
+                                  v                                                         |
+                        [ETAT_VERIF_PIN] (2)                                                |
+                         /                \                                                 |
+          (Code Correct)/                  \(Code Faux &lt; 3)                                 |
+                       v                    v                                               |
+               [ETAT_MENU_ACTIF] (3)   (Affichage Erreur) ----------------------------------+
+                  /          \              |
+        (Joystick/            \(Joystick    |(3e Échec consécutif)
+          DROITE)              GAUCHE)      v
+                v                v    [ETAT_VERROUILLAGE_TEMP] (5)
+      [ETAT_OUVERTURE] (4)       |    (Alarme &amp; Blocage 10s non-bloquant)
+                |                |          |
+                | (Délai 5s)     |          | (Délai 10s écoulé)
+                +----------------+----------+
+                
+     ===> SURVEILLANCE GLOBALE :
+          Si accel.est_secoue() == True  ====>  [ETAT_ALARME_SABOTAGE] (6) (Clignotement 5s)</code></pre>
+
+<h3>Travail Demandé : Compléter le Programme Principal</h3>
+<p>
+  Ouvrez votre fichier principal sous Thonny.
+  Insérez les fonctions pilotes validées en Partie 2 et complétez les blocs d'état repérés par <code># TODO</code> :
+</p>
+
+<pre><code class="language-python"><span class="im">from</span> machine <span class="im">import</span> I2C, Pin, UART, ADC
+<span class="im">import</span> time
+<span class="im">from</span> vl53l0x <span class="im">import</span> VL53L0X
+<span class="im">from</span> mma7660 <span class="im">import</span> MMA7660
+
+<span class="co"># --- INITIALISATIONS SHIELD & BUS ---</span>
+i2c = I2C(<span class="dv">0</span>, sda=Pin(<span class="dv">8</span>), scl=Pin(<span class="dv">9</span>), freq=<span class="dv">100000</span>)
+uart_clavier = UART(<span class="dv">0</span>, baudrate=<span class="dv">9600</span>, tx=Pin(<span class="dv">0</span>), rx=Pin(<span class="dv">1</span>))
+joy_x = ADC(Pin(<span class="dv">26</span>))
+joy_y = ADC(Pin(<span class="dv">27</span>))
+
+<span class="co"># Instanciation capteurs avec leurs adresses</span>
+capteur_tof = VL53L0X(i2c, address=<span class="bn">0x29</span>)
+accel = MMA7660(i2c, address=<span class="bn">0x4C</span>)
+
+<span class="co"># --- ÉTATS DU SYSTÈME ---</span>
+ETAT_VEILLE            = <span class="dv">0</span>
+ETAT_SAISIE_PIN        = <span class="dv">1</span>
+ETAT_VERIF_PIN         = <span class="dv">2</span>
+ETAT_MENU_ACTIF        = <span class="dv">3</span>
+ETAT_OUVERTURE         = <span class="dv">4</span>
+ETAT_VERROUILLAGE_TEMP = <span class="dv">5</span>
+ETAT_ALARME_SABOTAGE   = <span class="dv">6</span>
+
+<span class="co"># --- VARIABLES D'ÉTAT ---</span>
+CODE_SECRET_MAITRE = <span class="st">"1234"</span>
+code_en_cours = <span class="st">""</span>
+nb_erreurs = <span class="dv">0</span>
+etat_courant = ETAT_VEILLE
+t_debut_etat = <span class="dv">0</span>
+
+<span class="co"># (Insérer ici les fonctions lcd_*, matrice_*, lire_touche_clavier, lire_direction_joystick)</span>
+
+lcd_init()
+matrice_init()
+<span class="bu">print</span>(<span class="st">"=== PICO-SECURVAULT OPERATIONNEL ==="</span>)
+
+<span class="cf">while</span> <span class="va">True</span>:
+    <span class="co"># ------------------------------------------------------------------</span>
+    <span class="co"># SURVEILLANCE DU SABOTAGE PHYSIQUE (ACCÉLÉROMÈTRE)</span>
+    <span class="co"># ------------------------------------------------------------------</span>
+    <span class="cf">if</span> etat_courant != ETAT_ALARME_SABOTAGE <span class="kw">and</span> accel.est_secoue(seuil_delta=<span class="fl">0.4</span>):
+        <span class="bu">print</span>(<span class="st">"[ALERTE] Sabotage détecté !"</span>)
+        t_debut_etat = time.ticks_ms()
+        lcd_effacer()
+        lcd_afficher_texte(<span class="st">"ALERTE SABOTAGE!"</span>, <span class="dv">0</span>, <span class="dv">0</span>)
+        lcd_afficher_texte(<span class="st">"CHOC DETECTE !  "</span>, <span class="dv">1</span>, <span class="dv">0</span>)
+        matrice_afficher(ICONES[<span class="st">"ERREUR_X"</span>])
+        etat_courant = ETAT_ALARME_SABOTAGE
+
+    <span class="co"># ------------------------------------------------------------------</span>
+    <span class="co"># ÉTAT 0 : VEILLE AVEC RÉVEIL OPTIQUE ToF</span>
+    <span class="co"># ------------------------------------------------------------------</span>
+    <span class="cf">elif</span> etat_courant == ETAT_VEILLE:
+        matrice_afficher(ICONES[<span class="st">"CADENAS_FERME"</span>])
+        lcd_afficher_texte(<span class="st">"SECURVAULT PRETS"</span>, <span class="dv">0</span>, <span class="dv">0</span>)
+        lcd_afficher_texte(<span class="st">"APPROCHEZ OU PIN"</span>, <span class="dv">1</span>, <span class="dv">0</span>)
+        
+        dist = capteur_tof.ping()
+        touche = lire_touche_clavier()
+
+        <span class="cf">if</span> (dist &lt; <span class="dv">300</span>) <span class="kw">or</span> (touche <span class="kw">and</span> touche.isdigit()):
+            code_en_cours = touche <span class="cf">if</span> (touche <span class="kw">and</span> touche.isdigit()) <span class="cf">else</span> <span class="st">""</span>
+            lcd_effacer()
+            lcd_afficher_texte(<span class="st">"CODE PIN :      "</span>, <span class="dv">0</span>, <span class="dv">0</span>)
+            etoiles = <span class="st">"*"</span> * <span class="bu">len</span>(code_en_cours)
+            lcd_afficher_texte(etoiles + <span class="st">" "</span> * (<span class="dv">16</span> - <span class="bu">len</span>(etoiles)), <span class="dv">1</span>, <span class="dv">0</span>)
+            etat_courant = ETAT_SAISIE_PIN
+
+    <span class="co"># ------------------------------------------------------------------</span>
+    <span class="co"># ÉTAT 1 : SAISIE EN COURS DU CODE PIN (UART)</span>
+    <span class="co"># ------------------------------------------------------------------</span>
+    <span class="cf">elif</span> etat_courant == ETAT_SAISIE_PIN:
+        touche = lire_touche_clavier()
+        <span class="cf">if</span> touche:
+            <span class="cf">if</span> touche.isdigit() <span class="kw">and</span> <span class="bu">len</span>(code_en_cours) &lt; <span class="dv">8</span>:
+                code_en_cours += touche
+                etoiles = <span class="st">"*"</span> * <span class="bu">len</span>(code_en_cours)
+                lcd_afficher_texte(etoiles + <span class="st">" "</span> * (<span class="dv">16</span> - <span class="bu">len</span>(etoiles)), <span class="dv">1</span>, <span class="dv">0</span>)
+            <span class="cf">elif</span> touche == <span class="st">'*'</span>:
+                code_en_cours = code_en_cours[:-<span class="dv">1</span>]
+                etoiles = <span class="st">"*"</span> * <span class="bu">len</span>(code_en_cours)
+                lcd_afficher_texte(etoiles + <span class="st">" "</span> * (<span class="dv">16</span> - <span class="bu">len</span>(etoiles)), <span class="dv">1</span>, <span class="dv">0</span>)
+                <span class="cf">if</span> <span class="bu">len</span>(code_en_cours) == <span class="dv">0</span>:
+                    etat_courant = ETAT_VEILLE
+            <span class="cf">elif</span> touche == <span class="st">'#'</span>:
+                etat_courant = ETAT_VERIF_PIN
+
+    <span class="co"># ------------------------------------------------------------------</span>
+    <span class="co"># ÉTAT 2 : VÉRIFICATION DU CODE PIN (À COMPLÉTER)</span>
+    <span class="co"># ------------------------------------------------------------------</span>
+    <span class="cf">elif</span> etat_courant == ETAT_VERIF_PIN:
+        <span class="co"># TODO : Comparer code_en_cours avec CODE_SECRET_MAITRE</span>
+        <span class="co">#   - Si OUI : réinitialiser nb_erreurs, afficher ETOILE, passer à ETAT_MENU_ACTIF</span>
+        <span class="co">#   - Si NON : incrémenter nb_erreurs, afficher ERREUR_X</span>
+        <span class="co">#        Si nb_erreurs >= 3 -> t_debut_etat = time.ticks_ms() -> ETAT_VERROUILLAGE_TEMP</span>
+        <span class="co">#        Sinon -> retour ETAT_VEILLE</span>
+        <span class="cf">pass</span>
+
+    <span class="co"># ------------------------------------------------------------------</span>
+    <span class="co"># ÉTAT 3 : MENU JOYSTICK ACTIF (À COMPLÉTER)</span>
+    <span class="co"># ------------------------------------------------------------------</span>
+    <span class="cf">elif</span> etat_courant == ETAT_MENU_ACTIF:
+        <span class="co"># TODO : Lire la direction du joystick</span>
+        <span class="co">#   - Si "DROITE" : t_debut_etat = time.ticks_ms() -> passer à ETAT_OUVERTURE</span>
+        <span class="co">#   - Si "GAUCHE" : re-verrouiller -> retour ETAT_VEILLE</span>
+        <span class="cf">pass</span>
+
+    <span class="co"># ------------------------------------------------------------------</span>
+    <span class="co"># ÉTAT 4 : OUVERTURE SAS (À COMPLÉTER)</span>
+    <span class="co"># ------------------------------------------------------------------</span>
+    <span class="cf">elif</span> etat_courant == ETAT_OUVERTURE:
+        <span class="co"># TODO : Afficher CADENAS_OUVERT sur la matrice</span>
+        <span class="co"># TODO : Afficher "SAS DEVERROUILLE" et la distance porte lue par le ToF</span>
+        <span class="co"># TODO : Si time.ticks_diff(time.ticks_ms(), t_debut_etat) >= 5000 -> retour ETAT_VEILLE</span>
+        <span class="cf">pass</span>
+
+    <span class="co"># ------------------------------------------------------------------</span>
+    <span class="co"># ÉTAT 5 : VERROUILLAGE ANTI-INTRUSION 10 SECONDES (À COMPLÉTER)</span>
+    <span class="co"># ------------------------------------------------------------------</span>
+    <span class="cf">elif</span> etat_courant == ETAT_VERROUILLAGE_TEMP:
+        <span class="co"># TODO : Décompte en secondes réelles sur le LCD</span>
+        <span class="co"># TODO : Clignotement de la croix ERREUR_X toutes les 300 ms</span>
+        <span class="co"># TODO : Fin des 10 secondes -> nb_erreurs = 0 -> retour ETAT_VEILLE</span>
+        <span class="cf">pass</span>
+
+    <span class="co"># ------------------------------------------------------------------</span>
+    <span class="co"># ÉTAT 6 : ALARME SABOTAGE PHYSIQUE (À COMPLÉTER)</span>
+    <span class="co"># ------------------------------------------------------------------</span>
+    <span class="cf">elif</span> etat_courant == ETAT_ALARME_SABOTAGE:
+        <span class="co"># TODO : Maintenir l'alarme pendant 5 secondes</span>
+        <span class="co"># TODO : Dès que time.ticks_diff(time.ticks_ms(), t_debut_etat) >= 5000 -> retour ETAT_VEILLE</span>
+        <span class="cf">pass</span>
+
+    time.sleep_ms(<span class="dv">15</span>)
+</code></pre>
+
+<hr />
+
+<h2>PARTIE 4 : Défis Bonus &amp; Grille d'Évaluation (20 min)</h2>
+
+<ul>
+  <li><strong>Défi 1 — Dessin d'icônes personnalisées :</strong> Utilisez <a href="https://xantorohara.github.io/led-matrix-editor/" target="_blank">LED Matrix Editor</a> pour créer un motif personnalisé (ex : une clé, un bouclier de sécurité) et affichez-le sur la matrice lors du déverrouillage.</li>
+  <li><strong>Défi 2 — Changement dynamique du code PIN :</strong> Permettre de changer le code secret via une commande joystick vers le HAUT.</li>
+</ul>
+
+<hr />
+
+<h2>📝 Grille d'Évaluation Pratique (sur 20 points — 3h00)</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width: 28%;">Compétence &amp; Critère</th>
+      <th style="width: 48%;">Indicateurs de réussite</th>
+      <th class="center" style="width: 12%;">Barème</th>
+      <th class="center" style="width: 12%;">Note</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>1. Câblage Grove Shield &amp; Adresses I2C</strong></td>
+      <td>
+        Vérification du switch 3V3, câbles branchés aux bons ports (UART0, A1, I2C0), exactitude des 4 adresses I2C (<code>0x3E</code>, <code>0x70</code>, <code>0x29</code>, <code>0x4C</code>).
+      </td>
+      <td class="center"><strong>4 pts</strong></td>
+      <td class="center"></td>
+    </tr>
+    <tr>
+      <td><strong>2. Validation Unitaire &amp; Types de Données</strong></td>
+      <td>
+        Exécution des 6 codes exemples, affichage des messages reçus et identification correcte des types de données (<code>str</code> pour le clavier, <code>int/str</code> pour le joystick).
+      </td>
+      <td class="center"><strong>5 pts</strong></td>
+      <td class="center"></td>
+    </tr>
+    <tr>
+      <td><strong>3. Machine à États Finis (FSM)</strong></td>
+      <td>
+        Complétion des états 2 à 6, structure sans blocage spaghetti, réveil optique ToF fonctionnel, détection de sabotage prioritaire.
+      </td>
+      <td class="center"><strong>6 pts</strong></td>
+      <td class="center"></td>
+    </tr>
+    <tr>
+      <td><strong>4. Gestion Temporelle Non-Bloquante</strong></td>
+      <td>
+        Décompte de sécurité de 10s et temporisation d'ouverture gérés avec <code>time.ticks_ms()</code> et <code>time.ticks_diff()</code> sans figer le système.
+      </td>
+      <td class="center"><strong>3 pts</strong></td>
+      <td class="center"></td>
+    </tr>
+    <tr>
+      <td><strong>5. Qualité, Rigueur &amp; Autonomie</strong></td>
+      <td>
+        Nommage explicite, modularité, commentaires techniques, prise d'initiative (défis bonus).
+      </td>
+      <td class="center"><strong>2 pts</strong></td>
+      <td class="center"></td>
+    </tr>
+    <tr>
+      <td colspan="2" style="text-align: right; font-weight: bold;">TOTAL :</td>
+      <td class="center"><strong>/ 20</strong></td>
+      <td class="center"></td>
+    </tr>
+  </tbody>
+</table>
+
+</body>
+</html>
