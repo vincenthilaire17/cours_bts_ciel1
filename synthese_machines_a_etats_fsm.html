@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Synthèse : Machines à États Finis (FSM) — BTS CIEL</title>
+    <style>
+        :root {
+            --primary: #0b3c5d;
+            --primary-light: #e0f2fe;
+            --primary-dark: #07273d;
+            --secondary: #328cc1;
+            --accent: #d97706;
+            --success: #15803d;
+            --danger: #b91c1c;
+            --bg-main: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --code-bg: #0f172a;
+            --code-text: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--text-main);
+            background-color: var(--bg-main);
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 30px auto;
+            padding: 0 24px;
+        }
+
+        /* HEADER */
+        header {
+            background: linear-gradient(135deg, #0b3c5d 0%, #1e40af 100%);
+            color: white;
+            padding: 40px 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 14px rgba(11, 60, 93, 0.25);
+            margin-bottom: 30px;
+        }
+
+        header .filiere {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(4px);
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 0.85em;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        header h1 {
+            margin: 0 0 10px 0;
+            font-size: 2.2em;
+            line-height: 1.2;
+            font-weight: 800;
+        }
+
+        header p {
+            margin: 0;
+            font-size: 1.15em;
+            color: #bfdbfe;
+            max-width: 800px;
+        }
+
+        /* SOMMAIRE */
+        .toc-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--secondary);
+            border-radius: 8px;
+            padding: 20px 24px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+        }
+
+        .toc-card h3 {
+            margin: 0 0 12px 0;
+            color: var(--primary);
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 10px;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .toc-grid a {
+            color: #2563eb;
+            text-decoration: none;
+            font-size: 0.95em;
+            font-weight: 500;
+            transition: color 0.15s ease;
+        }
+
+        .toc-grid a:hover {
+            color: #1d4ed8;
+            text-decoration: underline;
+        }
+
+        /* SECTIONS & TITRES */
+        section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 28px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+        }
+
+        h2 {
+            color: var(--primary);
+            font-size: 1.55em;
+            margin-top: 0;
+            margin-bottom: 18px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--primary-light);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        h3 {
+            color: #1e3a8a;
+            font-size: 1.2em;
+            margin-top: 24px;
+            margin-bottom: 12px;
+        }
+
+        p, li {
+            font-size: 1em;
+            color: #334155;
+            line-height: 1.65;
+        }
+
+        /* BADGES */
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            font-size: 0.8em;
+            font-weight: 700;
+            border-radius: 999px;
+            text-transform: uppercase;
+        }
+        .badge-blue { background: #dbeafe; color: #1e40af; }
+        .badge-green { background: #dcfce7; color: #166534; }
+        .badge-amber { background: #fef3c7; color: #92400e; }
+        .badge-purple { background: #f3e8ff; color: #6b21a8; }
+        .badge-red { background: #fee2e2; color: #991b1b; }
+
+        /* BOITES ENCADREES */
+        .callout {
+            border-radius: 8px;
+            padding: 18px 20px;
+            margin: 18px 0;
+            border-left: 5px solid;
+            font-size: 0.98em;
+        }
+        .callout-info {
+            background: #f0f9ff;
+            border-color: #0284c7;
+            color: #075985;
+        }
+        .callout-warn {
+            background: #fffbeb;
+            border-color: #f59e0b;
+            color: #92400e;
+        }
+        .callout-success {
+            background: #f0fdf4;
+            border-color: #22c55e;
+            color: #166534;
+        }
+        .callout .callout-title,
+        .callout > strong:first-child {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 1.05em;
+        }
+        .callout strong:not(:first-child) {
+            display: inline;
+            font-weight: 700;
+        }
+
+        /* SVG CONTAINERS */
+        .svg-container {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            margin: 22px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+            overflow-x: auto;
+        }
+
+        .svg-container svg {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .svg-caption {
+            margin-top: 10px;
+            font-size: 0.88em;
+            color: var(--text-muted);
+            text-align: center;
+            font-style: italic;
+        }
+
+        /* TABLES */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 18px 0;
+            font-size: 0.94em;
+        }
+
+        th, td {
+            border: 1px solid var(--border);
+            padding: 10px 14px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f1f5f9;
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+
+        /* CODE BLOCKS */
+        pre {
+            background-color: var(--code-bg);
+            color: var(--code-text);
+            border-radius: 8px;
+            padding: 16px 20px;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.45;
+            margin: 16px 0;
+            border: 1px solid #1e293b;
+        }
+
+        code {
+            font-family: 'Consolas', 'Courier New', monospace;
+            background-color: #e2e8f0;
+            color: #0f172a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        pre code {
+            background-color: transparent;
+            color: inherit;
+            padding: 0;
+        }
+
+        .keyword { color: #f472b6; font-weight: bold; }
+        .function { color: #38bdf8; }
+        .string { color: #a5f3fc; }
+        .comment { color: #94a3b8; font-style: italic; }
+        .number { color: #fbbf24; }
+        .operator { color: #e2e8f0; }
+
+        /* GRILLE DE COMPARAISON */
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            margin: 20px 0;
+        }
+
+        @media (max-width: 768px) {
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .comp-card {
+            border-radius: 8px;
+            padding: 18px;
+            border: 1px solid var(--border);
+        }
+        .comp-bad {
+            background: #fff5f5;
+            border-color: #fecaca;
+        }
+        .comp-bad h4 {
+            color: #b91c1c;
+            margin-top: 0;
+        }
+        .comp-good {
+            background: #f0fdf4;
+            border-color: #bbf7d0;
+        }
+        .comp-good h4 {
+            color: #15803d;
+            margin-top: 0;
+        }
+
+        /* FOOTER */
+        footer {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9em;
+            padding: 30px 0 20px;
+            border-top: 1px solid var(--border);
+            margin-top: 40px;
+        }
+
+        /* PRINT STYLES */
+        @media print {
+            body {
+                background: white;
+                color: black;
+            }
+            .container {
+                max-width: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            header {
+                background: none;
+                color: black;
+                border: 1px solid #ccc;
+                box-shadow: none;
+                padding: 15px;
+            }
+            header h1 { color: #0b3c5d; }
+            header p { color: #555; }
+            section {
+                box-shadow: none;
+                border: 1px solid #ddd;
+                page-break-inside: avoid;
+            }
+            .svg-container {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- EN-TÊTE -->
+    <header>
+        <span class="filiere">BTS CIEL — Systèmes Numériques &amp; Électronique Embarquée</span>
+        <h1>Fiche de Synthèse : Les Machines à États Finis (FSM)</h1>
+        <p>Modélisation formelle, architecture logicielle non-bloquante et implémentation en MicroPython / C embarqué.</p>
+    </header>
+
+    <!-- SOMMAIRE -->
+    <div class="toc-card">
+        <h3>📑 Table des Matières</h3>
+        <ul class="toc-grid">
+            <li><a href="#section-1">1. Pourquoi la FSM ? (Fin du code Spaghetti)</a></li>
+            <li><a href="#section-2">2. Notions fondamentales &amp; Vocabulaire</a></li>
+            <li><a href="#section-3">3. Modèles de Moore vs Mealy</a></li>
+            <li><a href="#section-4">4. Le Diagramme États-Transitions</a></li>
+            <li><a href="#section-5">5. Implémentation Logicielle en MicroPython</a></li>
+            <li><a href="#section-6">6. Les 5 Règles d'Or du Développeur Embarqué</a></li>
+            <li><a href="#section-7">7. Étude de Cas : Système Anti-Triche Réflexe</a></li>
+        </ul>
+    </div>
+
+    <!-- SECTION 1 -->
+    <section id="section-1">
+        <h2>1. Pourquoi la Machine à États Finis ? (En finir avec le code Spaghetti)</h2>
+        <p>
+            Dans les systèmes embarqués élémentaires, les étudiants débutent souvent en enchaînant des instructions séquentielles bloquantes 
+            (ex: <code>time.sleep(3)</code> ou <code>delay(3000)</code>) et en multipliant des drapeaux booléens 
+            (<code>en_cours = True</code>, <code>bouton_vu = False</code>, <code>alarme_active = True</code>...).
+        </p>
+
+        <div class="comparison-grid">
+            <div class="comp-card comp-bad">
+                <h4>❌ Approche Linéaire Bloquante ("Spaghetti")</h4>
+                <ul>
+                    <li><strong>CPU figé :</strong> Pendant un <code>sleep()</code>, le microcontrôleur est incapable de lire un capteur d'arrêt d'urgence ou un bouton.</li>
+                    <li><strong>Explosion combinatoire :</strong> 5 variables booléennes créent 2<sup>5</sup> = 32 combinaisons d'états souvent imprévisibles et incontrôlées.</li>
+                    <li><strong>Débogage cauchemardesque :</strong> Impossibilité de savoir précisément où en est l'exécution en cas de bug.</li>
+                </ul>
+            </div>
+            <div class="comp-card comp-good">
+                <h4>✅ Approche FSM (Machine à États Finis)</h4>
+                <ul>
+                    <li><strong>Unicité de l'état :</strong> Le système se trouve à chaque instant dans un état précis, unique et exclusif (ex: <code>VEILLE</code>, <code>CHRONO</code>).</li>
+                    <li><strong>Exécution non bloquante :</strong> La boucle maîtresse s'exécute à haute cadence (ex: toutes les 5 ms).</li>
+                    <li><strong>Clarté industrielle :</strong> Correspondance directe 1:1 entre le diagramme théorique et le code source.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- SVG 1 : SPAGHETTI VS FSM -->
+        <div class="svg-container">
+            <svg viewBox="0 0 880 300" width="880" height="300" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="grad-spaghetti" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#fee2e2" />
+                        <stop offset="100%" stop-color="#fecaca" />
+                    </linearGradient>
+                    <linearGradient id="grad-fsm" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#e0f2fe" />
+                        <stop offset="100%" stop-color="#bae6fd" />
+                    </linearGradient>
+                    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 1 L 10 5 L 0 9 z" fill="#0284c7" />
+                    </marker>
+                    <marker id="arrow-spag" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 1 L 10 5 L 0 9 z" fill="#dc2626" />
+                    </marker>
+                </defs>
+
+                <!-- Cadre Spaghetti -->
+                <rect x="20" y="20" width="390" height="260" rx="12" fill="url(#grad-spaghetti)" stroke="#f87171" stroke-width="2" />
+                <text x="215" y="50" font-family="'Segoe UI', sans-serif" font-size="16" font-weight="bold" fill="#991b1b" text-anchor="middle">Architecture Naïve : Code Spaghetti</text>
+
+                <!-- Boites emmêlées spaghetti -->
+                <rect x="50" y="75" width="140" height="36" rx="6" fill="#ffffff" stroke="#ef4444" stroke-width="1.5"/>
+                <text x="120" y="98" font-family="'Consolas', monospace" font-size="12" fill="#7f1d1d" text-anchor="middle">while flag_1 == True</text>
+
+                <rect x="230" y="115" width="150" height="36" rx="6" fill="#fef2f2" stroke="#dc2626" stroke-width="1.5"/>
+                <text x="305" y="138" font-family="'Consolas', monospace" font-size="12" fill="#991b1b" text-anchor="middle">time.sleep(5) ⚠️ BLOCAGE</text>
+
+                <rect x="60" y="165" width="150" height="36" rx="6" fill="#ffffff" stroke="#ef4444" stroke-width="1.5"/>
+                <text x="135" y="188" font-family="'Consolas', monospace" font-size="12" fill="#7f1d1d" text-anchor="middle">if btn and not a_triche</text>
+
+                <rect x="230" y="215" width="140" height="36" rx="6" fill="#ffffff" stroke="#ef4444" stroke-width="1.5"/>
+                <text x="300" y="238" font-family="'Consolas', monospace" font-size="12" fill="#7f1d1d" text-anchor="middle">flag_alarme = True...</text>
+
+                <!-- Trajets désordonnés -->
+                <path d="M 120 111 C 120 140, 240 100, 305 115" fill="none" stroke="#dc2626" stroke-width="2" stroke-dasharray="4" marker-end="url(#arrow-spag)"/>
+                <path d="M 305 151 C 305 180, 200 170, 135 165" fill="none" stroke="#dc2626" stroke-width="2" marker-end="url(#arrow-spag)"/>
+                <path d="M 135 201 C 135 240, 200 230, 230 233" fill="none" stroke="#dc2626" stroke-width="2" stroke-dasharray="3" marker-end="url(#arrow-spag)"/>
+                <path d="M 370 233 C 410 210, 210 60, 190 85" fill="none" stroke="#dc2626" stroke-width="2" marker-end="url(#arrow-spag)"/>
+
+                <!-- Cadre FSM -->
+                <rect x="470" y="20" width="390" height="260" rx="12" fill="url(#grad-fsm)" stroke="#38bdf8" stroke-width="2" />
+                <text x="665" y="50" font-family="'Segoe UI', sans-serif" font-size="16" font-weight="bold" fill="#075985" text-anchor="middle">Architecture Pro : Machine à États (FSM)</text>
+
+                <!-- Anneau FSM ordonné -->
+                <!-- État VEILLE -->
+                <rect x="500" y="100" width="105" height="45" rx="8" fill="#ffffff" stroke="#0284c7" stroke-width="2"/>
+                <text x="552" y="127" font-family="'Segoe UI', sans-serif" font-weight="bold" font-size="12" fill="#0369a1" text-anchor="middle">VEILLE (0)</text>
+
+                <!-- État ACTIF -->
+                <rect x="715" y="100" width="105" height="45" rx="8" fill="#ffffff" stroke="#0284c7" stroke-width="2"/>
+                <text x="767" y="127" font-family="'Segoe UI', sans-serif" font-weight="bold" font-size="12" fill="#0369a1" text-anchor="middle">ACTIF (1)</text>
+
+                <!-- État EVAL -->
+                <rect x="605" y="205" width="120" height="45" rx="8" fill="#ffffff" stroke="#0284c7" stroke-width="2"/>
+                <text x="665" y="232" font-family="'Segoe UI', sans-serif" font-weight="bold" font-size="12" fill="#0369a1" text-anchor="middle">TRAITEMENT (2)</text>
+
+                <!-- Flèches FSM claires -->
+                <path d="M 605 115 L 705 115" fill="none" stroke="#0284c7" stroke-width="2.5" marker-end="url(#arrow)"/>
+                <text x="655" y="105" font-family="'Segoe UI', sans-serif" font-size="10" fill="#0369a1" text-anchor="middle">Événement A</text>
+
+                <path d="M 767 145 C 767 185, 740 215, 725 220" fill="none" stroke="#0284c7" stroke-width="2.5" marker-end="url(#arrow)"/>
+                <text x="765" y="185" font-family="'Segoe UI', sans-serif" font-size="10" fill="#0369a1" text-anchor="middle">Délai écoulé</text>
+
+                <path d="M 605 225 C 550 225, 540 180, 545 155" fill="none" stroke="#0284c7" stroke-width="2.5" marker-end="url(#arrow)"/>
+                <text x="535" y="195" font-family="'Segoe UI', sans-serif" font-size="10" fill="#0369a1" text-anchor="middle">Fin calcul</text>
+            </svg>
+            <div class="svg-caption">Figure 1 : Comparaison structurelle entre code linéaire enchevêtré et Machine à États cadencée.</div>
+        </div>
+    </section>
+
+    <!-- SECTION 2 -->
+    <section id="section-2">
+        <h2>2. Notions Fondamentales &amp; Vocabulaire Technique</h2>
+        <p>Une Machine à États Finis (en anglais <em>Finite State Machine</em> ou <strong>FSM</strong>) est un modèle mathématique composé de 4 piliers essentiels :</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 22%;">Concept</th>
+                    <th style="width: 38%;">Définition Formelle</th>
+                    <th style="width: 40%;">Exemple Système Embarqué</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>État (State)</strong></td>
+                    <td>Situation stable et identifiable dans laquelle se trouve le système pendant une durée donnée. L'état détermine le comportement présent.</td>
+                    <td><code>ETAT_ATTENTE</code> : La LED jaune est allumée, le chronomètre est armé.</td>
+                </tr>
+                <tr>
+                    <td><strong>Événement (Event / Input)</strong></td>
+                    <td>Stimulus d'entrée (externe ou interne) susceptible de provoquer une réaction du système.</td>
+                    <td>Front montant sur le bouton poussoir (<code>bouton.value() == 1</code>) ou fin de temporisation.</td>
+                </tr>
+                <tr>
+                    <td><strong>Condition de Garde</strong></td>
+                    <td>Condition booléenne supplémentaire requise pour autoriser la transition lors de la survenue de l'événement.</td>
+                    <td><code>[temps_ecoule &lt; seuil_max]</code> ou <code>[temperature &gt; 50°C]</code>.</td>
+                </tr>
+                <tr>
+                    <td><strong>Transition</strong></td>
+                    <td>Passage instantané et exclusif d'un état source à un état cible, validé par un événement vérifiant la garde.</td>
+                    <td>Basculement de <code>ETAT_VEILLE</code> vers <code>ETAT_ARMEMENT</code>.</td>
+                </tr>
+                <tr>
+                    <td><strong>Action</strong></td>
+                    <td>Opération exécutée par le microcontrôleur. Elle peut être liée à l'état ou à la transition.</td>
+                    <td>Émettre un bip sonore, allumer une LED, incrémenter un compteur.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- SVG 2 : ANATOMIE D'UNE TRANSITION -->
+        <div class="svg-container">
+            <svg viewBox="0 0 880 260" width="880" height="260" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="box-grad1" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="#ffffff"/>
+                        <stop offset="100%" stop-color="#f8fafc"/>
+                    </linearGradient>
+                    <filter id="shadow" x="-5%" y="-5%" width="115%" height="115%">
+                        <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#0f172a" flood-opacity="0.08"/>
+                    </filter>
+                    <marker id="arrow-green" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                        <path d="M 0 1 L 10 5 L 0 9 z" fill="#059669" />
+                    </marker>
+                </defs>
+
+                <!-- État Source -->
+                <g filter="url(#shadow)">
+                    <rect x="40" y="35" width="230" height="185" rx="12" fill="url(#box-grad1)" stroke="#0b3c5d" stroke-width="2.5"/>
+                    <rect x="40" y="35" width="230" height="42" rx="12" fill="#0b3c5d"/>
+                    <rect x="40" y="65" width="230" height="12" fill="#0b3c5d"/>
+                    <text x="155" y="62" font-family="'Segoe UI', sans-serif" font-weight="bold" font-size="15" fill="#ffffff" text-anchor="middle">ÉTAT SOURCE</text>
+                    
+                    <text x="55" y="112" font-family="'Consolas', monospace" font-size="12"><tspan font-weight="bold" fill="#0284c7">entry / </tspan><tspan fill="#1e293b">Allumer LED Jaune</tspan></text>
+                    <text x="55" y="145" font-family="'Consolas', monospace" font-size="12"><tspan font-weight="bold" fill="#475569">do / </tspan><tspan fill="#1e293b">Surveiller bouton</tspan></text>
+                    <text x="55" y="178" font-family="'Consolas', monospace" font-size="12"><tspan font-weight="bold" fill="#dc2626">exit / </tspan><tspan fill="#1e293b">Éteindre LED Jaune</tspan></text>
+                </g>
+
+                <!-- Transition Flèche & Cartouche -->
+                <g>
+                    <path d="M 275 128 L 600 128" fill="none" stroke="#059669" stroke-width="3" marker-end="url(#arrow-green)"/>
+                    
+                    <!-- Cartouche d'explication syntaxique UML -->
+                    <rect x="295" y="55" width="285" height="58" rx="8" fill="#ecfdf5" stroke="#10b981" stroke-width="1.5" filter="url(#shadow)"/>
+                    <text x="437" y="78" font-family="'Segoe UI', sans-serif" font-weight="bold" font-size="13" fill="#065f46" text-anchor="middle">Syntaxe Standard d'une Transition</text>
+                    <text x="437" y="99" font-family="'Consolas', monospace" font-weight="bold" font-size="13" fill="#047857" text-anchor="middle">Événement [Garde] / Action()</text>
+                </g>
+
+                <!-- État Cible -->
+                <g filter="url(#shadow)">
+                    <rect x="610" y="35" width="230" height="185" rx="12" fill="url(#box-grad1)" stroke="#0b3c5d" stroke-width="2.5"/>
+                    <rect x="610" y="35" width="230" height="42" rx="12" fill="#0b3c5d"/>
+                    <rect x="610" y="65" width="230" height="12" fill="#0b3c5d"/>
+                    <text x="725" y="62" font-family="'Segoe UI', sans-serif" font-weight="bold" font-size="15" fill="#ffffff" text-anchor="middle">ÉTAT CIBLE</text>
+
+                    <text x="625" y="112" font-family="'Consolas', monospace" font-size="12"><tspan font-weight="bold" fill="#0284c7">entry / </tspan><tspan fill="#1e293b">Déclencher Buzzer</tspan></text>
+                    <text x="625" y="145" font-family="'Consolas', monospace" font-size="12"><tspan font-weight="bold" fill="#475569">do / </tspan><tspan fill="#1e293b">Compteur temps ms</tspan></text>
+                    <text x="625" y="178" font-family="'Consolas', monospace" font-size="12"><tspan font-weight="bold" fill="#dc2626">exit / </tspan><tspan fill="#1e293b">Sauvegarder score</tspan></text>
+                </g>
+            </svg>
+            <div class="svg-caption">Figure 2 : Anatomie d'un état (actions Entry/Do/Exit) et formalisme d'une transition avec garde et action.</div>
+        </div>
+    </section>
+
+    <!-- SECTION 3 -->
+    <section id="section-3">
+        <h2>3. Les Deux Grandes Familles : Moore vs Mealy</h2>
+        <p>En électronique numérique et en programmation embarquée, on distingue deux architectures fondamentales pour calculer les signaux de sortie :</p>
+
+        <!-- SVG 3 : MOORE VS MEALY -->
+        <div class="svg-container">
+            <svg viewBox="0 0 880 320" width="880" height="320" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <marker id="arr-b" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 1 L 10 5 L 0 9 z" fill="#1e40af" />
+                    </marker>
+                    <marker id="arr-p" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 1 L 10 5 L 0 9 z" fill="#7c3aed" />
+                    </marker>
+                    <marker id="arr-r" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 1 L 10 5 L 0 9 z" fill="#dc2626" />
+                    </marker>
+                </defs>
+
+                <!-- MACHINE DE MOORE -->
+                <rect x="20" y="20" width="405" height="280" rx="10" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5"/>
+                <text x="222" y="48" font-family="'Segoe UI', sans-serif" font-size="16" font-weight="bold" fill="#1e3a8a" text-anchor="middle">Automate de MOORE</text>
+                <text x="222" y="68" font-family="'Segoe UI', sans-serif" font-size="12" fill="#64748b" text-anchor="middle">Les sorties dépendent UNIQUEMENT de l'état actif</text>
+
+                <!-- Blocs Moore -->
+                <rect x="70" y="115" width="85" height="50" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="112" y="137" font-family="'Segoe UI', sans-serif" font-size="11" font-weight="bold" fill="#1e40af" text-anchor="middle">Logique Futur</text>
+                <text x="112" y="153" font-family="'Segoe UI', sans-serif" font-size="9" fill="#1e40af" text-anchor="middle">(Combinatoire)</text>
+
+                <rect x="185" y="115" width="80" height="50" rx="6" fill="#bfdbfe" stroke="#1d4ed8" stroke-width="1.5"/>
+                <text x="225" y="137" font-family="'Segoe UI', sans-serif" font-size="11" font-weight="bold" fill="#1e3a8a" text-anchor="middle">État Actuel</text>
+                <text x="225" y="153" font-family="'Segoe UI', sans-serif" font-size="9" fill="#1e3a8a" text-anchor="middle">(Registre)</text>
+
+                <rect x="295" y="115" width="85" height="50" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="337" y="137" font-family="'Segoe UI', sans-serif" font-size="11" font-weight="bold" fill="#1e40af" text-anchor="middle">Logique Sortie</text>
+                <text x="337" y="153" font-family="'Segoe UI', sans-serif" font-size="9" fill="#1e40af" text-anchor="middle">(Combinatoire)</text>
+
+                <!-- Flèches Moore -->
+                <path d="M 28 140 L 68 140" stroke="#1e40af" stroke-width="2" marker-end="url(#arr-b)"/>
+                <text x="48" y="125" font-size="10" font-weight="bold" fill="#1e40af" text-anchor="middle">Entrées</text>
+                <path d="M 155 140 L 183 140" stroke="#1e40af" stroke-width="2" marker-end="url(#arr-b)"/>
+                <path d="M 265 140 L 293 140" stroke="#1e40af" stroke-width="2" marker-end="url(#arr-b)"/>
+                <path d="M 380 140 L 415 140" stroke="#1e40af" stroke-width="2" marker-end="url(#arr-b)"/>
+                <text x="398" y="125" font-size="10" font-weight="bold" fill="#1e40af" text-anchor="middle">Sorties</text>
+                <!-- Boucle rétroaction Moore -->
+                <path d="M 225 165 L 225 210 L 112 210 L 112 167" fill="none" stroke="#1e40af" stroke-width="2" marker-end="url(#arr-b)"/>
+                <text x="168" y="202" font-size="10" fill="#64748b" text-anchor="middle">Retour État Présent</text>
+
+                <text x="222" y="270" font-family="'Segoe UI', sans-serif" font-size="11" fill="#047857" font-weight="bold" text-anchor="middle">✅ Robuste, synchrone, exempt de parasites (glitches).</text>
+
+                <!-- MACHINE DE MEALY -->
+                <rect x="455" y="20" width="405" height="280" rx="10" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5"/>
+                <text x="657" y="48" font-family="'Segoe UI', sans-serif" font-size="16" font-weight="bold" fill="#6b21a8" text-anchor="middle">Automate de MEALY</text>
+                <text x="657" y="68" font-family="'Segoe UI', sans-serif" font-size="12" fill="#64748b" text-anchor="middle">Les sorties dépendent de l'état ET des entrées directes</text>
+
+                <!-- Blocs Mealy -->
+                <rect x="505" y="115" width="85" height="50" rx="6" fill="#f3e8ff" stroke="#a855f7" stroke-width="1.5"/>
+                <text x="547" y="137" font-family="'Segoe UI', sans-serif" font-size="11" font-weight="bold" fill="#6b21a8" text-anchor="middle">Logique Futur</text>
+                <text x="547" y="153" font-family="'Segoe UI', sans-serif" font-size="9" fill="#6b21a8" text-anchor="middle">(Combinatoire)</text>
+
+                <rect x="620" y="115" width="80" height="50" rx="6" fill="#e9d5ff" stroke="#7e22ce" stroke-width="1.5"/>
+                <text x="660" y="137" font-family="'Segoe UI', sans-serif" font-size="11" font-weight="bold" fill="#581c87" text-anchor="middle">État Actuel</text>
+                <text x="660" y="153" font-family="'Segoe UI', sans-serif" font-size="9" fill="#581c87" text-anchor="middle">(Registre)</text>
+
+                <rect x="730" y="115" width="85" height="50" rx="6" fill="#f3e8ff" stroke="#a855f7" stroke-width="1.5"/>
+                <text x="772" y="137" font-family="'Segoe UI', sans-serif" font-size="11" font-weight="bold" fill="#6b21a8" text-anchor="middle">Logique Sortie</text>
+                <text x="772" y="153" font-family="'Segoe UI', sans-serif" font-size="9" fill="#6b21a8" text-anchor="middle">(Combinatoire)</text>
+
+                <!-- Flèches Mealy -->
+                <path d="M 463 140 L 503 140" stroke="#7c3aed" stroke-width="2" marker-end="url(#arr-p)"/>
+                <text x="483" y="160" font-size="10" font-weight="bold" fill="#7c3aed" text-anchor="middle">Entrées</text>
+                <path d="M 590 140 L 618 140" stroke="#7c3aed" stroke-width="2" marker-end="url(#arr-p)"/>
+                <path d="M 700 140 L 728 140" stroke="#7c3aed" stroke-width="2" marker-end="url(#arr-p)"/>
+                <path d="M 815 140 L 850 140" stroke="#7c3aed" stroke-width="2" marker-end="url(#arr-p)"/>
+                <text x="833" y="125" font-size="10" font-weight="bold" fill="#7c3aed" text-anchor="middle">Sorties</text>
+                
+                <!-- Boucle rétroaction Mealy -->
+                <path d="M 660 165 L 660 210 L 547 210 L 547 167" fill="none" stroke="#7c3aed" stroke-width="2" marker-end="url(#arr-p)"/>
+                <text x="603" y="202" font-size="10" fill="#64748b" text-anchor="middle">Retour État Présent</text>
+
+                <!-- Point de dérivation et entrée directe vers sortie (Mealy) -->
+                <circle cx="483" cy="140" r="3.5" fill="#dc2626"/>
+                <path d="M 483 140 L 483 88 Q 483 80 493 80 L 762 80 Q 772 80 772 88 L 772 112" fill="none" stroke="#dc2626" stroke-width="2" stroke-dasharray="4" marker-end="url(#arr-r)"/>
+                <text x="628" y="72" font-size="10" fill="#dc2626" font-weight="bold" text-anchor="middle">Lien direct Entrée ➔ Sortie (Asynchrone)</text>
+
+                <text x="657" y="270" font-family="'Segoe UI', sans-serif" font-size="11" fill="#b45309" font-weight="bold" text-anchor="middle">⚡ Réaction instantanée mais sensible aux aléas transitoires.</text>
+            </svg>
+            <div class="svg-caption">Figure 3 : Schéma structurel comparant les automates synchrones de Moore et les automates réactifs de Mealy.</div>
+        </div>
+
+        <div class="callout callout-info">
+            <strong class="callout-title">Recommandation BTS CIEL :</strong>
+            En microcontrôleur (RP2040, STM32, ESP32), privilégiez le <strong>modèle de Moore</strong> : associez les commandes d'actionneurs 
+            directement aux blocs de l'état actif. Cela garantit un code beaucoup plus lisible, déterministe et simple à tester.
+        </div>
+    </section>
+
+    <!-- SECTION 4 -->
+    <section id="section-4">
+        <h2>4. Le Diagramme États-Transitions Complet</h2>
+        <p>
+            Ci-dessous le graphe d'états correspondant au système réel du <strong>TP 3 Pico-Réflexe</strong> 
+            (Banc de test des réflexes arcade avec sécurité anti-triche et seuil analogique) :
+        </p>
+
+        <!-- SVG 4 : DIAGRAMME D'ÉTATS COMPLET -->
+        <div class="svg-container">
+            <svg viewBox="0 0 920 440" width="920" height="440" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <marker id="f-arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 1 L 10 5 L 0 9 z" fill="#0b3c5d" />
+                    </marker>
+                    <marker id="f-red" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 1 L 10 5 L 0 9 z" fill="#dc2626" />
+                    </marker>
+                    <marker id="f-green" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 1 L 10 5 L 0 9 z" fill="#16a34a" />
+                    </marker>
+                    <filter id="f-shadow" x="-5%" y="-5%" width="112%" height="115%">
+                        <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.1"/>
+                    </filter>
+                </defs>
+
+                <!-- POINT INITIAL -->
+                <circle cx="40" cy="110" r="12" fill="#0b3c5d"/>
+                <path d="M 52 110 L 95 110" stroke="#0b3c5d" stroke-width="2.5" marker-end="url(#f-arrow)"/>
+
+                <!-- ÉTAT 0 : VEILLE -->
+                <g filter="url(#f-shadow)">
+                    <rect x="100" y="80" width="130" height="60" rx="10" fill="#f0f9ff" stroke="#0284c7" stroke-width="2"/>
+                    <text x="165" y="105" font-family="'Segoe UI', sans-serif" font-weight="bold" font-size="12" fill="#0369a1" text-anchor="middle">ETAT_VEILLE (0)</text>
+                    <text x="165" y="125" font-family="'Segoe UI', sans-serif" font-size="10" fill="#075985" text-anchor="middle">LED Jaune ON / Lire ADC</text>
+                </g>
+
+                <!-- TRANSITION 0 -> 1 -->
+                <path d="M 230 110 L 305 110" stroke="#0b3c5d" stroke-width="2.5" marker-end="url(#f-arrow)"/>
+                <text x="268" y="100" font-family="'Segoe UI', sans-serif" font-size="10" font-weight="bold" fill="#0b3c5d" text-anchor="middle">Appui Bouton</text>
+
+                <!-- ÉTAT 1 : ARMEMENT -->
+                <g filter="url(#f-shadow)">
+                    <rect x="310" y="80" width="130" height="60" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+                    <text x="375" y="105" font-family="'Segoe UI', sans-serif" font-weight="bold" font-size="12" fill="#92400e" text-anchor="middle">ETAT_ARMEMENT (1)</text>
+                    <text x="375" y="125" font-family="'Segoe UI', sans-serif" font-size="10" fill="#78350f" text-anchor="middle">Bip 440Hz / rand(2,5s)</text>
+                </g>
+
+                <!-- TRANSITION 1 -> 2 -->
+                <path d="M 440 110 L 515 110" stroke="#0b3c5d" stroke-width="2.5" marker-end="url(#f-arrow)"/>
+                <text x="478" y="100" font-family="'Segoe UI', sans-serif" font-size="10" font-weight="bold" fill="#0b3c5d" text-anchor="middle">Immédiat</text>
+
+                <!-- ÉTAT 2 : ATTENTE ALEATOIRE -->
+                <g filter="url(#f-shadow)">
+                    <rect x="520" y="80" width="160" height="60" rx="10" fill="#f1f5f9" stroke="#475569" stroke-width="2"/>
+                    <text x="600" y="105" font-family="'Segoe UI', sans-serif" font-weight="bold" font-size="12" fill="#1e293b" text-anchor="middle">ATTENTE_ALEATOIRE (2)</text>
+                    <text x="600" y="125" font-family="'Segoe UI', sans-serif" font-size="10" fill="#475569" text-anchor="middle">Surveillance Bouton/Délai</text>
+                </g>
+
+                <!-- BRANCHE TRICHE (2 -> 4) -->
+                <path d="M 600 140 L 600 235" stroke="#dc2626" stroke-width="2.5" marker-end="url(#f-red)"/>
+                <text x="645" y="185" font-family="'Segoe UI', sans-serif" font-size="10" font-weight="bold" fill="#dc2626" text-anchor="middle">Appui Bouton (Faux Départ !)</text>
+
+                <!-- ÉTAT 4 : TRICHE -->
+                <g filter="url(#f-shadow)">
+                    <rect x="525" y="240" width="150" height="60" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+                    <text x="600" y="265" font-family="'Segoe UI', sans-serif" font-weight="bold" font-size="12" fill="#991b1b" text-anchor="middle">ETAT_TRICHE (4)</text>
+                    <text x="600" y="285" font-family="'Segoe UI', sans-serif" font-size="10" fill="#7f1d1d" text-anchor="middle">LED Rouge / Alarme 180Hz</text>
+                </g>
+
+                <!-- BRANCHE NORMALE (2 -> 3) -->
+                <path d="M 680 110 L 755 110" stroke="#16a34a" stroke-width="2.5" marker-end="url(#f-green)"/>
+                <text x="718" y="100" font-family="'Segoe UI', sans-serif" font-size="10" font-weight="bold" fill="#16a34a" text-anchor="middle">Délai écoulé</text>
+
+                <!-- ÉTAT 3 : CHRONO -->
+                <g filter="url(#f-shadow)">
+                    <rect x="760" y="80" width="140" height="60" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+                    <text x="830" y="105" font-family="'Segoe UI', sans-serif" font-weight="bold" font-size="12" fill="#166534" text-anchor="middle">CHRONO_REACTION (3)</text>
+                    <text x="830" y="125" font-family="'Segoe UI', sans-serif" font-size="10" fill="#14532d" text-anchor="middle">LED Verte / TOP 880Hz</text>
+                </g>
+
+                <!-- TRANSITION 3 -> 5 (ÉVALUATION) : Contourne l'état triche par le bas -->
+                <path d="M 830 140 L 830 320 Q 830 328 820 328 L 440 328 Q 430 328 430 318 L 430 305" fill="none" stroke="#0b3c5d" stroke-width="2.5" marker-end="url(#f-arrow)"/>
+                <rect x="560" y="318" width="140" height="20" rx="4" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+                <text x="630" y="332" font-family="'Segoe UI', sans-serif" font-size="10" font-weight="bold" fill="#0b3c5d" text-anchor="middle">Appui OU Timeout</text>
+
+                <!-- TRANSITION 4 -> 5 -->
+                <path d="M 525 270 L 465 270" stroke="#0b3c5d" stroke-width="2.5" marker-end="url(#f-arrow)"/>
+                <text x="495" y="260" font-family="'Segoe UI', sans-serif" font-size="10" fill="#0b3c5d" text-anchor="middle">Fin alerte</text>
+
+                <!-- ÉTAT 5 : EVALUATION -->
+                <g filter="url(#f-shadow)">
+                    <rect x="310" y="240" width="150" height="60" rx="10" fill="#f3e8ff" stroke="#7e22ce" stroke-width="2"/>
+                    <text x="385" y="265" font-family="'Segoe UI', sans-serif" font-weight="bold" font-size="12" fill="#581c87" text-anchor="middle">ETAT_EVALUATION (5)</text>
+                    <text x="385" y="285" font-family="'Segoe UI', sans-serif" font-size="10" fill="#6b21a8" text-anchor="middle">Enreg score / Manche += 1</text>
+                </g>
+
+                <!-- RETOUR VERS VEILLE SI MANCHE <= 5 -->
+                <path d="M 330 240 C 310 180, 200 170, 165 145" fill="none" stroke="#0284c7" stroke-width="2" stroke-dasharray="4" marker-end="url(#f-arrow)"/>
+                <text x="210" y="200" font-family="'Segoe UI', sans-serif" font-size="10" font-weight="bold" fill="#0284c7" text-anchor="middle">[manche &lt;= 5]</text>
+
+                <!-- TRANSITION 5 -> 6 (FIN SESSION SI MANCHE > 5) -->
+                <path d="M 385 300 L 385 350" stroke="#7e22ce" stroke-width="2.5" marker-end="url(#f-arrow)"/>
+                <text x="440" y="330" font-family="'Segoe UI', sans-serif" font-size="10" font-weight="bold" fill="#7e22ce" text-anchor="middle">[manche &gt; 5]</text>
+
+                <!-- ÉTAT 6 : FIN SESSION -->
+                <g filter="url(#f-shadow)">
+                    <rect x="305" y="355" width="160" height="60" rx="10" fill="#fdf4ff" stroke="#a21caf" stroke-width="2"/>
+                    <text x="385" y="380" font-family="'Segoe UI', sans-serif" font-weight="bold" font-size="12" fill="#701a75" text-anchor="middle">ETAT_FIN_SESSION (6)</text>
+                    <text x="385" y="400" font-family="'Segoe UI', sans-serif" font-size="10" fill="#86198f" text-anchor="middle">Stats (min, moy) / Rejouer</text>
+                </g>
+
+                <!-- RETOUR 6 -> VEILLE -->
+                <path d="M 305 385 C 80 385, 80 200, 140 145" fill="none" stroke="#0b3c5d" stroke-width="2" marker-end="url(#f-arrow)"/>
+                <text x="120" y="365" font-family="'Segoe UI', sans-serif" font-size="10" font-weight="bold" fill="#0b3c5d" text-anchor="middle">Appui Bouton (Nouvelle Session)</text>
+            </svg>
+            <div class="svg-caption">Figure 4 : Graphe d'états complet du système PICO-RÉFLEXE avec transitions conditionnelles et gestion d'erreurs.</div>
+        </div>
+    </section>
+
+    <!-- SECTION 5 -->
+    <section id="section-5">
+        <h2>5. Implémentation Logicielle en MicroPython</h2>
+        <p>Le patron de conception canonique d'une FSM en MicroPython repose sur une boucle <code>while True:</code> principale et une aiguille <code>if / elif</code> cadencée de manière régulière :</p>
+
+        <pre><code><span class="comment"># --- CONSTANTES D'ÉTATS (Lisibilité &amp; Maintenance) ---</span>
+<span class="keyword">ETAT_VEILLE</span>            <span class="operator">=</span> <span class="number">0</span>
+<span class="keyword">ETAT_ARMEMENT</span>          <span class="operator">=</span> <span class="number">1</span>
+<span class="keyword">ETAT_ATTENTE_ALEATOIRE</span> <span class="operator">=</span> <span class="number">2</span>
+<span class="keyword">ETAT_CHRONO_REACTION</span>   <span class="operator">=</span> <span class="number">3</span>
+<span class="keyword">ETAT_TRICHE</span>            <span class="operator">=</span> <span class="number">4</span>
+
+<span class="comment"># Variable d'état initiale</span>
+etat <span class="operator">=</span> <span class="keyword">ETAT_VEILLE</span>
+
+<span class="comment"># --- BOUCLE MAÎTRESSE NON-BLOQUANTE ---</span>
+<span class="keyword">while</span> <span class="keyword">True</span>:
+    <span class="comment"># 1. ÉTAT VEILLE : Surveillance de l'entrée</span>
+    <span class="keyword">if</span> etat <span class="operator">==</span> <span class="keyword">ETAT_VEILLE</span>:
+        led_jaune.value(<span class="number">1</span>)
+        <span class="keyword">if</span> bouton.value() <span class="operator">==</span> <span class="number">1</span>:
+            attendre_relachement()
+            led_jaune.value(<span class="number">0</span>)
+            etat <span class="operator">=</span> <span class="keyword">ETAT_ARMEMENT</span>  <span class="comment"># &lt;-- Transition</span>
+
+    <span class="comment"># 2. ÉTAT ARMEMENT : Initialisation temporelle</span>
+    <span class="keyword">elif</span> etat <span class="operator">==</span> <span class="keyword">ETAT_ARMEMENT</span>:
+        bip(<span class="number">440</span>, <span class="number">150</span>)
+        delai_ms <span class="operator">=</span> random_intervalle(<span class="number">2000</span>, <span class="number">5000</span>)
+        t_debut <span class="operator">=</span> time.ticks_ms()
+        etat <span class="operator">=</span> <span class="keyword">ETAT_ATTENTE_ALEATOIRE</span>  <span class="comment"># &lt;-- Transition immédiate</span>
+
+    <span class="comment"># 3. ÉTAT ATTENTE NON-BLOQUANTE &amp; DÉTECTION ÉVÉNEMENTS</span>
+    <span class="keyword">elif</span> etat <span class="operator">==</span> <span class="keyword">ETAT_ATTENTE_ALEATOIRE</span>:
+        <span class="keyword">if</span> bouton.value() <span class="operator">==</span> <span class="number">1</span>:
+            <span class="comment"># Événement Faux Départ !</span>
+            attendre_relachement()
+            etat <span class="operator">=</span> <span class="keyword">ETAT_TRICHE</span>     <span class="comment"># &lt;-- Transition d'erreur</span>
+        <span class="keyword">elif</span> time.ticks_diff(time.ticks_ms(), t_debut) <span class="operator">&gt;=</span> delai_ms:
+            <span class="comment"># Événement Délai expiré !</span>
+            etat <span class="operator">=</span> <span class="keyword">ETAT_CHRONO_REACTION</span>
+
+    <span class="comment"># 4. ÉTAT TRICHE : Traitement de la sanction</span>
+    <span class="keyword">elif</span> etat <span class="operator">==</span> <span class="keyword">ETAT_TRICHE</span>:
+        alerte_sonore_stridente()
+        etat <span class="operator">=</span> <span class="keyword">ETAT_VEILLE</span>
+
+    time.sleep_ms(<span class="number">5</span>)  <span class="comment"># Cadencement de la boucle (Échantillonnage 200 Hz)</span></code></pre>
+    </section>
+
+    <!-- SECTION 6 -->
+    <section id="section-6">
+        <h2>6. Les 5 Règles d'Or du Développeur Embarqué</h2>
+
+        <div class="callout callout-success">
+            <strong>Règle 1 : Nommer les états sous forme de constantes parlantes</strong>
+            Bannir les nombres magiques (ex: <code>etat = 2</code>). Utiliser des identifiants explicites : <code>ETAT_ATTENTE</code>, <code>ETAT_ALARME</code>.
+        </div>
+
+        <div class="callout callout-warn">
+            <strong>Règle 2 : Proscrire les attentes bloquantes (<code>time.sleep</code>) dans la boucle active</strong>
+            Un <code>sleep(2)</code> bloque le traitement des interruptions et désactive la scrutation des boutons. Utiliser le couple <code>time.ticks_ms()</code> / <code>time.ticks_diff()</code>.
+        </div>
+
+        <div class="callout callout-info">
+            <strong>Règle 3 : Assurer l'anti-rebond matériel ou logiciel</strong>
+            Un bouton mécanique rebondit pendant 5 à 20 ms. Veillez à toujours attendre le relâchement ou utiliser une fonction de débouçage pour ne pas franchir deux transitions d'affilée.
+        </div>
+
+        <div class="callout callout-info">
+            <strong>Règle 4 : Toujours prévoir un état de repli ou de sécurité (Failsafe)</strong>
+            En cas de valeur imprévue ou d'erreur capteur, le bloc <code>else:</code> doit ramener le système vers un état de sécurité connu (ex: <code>ETAT_VEILLE</code>).
+        </div>
+
+        <div class="callout callout-success">
+            <strong>Règle 5 : Écrire la table de transition avant de coder</strong>
+            Poser sur papier la matrice (État Actuel × Événement ➔ Nouvel État + Actions) avant d'écrire la moindre ligne de code permet d'éliminer 90% des bugs d'architecture.
+        </div>
+    </section>
+
+    <!-- SECTION 7 -->
+    <section id="section-7">
+        <h2>7. Matrice de Transition (Table de Vérité FSM)</h2>
+        <p>Ce tableau constitue la spécification formelle indispensable pour les revues de code et le dossier technique de BTS CIEL :</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>État Courant</th>
+                    <th>Événement / Condition</th>
+                    <th>Actions Déclenchées</th>
+                    <th>État Futur</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>ETAT_VEILLE</code></td>
+                    <td>Bouton pressé (<code>BP == 1</code>)</td>
+                    <td>Éteindre LED Jaune, bip court</td>
+                    <td><code>ETAT_ARMEMENT</code></td>
+                </tr>
+                <tr>
+                    <td><code>ETAT_ARMEMENT</code></td>
+                    <td>Calcul aléatoire terminé</td>
+                    <td>Horodatage <code>t_debut</code>, tirage <code>delai</code></td>
+                    <td><code>ETAT_ATTENTE_ALEATOIRE</code></td>
+                </tr>
+                <tr>
+                    <td><code>ETAT_ATTENTE_ALEATOIRE</code></td>
+                    <td>Bouton pressé prématurément</td>
+                    <td>Incrémenter pénalité, son d'alarme</td>
+                    <td><code>ETAT_TRICHE</code></td>
+                </tr>
+                <tr>
+                    <td><code>ETAT_ATTENTE_ALEATOIRE</code></td>
+                    <td>Délai écoulé (<code>delta_t &gt;= delai</code>)</td>
+                    <td>Allumer LED Verte, bip aigu TOP</td>
+                    <td><code>ETAT_CHRONO_REACTION</code></td>
+                </tr>
+                <tr>
+                    <td><code>ETAT_CHRONO_REACTION</code></td>
+                    <td>Bouton pressé</td>
+                    <td>Calcul du temps de réaction, LED retour</td>
+                    <td><code>ETAT_EVALUATION</code></td>
+                </tr>
+                <tr>
+                    <td><code>ETAT_CHRONO_REACTION</code></td>
+                    <td>Temps &gt; seuil potentiomètre</td>
+                    <td>Signal temps écoulé, pénalité</td>
+                    <td><code>ETAT_EVALUATION</code></td>
+                </tr>
+                <tr>
+                    <td><code>ETAT_TRICHE</code></td>
+                    <td>Sanction de 1s terminée</td>
+                    <td>Extinction alarme</td>
+                    <td><code>ETAT_EVALUATION</code></td>
+                </tr>
+                <tr>
+                    <td><code>ETAT_EVALUATION</code></td>
+                    <td>Manche &lt;= 5</td>
+                    <td>Préparation manche suivante</td>
+                    <td><code>ETAT_VEILLE</code></td>
+                </tr>
+                <tr>
+                    <td><code>ETAT_EVALUATION</code></td>
+                    <td>Manche &gt; 5</td>
+                    <td>Calcul moyenne et meilleur score</td>
+                    <td><code>ETAT_FIN_SESSION</code></td>
+                </tr>
+                <tr>
+                    <td><code>ETAT_FIN_SESSION</code></td>
+                    <td>Appui Bouton</td>
+                    <td>Réinitialisation des variables</td>
+                    <td><code>ETAT_VEILLE</code></td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- PIED DE PAGE -->
+    <footer>
+        <p><strong>BTS CIEL — 1<sup>re</sup> Année</strong> | Systèmes Numériques &amp; Électronique Embarquée</p>
+        <p>Document pédagogique de référence — Microcontrôleurs RP2040 / MicroPython</p>
+    </footer>
+
+</div>
+
+</body>
+</html>
