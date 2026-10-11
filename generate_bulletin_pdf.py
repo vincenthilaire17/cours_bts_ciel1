@@ -1,5 +1,5 @@
 # ==============================================================================
-# BILAN COMPLET OFFICIEL DE LA CLASSE BTS CIEL 1 — 15 COPIES
+# BILAN COMPLET OFFICIEL DE LA CLASSE BTS CIEL 1 — 15 COPIES (NOMS SEULS)
 # ==============================================================================
 import os
 from reportlab.lib.pagesizes import A4
@@ -11,12 +11,11 @@ from reportlab.platypus import (
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT, TA_JUSTIFY
 
-# Liste exhaustive des 15 élèves
+# Liste exhaustive des 15 élèves (Noms seuls, sans prénoms)
 ELEVES_15 = [
     {
         "rang": 1,
         "nom": "DEVIER",
-        "prenom": "Rémi",
         "partie_a": 6.50,
         "partie_b": 3.00,
         "partie_c": 9.00,
@@ -27,7 +26,6 @@ ELEVES_15 = [
     {
         "rang": 2,
         "nom": "RICHARD",
-        "prenom": "Clément",
         "partie_a": 6.50,
         "partie_b": 2.75,
         "partie_c": 8.75,
@@ -38,7 +36,6 @@ ELEVES_15 = [
     {
         "rang": 3,
         "nom": "TREIBER",
-        "prenom": "",
         "partie_a": 6.00,
         "partie_b": 3.75,
         "partie_c": 8.00,
@@ -49,7 +46,6 @@ ELEVES_15 = [
     {
         "rang": 4,
         "nom": "CRIT",
-        "prenom": "",
         "partie_a": 6.00,
         "partie_b": 2.75,
         "partie_c": 7.50,
@@ -60,7 +56,6 @@ ELEVES_15 = [
     {
         "rang": 5,
         "nom": "GUILLOT",
-        "prenom": "Yaan",
         "partie_a": 5.75,
         "partie_b": 3.00,
         "partie_c": 5.50,
@@ -71,7 +66,6 @@ ELEVES_15 = [
     {
         "rang": 6,
         "nom": "BOUSSAGUET",
-        "prenom": "Clément",
         "partie_a": 5.00,
         "partie_b": 2.50,
         "partie_c": 6.00,
@@ -81,8 +75,7 @@ ELEVES_15 = [
     },
     {
         "rang": 7,
-        "nom": "DIEGO",
-        "prenom": "",
+        "nom": "HAILLOT",
         "partie_a": 4.75,
         "partie_b": 1.25,
         "partie_c": 5.75,
@@ -92,8 +85,7 @@ ELEVES_15 = [
     },
     {
         "rang": 8,
-        "nom": "GUILLOD",
-        "prenom": "Mathis",
+        "nom": "YACOUBI",
         "partie_a": 4.50,
         "partie_b": 2.75,
         "partie_c": 4.00,
@@ -104,7 +96,6 @@ ELEVES_15 = [
     {
         "rang": 9,
         "nom": "CURTAT",
-        "prenom": "Maxime",
         "partie_a": 3.00,
         "partie_b": 1.25,
         "partie_c": 6.50,
@@ -115,7 +106,6 @@ ELEVES_15 = [
     {
         "rang": 10,
         "nom": "RUGGIERO",
-        "prenom": "",
         "partie_a": 3.75,
         "partie_b": 2.75,
         "partie_c": 3.75,
@@ -126,7 +116,6 @@ ELEVES_15 = [
     {
         "rang": 11,
         "nom": "CUBAS",
-        "prenom": "Frédéric",
         "partie_a": 4.00,
         "partie_b": 1.75,
         "partie_c": 3.00,
@@ -137,7 +126,6 @@ ELEVES_15 = [
     {
         "rang": 12,
         "nom": "EROUART",
-        "prenom": "Titouan",
         "partie_a": 2.50,
         "partie_b": 1.25,
         "partie_c": 2.75,
@@ -148,7 +136,6 @@ ELEVES_15 = [
     {
         "rang": 13,
         "nom": "LEBLANC",
-        "prenom": "Noam",
         "partie_a": 5.25,
         "partie_b": 0.75,
         "partie_c": 0.00,
@@ -159,7 +146,6 @@ ELEVES_15 = [
     {
         "rang": 14,
         "nom": "MARTIN",
-        "prenom": "",
         "partie_a": 2.25,
         "partie_b": 1.50,
         "partie_c": 2.00,
@@ -170,7 +156,6 @@ ELEVES_15 = [
     {
         "rang": 15,
         "nom": "ALDARADE",
-        "prenom": "Léo",
         "partie_a": 3.25,
         "partie_b": 1.25,
         "partie_c": 0.75,
@@ -227,8 +212,8 @@ def build_pdf(filename="Bilan_Evaluation_MicroPython_BTS_CIEL.pdf"):
         'CellText',
         parent=styles['Normal'],
         fontName='Helvetica',
-        fontSize=8,
-        leading=10.5,
+        fontSize=8.5,
+        leading=11,
         textColor=colors.HexColor('#1e293b')
     )
 
@@ -305,7 +290,7 @@ def build_pdf(filename="Bilan_Evaluation_MicroPython_BTS_CIEL.pdf"):
     
     table_headers = [
         Paragraph("<b>Rang</b>", style_cell_center),
-        Paragraph("<b>Nom &amp; Prénom</b>", style_cell_center),
+        Paragraph("<b>Nom de l'Élève</b>", style_cell_center),
         Paragraph("<b>Partie A<br/>(/7)</b>", style_cell_center),
         Paragraph("<b>Partie B<br/>(/4)</b>", style_cell_center),
         Paragraph("<b>Partie C<br/>(/9)</b>", style_cell_center),
@@ -326,7 +311,7 @@ def build_pdf(filename="Bilan_Evaluation_MicroPython_BTS_CIEL.pdf"):
 
         rows.append([
             Paragraph(str(e["rang"]), style_cell_center),
-            Paragraph(f"<b>{e['nom']}</b> {e['prenom']}", style_cell),
+            Paragraph(f"<b>{e['nom']}</b>", style_cell_center),
             Paragraph(f"{e['partie_a']:.2f}", style_cell_center),
             Paragraph(f"{e['partie_b']:.2f}", style_cell_center),
             Paragraph(f"{e['partie_c']:.2f}", style_cell_center),
@@ -379,7 +364,7 @@ def build_pdf(filename="Bilan_Evaluation_MicroPython_BTS_CIEL.pdf"):
     for idx, e in enumerate(ELEVES_15):
         card_data = [
             [
-                Paragraph(f"<b>{e['rang']}. {e['nom']} {e['prenom']}</b>", ParagraphStyle('NomEleve', parent=style_h2, fontSize=11, textColor=colors.HexColor('#0b3c5d'))),
+                Paragraph(f"<b>{e['rang']}. {e['nom']}</b>", ParagraphStyle('NomEleve', parent=style_h2, fontSize=11, textColor=colors.HexColor('#0b3c5d'))),
                 Paragraph(f"<b>NOTE FINALE : <font size=11 color='#0b3c5d'>{e['note']:.2f} / 20</font></b> ({e['mention']})", ParagraphStyle('NoteEleve', parent=style_cell_bold, alignment=TA_RIGHT))
             ],
             [
@@ -408,12 +393,11 @@ def build_pdf(filename="Bilan_Evaluation_MicroPython_BTS_CIEL.pdf"):
         story.append(t_card)
         story.append(Spacer(1, 8))
         
-        # Saut de page tous les 4 élèves pour un rendu équilibré sur 4 pages supplémentaires
         if (idx + 1) % 4 == 0 and idx != len(ELEVES_15) - 1:
             story.append(PageBreak())
 
     doc.build(story)
-    print(f"[SUCCÈS] Document PDF officiel généré pour les 15 élèves : {filename}")
+    print(f"[SUCCÈS] Document PDF officiel régénéré (Noms seuls) : {filename}")
 
 if __name__ == "__main__":
     build_pdf("c:\\Users\\vince\\OneDrive\\Documents\\GitHub\\cours_bts_ciel1\\Bilan_Evaluation_MicroPython_BTS_CIEL.pdf")

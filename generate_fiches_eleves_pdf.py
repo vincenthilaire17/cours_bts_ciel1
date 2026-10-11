@@ -16,7 +16,6 @@ FICHES = [
     {
         "rang": 1,
         "nom": "DEVIER",
-        "prenom": "Rémi",
         "note": 18.50,
         "mention": "Très Bien (Major de promotion)",
         "scores": {
@@ -34,7 +33,6 @@ FICHES = [
     {
         "rang": 2,
         "nom": "RICHARD",
-        "prenom": "Clément",
         "note": 18.00,
         "mention": "Très Bien",
         "scores": {
@@ -52,7 +50,6 @@ FICHES = [
     {
         "rang": 3,
         "nom": "TREIBER",
-        "prenom": "",
         "note": 17.75,
         "mention": "Très Bien",
         "scores": {
@@ -70,7 +67,6 @@ FICHES = [
     {
         "rang": 4,
         "nom": "CRIT",
-        "prenom": "",
         "note": 16.25,
         "mention": "Très Bien",
         "scores": {
@@ -88,7 +84,6 @@ FICHES = [
     {
         "rang": 5,
         "nom": "GUILLOT",
-        "prenom": "Yaan",
         "note": 14.25,
         "mention": "Bien",
         "scores": {
@@ -106,7 +101,6 @@ FICHES = [
     {
         "rang": 6,
         "nom": "BOUSSAGUET",
-        "prenom": "Clément",
         "note": 13.50,
         "mention": "Assez Bien",
         "scores": {
@@ -123,8 +117,7 @@ FICHES = [
     },
     {
         "rang": 7,
-        "nom": "DIEGO",
-        "prenom": "",
+        "nom": "HAILLOT",
         "note": 11.75,
         "mention": "Passable",
         "scores": {
@@ -141,8 +134,7 @@ FICHES = [
     },
     {
         "rang": 8,
-        "nom": "GUILLOD",
-        "prenom": "Mathis",
+        "nom": "YACOUBI",
         "note": 11.25,
         "mention": "Passable",
         "scores": {
@@ -160,7 +152,6 @@ FICHES = [
     {
         "rang": 9,
         "nom": "CURTAT",
-        "prenom": "Maxime",
         "note": 10.75,
         "mention": "Passable",
         "scores": {
@@ -178,7 +169,6 @@ FICHES = [
     {
         "rang": 10,
         "nom": "RUGGIERO",
-        "prenom": "",
         "note": 10.25,
         "mention": "Passable",
         "scores": {
@@ -196,7 +186,6 @@ FICHES = [
     {
         "rang": 11,
         "nom": "CUBAS",
-        "prenom": "Frédéric",
         "note": 8.75,
         "mention": "Insuffisant",
         "scores": {
@@ -214,7 +203,6 @@ FICHES = [
     {
         "rang": 12,
         "nom": "EROUART",
-        "prenom": "Titouan",
         "note": 6.50,
         "mention": "Insuffisant",
         "scores": {
@@ -232,13 +220,12 @@ FICHES = [
     {
         "rang": 13,
         "nom": "LEBLANC",
-        "prenom": "Noam",
         "note": 6.00,
         "mention": "Insuffisant",
         "scores": {
             "A1": (1.50, 3.0, "Logique active basse bien comprise (0 à l'appui). Rôle du pull-up vague."),
             "A2": (3.75, 4.0, "Très bonne analyse PWM : 3 itérations (300, 500, 700), coupure sonore et fréquence 1000 Hz exactes."),
-            "B1": (0.25, 2.0) : "Partie quasi-vierge."),
+            "B1": (0.25, 2.0, "Partie quasi-vierge."),
             "B2": (0.50, 2.0, "Formule posée, mais erreur d'unité (0.5 Hz au lieu de 500 Hz)."),
             "C1": (0.00, 3.0, "Exercice laissé vierge."),
             "C2": (0.00, 6.0, "Exercice laissé vierge.")
@@ -250,7 +237,6 @@ FICHES = [
     {
         "rang": 14,
         "nom": "MARTIN",
-        "prenom": "",
         "note": 5.75,
         "mention": "Insuffisant",
         "scores": {
@@ -268,7 +254,6 @@ FICHES = [
     {
         "rang": 15,
         "nom": "ALDARADE",
-        "prenom": "Léo",
         "note": 5.25,
         "mention": "Insuffisant",
         "scores": {
@@ -408,7 +393,7 @@ def build_fiches_pdf(filename="Fiches_Individuelles_Eleves_BTS_CIEL.pdf"):
 
         id_data = [
             [
-                Paragraph(f"<b>ÉLÈVE :</b> <font size=12 color='#0b3c5d'><b>{e['nom']}</b> {e['prenom']}</font>", style_cell),
+                Paragraph(f"<b>ÉLÈVE :</b> <font size=12 color='#0b3c5d'><b>{e['nom']}</b></font>", style_cell),
                 Paragraph(f"<b>RANG :</b> <b>{e['rang']} / 15</b>", style_cell_center),
                 Paragraph(f"<b>NOTE FINALE :</b> <font size=14 color='{c_badge}'><b>{e['note']:.2f} / 20</b></font>", style_cell_center)
             ],
