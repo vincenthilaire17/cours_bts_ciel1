@@ -105,6 +105,16 @@ ELEVES_15 = [
     },
     {
         "rang": 10,
+        "nom": "CUBAS",
+        "partie_a": 5.00,
+        "partie_b": 2.75,
+        "partie_c": 3.00,
+        "note": 10.75,
+        "mention": "Passable",
+        "appreciation": "Moyenne atteinte ! Très bonne progression sur la compréhension du matériel (logique PULL_UP, PWM et quantification ADC). La démarche algorithmique sur la fonction et le mini-projet montre de bonnes bases qu'il faut consolider sur machine."
+    },
+    {
+        "rang": 11,
         "nom": "RUGGIERO",
         "partie_a": 3.75,
         "partie_b": 2.75,
@@ -112,16 +122,6 @@ ELEVES_15 = [
         "note": 10.25,
         "mention": "Passable",
         "appreciation": "Moyenne tout juste atteinte. Calcul du rapport cyclique exact (25%). Attention à ne pas remplacer les structures if/elif par des boucles while successives qui bloquent l'exécution du microcontrôleur."
-    },
-    {
-        "rang": 11,
-        "nom": "CUBAS",
-        "partie_a": 4.00,
-        "partie_b": 1.75,
-        "partie_c": 3.00,
-        "note": 8.75,
-        "mention": "Insuffisant",
-        "appreciation": "Compréhension correcte de la logique binaire du bouton et de l'extinction PWM. En revanche, confusions d'unités physiques (période en ms) et mini-projet inachevé. Poursuivre l'entraînement sur machine."
     },
     {
         "rang": 12,

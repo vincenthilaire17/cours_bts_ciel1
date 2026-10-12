@@ -168,6 +168,23 @@ FICHES = [
     },
     {
         "rang": 10,
+        "nom": "CUBAS",
+        "note": 10.75,
+        "mention": "Passable",
+        "scores": {
+            "A1": (2.00, 3.0, "Niveau de repos à 1 et appui à 0 bien identifiés. Rôle de la résistance de tirage et de l'état flottant mieux appréhendé."),
+            "A2": (3.00, 4.0, "Coupure sonore par duty_u16(0) comprise. Analyse PWM bien menée sur les itérations et la fréquence 1000 Hz."),
+            "B1": (1.50, 2.0, "Bonne définition de la grandeur numérique binaire face à la tension convertie par l'ADC."),
+            "B2": (1.25, 2.0, "Formule f = 1/T posée et application numérique correcte. Notion de rapport cyclique amorcée."),
+            "C1": (1.00, 3.0, "Boucle for ébauchée, mais a placé cadence dans le range au lieu de nb_bips, absence de temporisations."),
+            "C2": (2.00, 6.0, "Configuration amorcée, mais la boucle while True s'arrête prématurément après la lecture ADC.")
+        },
+        "points_forts": "Bonne compréhension de la logique Tout-Ou-Rien, du PWM et de la conversion analogique-numérique.",
+        "axes_progres": "Apprendre à structurer une boucle for d'itération et approfondir l'algorithmique sur machine.",
+        "conseil": "Moyenne atteinte ! Poursuivez vos efforts avec régularité lors des travaux pratiques."
+    },
+    {
+        "rang": 11,
         "nom": "RUGGIERO",
         "note": 10.25,
         "mention": "Passable",
@@ -182,23 +199,6 @@ FICHES = [
         "points_forts": "Bonne intuition sur le rapport cyclique PWM et compréhension générale du cahier des charges.",
         "axes_progres": "Ne jamais utiliser de boucles while pour tester des conditions mutuellement exclusives (utiliser if / elif).",
         "conseil": "Moyenne tout juste atteinte, il faut structurer davantage votre code."
-    },
-    {
-        "rang": 11,
-        "nom": "CUBAS",
-        "note": 8.75,
-        "mention": "Insuffisant",
-        "scores": {
-            "A1": (1.75, 3.0, "Niveau de repos à 1 et appui à 0 bien identifiés. Rôle de la temporisation trop succinct."),
-            "A2": (2.25, 4.0, "Coupure sonore par duty_u16(0) comprise. A oublié la 3e note (700) et s'est trompé sur le calcul de volume (moitié et non double)."),
-            "B1": (1.25, 2.0, "Bonne définition de la valeur numérique binaire face à la tension convertie."),
-            "B2": (0.50, 2.0, "Formule f = 1/T posée, mais confusion d'unités dans le calcul (1/2000)."),
-            "C1": (1.00, 3.0, "Boucle for ébauchée, mais a placé cadence dans le range au lieu de nb_bips, absence de temporisations."),
-            "C2": (2.00, 6.0, "Configuration amorcée, mais la boucle while True s'arrête prématurément après la lecture ADC.")
-        },
-        "points_forts": "Bonne compréhension de la logique Tout-Ou-Rien et du rôle de l'ADC.",
-        "axes_progres": "Apprendre à structurer une boucle for d'itération et soigner les conversions d'unités.",
-        "conseil": "Des bases présentes, un travail régulier sur machine permettra de progresser."
     },
     {
         "rang": 12,
@@ -369,6 +369,9 @@ def build_fiches_pdf(filename="Fiches_Individuelles_Eleves_BTS_CIEL.pdf"):
 
     story = []
 
+    notes_classe = [e["note"] for e in FICHES]
+    moy_classe = sum(notes_classe) / len(notes_classe)
+
     for idx, e in enumerate(FICHES):
         # -------------------------------------------------------------
         # EN-TÊTE DE LA FICHE
@@ -400,7 +403,7 @@ def build_fiches_pdf(filename="Fiches_Individuelles_Eleves_BTS_CIEL.pdf"):
             [
                 Paragraph(f"<b>Promotion :</b> BTS CIEL 1re Année | Durée : 1h30", style_cell),
                 Paragraph(f"<b>Mention :</b> <font color='{c_badge}'><b>{e['mention']}</b></font>", style_cell_center),
-                Paragraph("<b>Moyenne de classe :</b> 11,63 / 20", style_cell_center)
+                Paragraph(f"<b>Moyenne de classe :</b> {moy_classe:.2f} / 20".replace('.', ','), style_cell_center)
             ]
         ]
         t_id = Table(id_data, colWidths=[8.0*cm, 4.5*cm, 5.5*cm])
