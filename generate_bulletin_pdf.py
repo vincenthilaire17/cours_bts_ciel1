@@ -75,6 +75,16 @@ ELEVES_15 = [
     },
     {
         "rang": 7,
+        "nom": "CURTAT",
+        "partie_a": 4.00,
+        "partie_b": 1.25,
+        "partie_c": 7.50,
+        "note": 12.75,
+        "mention": "Assez Bien",
+        "appreciation": "Très bon travail d'ensemble et nette progression ! Excellente maîtrise algorithmique sur la fonction paramétrée C.1 et très bonne structure du mini-projet C.2. L'analyse de code en Partie A est solide."
+    },
+    {
+        "rang": 8,
         "nom": "HAILLOT",
         "partie_a": 4.75,
         "partie_b": 1.25,
@@ -84,7 +94,7 @@ ELEVES_15 = [
         "appreciation": "Moyenne atteinte avec de très belles aptitudes pratiques en programmation : le code du mini-projet C.2 est l'un des plus complets et structurés du groupe. Consolider les définitions théoriques de cours (pull-up, ADC)."
     },
     {
-        "rang": 8,
+        "rang": 9,
         "nom": "YACOUBI",
         "partie_a": 4.50,
         "partie_b": 2.75,
@@ -92,16 +102,6 @@ ELEVES_15 = [
         "note": 11.25,
         "mention": "Passable",
         "appreciation": "Ensemble convenable. Les calculs physiques (fréquence et rapport cyclique PWM) sont maîtrisés sans faute. En revanche, l'écriture de fonctions paramétrées et la méthode .value() sur les broches sont à consolider."
-    },
-    {
-        "rang": 9,
-        "nom": "CURTAT",
-        "partie_a": 3.00,
-        "partie_b": 1.25,
-        "partie_c": 6.50,
-        "note": 10.75,
-        "mention": "Passable",
-        "appreciation": "Moyenne obtenue. Excellente écriture de la fonction paramétrée C.1 (boucle for et sleep bien rythmés). Attention aux confusions d'unités physiques sur la période et à la syntaxe des méthodes (val = pot.read_u16())."
     },
     {
         "rang": 10,

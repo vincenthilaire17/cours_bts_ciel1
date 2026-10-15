@@ -117,6 +117,23 @@ FICHES = [
     },
     {
         "rang": 7,
+        "nom": "CURTAT",
+        "note": 12.75,
+        "mention": "Assez Bien",
+        "scores": {
+            "A1": (1.50, 3.0, "Niveau de repos à 1 et logique du bouton bien retenus. Rôle de la boucle anti-rebond mieux explicité."),
+            "A2": (2.50, 4.0, "Bonne explication de la coupure sonore et des paramètres de la fonction jouer_note."),
+            "B1": (0.75, 2.0, "Mentionne le signal binaire 0 et 1. Valeurs du potentiomètre non indiquées."),
+            "B2": (0.50, 2.0, "Formule f = 1/T juste, mais attention à l'erreur d'unité : 2 ms = 0.002 s (donne 500 Hz et non 0.5 Hz)."),
+            "C1": (3.00, 3.0, "Sans faute sur la fonction réutilisable : boucle for, alternance allumage/extinction et temporisations parfaites."),
+            "C2": (4.50, 6.0, "Très belle structure générale de la boucle while True : les 3 plages, les LEDs et les alertes sont bien gérées.")
+        },
+        "points_forts": "Excellente écriture algorithmique sur la Partie C (fonctions et boucle de régulation).",
+        "axes_progres": "Vigilance sur les conversions d'unités physiques en électronique (ms en s).",
+        "conseil": "Mention Assez Bien amplement méritée, continuez avec cette même rigueur."
+    },
+    {
+        "rang": 8,
         "nom": "HAILLOT",
         "note": 11.75,
         "mention": "Passable",
@@ -133,7 +150,7 @@ FICHES = [
         "conseil": "Du potentiel pratique indéniable, il faut désormais soigner la théorie."
     },
     {
-        "rang": 8,
+        "rang": 9,
         "nom": "YACOUBI",
         "note": 11.25,
         "mention": "Passable",
@@ -148,23 +165,6 @@ FICHES = [
         "points_forts": "Bonne maîtrise des calculs physiques PWM et des configurations d'entrées/sorties.",
         "axes_progres": "Revoir la syntaxe des boucles for et s'entraîner à coder plus vite pour finir les sujets.",
         "conseil": "Résultats convenables, intensifiez l'entraînement sur machine."
-    },
-    {
-        "rang": 9,
-        "nom": "CURTAT",
-        "note": 10.75,
-        "mention": "Passable",
-        "scores": {
-            "A1": (1.00, 3.0, "A bien retenu que le bouton renvoie 1 au repos. Rôle de la résistance et de la boucle anti-rebond non compris."),
-            "A2": (2.00, 4.0, "Bonne explication de la coupure sonore. Attention : a confondu la borne 300 avec le nombre d'itérations."),
-            "B1": (0.75, 2.0, "Mentionne le signal binaire 0 et 1. Valeurs du potentiomètre non indiquées."),
-            "B2": (0.50, 2.0, "Formule f = 1/T juste, mais attention à l'erreur d'unité : 2 ms = 0.002 s (donne 500 Hz et non 0.5 Hz)."),
-            "C1": (2.75, 3.0, "Très belle écriture de la fonction réutilisable : boucle for, alternance allumage/extinction et temporisations parfaites."),
-            "C2": (3.75, 6.0, "Structure générale bien posée. Attention à la syntaxe val = pot.read_u16() et à ne pas utiliser de boucles while bloquantes.")
-        },
-        "points_forts": "Excellente écriture algorithmique sur l'Exercice C.1.",
-        "axes_progres": "Vigilance sur les conversions d'unités physiques et éviter les boucles while à l'intérieur d'un état.",
-        "conseil": "Moyenne atteinte, le travail sur la fonction montre de vraies capacités."
     },
     {
         "rang": 10,
