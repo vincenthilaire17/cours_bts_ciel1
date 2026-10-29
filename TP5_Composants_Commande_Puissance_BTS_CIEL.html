@@ -1,0 +1,2341 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>TP 5 : PICO-DRIVEBENCH — Composants Discrets, Proteus &amp; Commande/Puissance — BTS CIEL (5h)</title>
+  <style>
+    :root {
+      --primary: #0b3c5d;
+      --primary-light: #e0f2fe;
+      --secondary: #1d4ed8;
+      --accent: #d97706;
+      --cmd-blue: #0284c7;
+      --cmd-bg: #f0f9ff;
+      --pwr-red: #dc2626;
+      --pwr-bg: #fef2f2;
+      --sim-purple: #7c3aed;
+      --sim-bg: #f5f3ff;
+      --real-green: #15803d;
+      --real-bg: #f0fdf4;
+      --bg-page: #f8fafc;
+      --bg-card: #ffffff;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --border: #cbd5e1;
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      color: var(--text-main);
+      background-color: var(--bg-page);
+      scroll-behavior: smooth;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.58;
+      color: var(--text-main);
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 18px 20px 70px 20px;
+    }
+
+    @page {
+      margin: 1.3cm;
+      size: A4;
+    }
+
+    @media print {
+      body {
+        max-width: 100%;
+        padding: 0;
+        font-size: 9.5pt;
+        color: #000;
+        background: #fff;
+      }
+      .no-print {
+        display: none !important;
+      }
+      section, .card-block {
+        box-shadow: none !important;
+        border: 1px solid #cbd5e1 !important;
+      }
+      pre, blockquote, table, .svg-card, .callout {
+        page-break-inside: avoid;
+      }
+      h1, h2, h3, h4 {
+        page-break-after: avoid;
+      }
+      a {
+        color: #000;
+        text-decoration: underline;
+      }
+    }
+
+    /* Barre supérieure collante */
+    .top-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 16px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+    }
+    .top-bar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .back-link {
+      font-weight: 700;
+      color: var(--primary);
+      text-decoration: none;
+      font-size: 9.5pt;
+      padding: 5px 10px;
+      border-radius: 6px;
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+    }
+    .back-link:hover { background: #e2e8f0; text-decoration: none; }
+
+    .progress-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 9pt;
+      font-weight: 600;
+      color: #334155;
+    }
+    .progress-track {
+      width: 150px;
+      height: 10px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #0284c7, #16a34a);
+      transition: width 0.25s ease;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+      padding: 7px 13px;
+      font-size: 9pt;
+      font-weight: 700;
+      font-family: inherit;
+      transition: transform 0.1s ease, opacity 0.15s ease, box-shadow 0.15s ease;
+      text-decoration: none;
+    }
+    .btn:hover { opacity: 0.93; text-decoration: none; }
+    .btn:active { transform: translateY(1px); }
+    .btn-primary {
+      background: linear-gradient(135deg, #1d4ed8, #0b3c5d);
+      color: #ffffff;
+      box-shadow: 0 2px 6px rgba(29, 78, 216, 0.25);
+    }
+    .btn-docs {
+      background: linear-gradient(135deg, #15803d, #0f766e);
+      color: #ffffff;
+      box-shadow: 0 2px 6px rgba(21, 128, 61, 0.25);
+    }
+    .btn-outline {
+      background: #ffffff;
+      color: #1e293b;
+      border: 1px solid #cbd5e1;
+    }
+
+    /* En-tête principal */
+    .header-box {
+      background: linear-gradient(135deg, #0b3c5d 0%, #1e3a8a 100%);
+      color: #ffffff;
+      border-radius: 12px;
+      padding: 24px 26px;
+      margin-bottom: 22px;
+      box-shadow: 0 6px 18px rgba(11, 60, 93, 0.2);
+    }
+    .header-kicker {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.16);
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 8.5pt;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .header-box h1 {
+      color: #ffffff;
+      font-size: 19pt;
+      margin: 0 0 10px 0;
+      border: none;
+      padding: 0;
+      line-height: 1.25;
+    }
+    .header-subtitle {
+      color: #dbeafe;
+      font-size: 10.5pt;
+      margin: 0 0 14px 0;
+    }
+    .header-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 9pt;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .meta-pill {
+      background: rgba(15, 23, 42, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 4px 10px;
+      border-radius: 6px;
+      color: #f8fafc;
+    }
+
+    /* Titres */
+    h1, h2, h3, h4 {
+      color: var(--primary);
+      font-weight: 700;
+      line-height: 1.28;
+    }
+    h2 {
+      font-size: 14.5pt;
+      margin-top: 30px;
+      margin-bottom: 12px;
+      color: #0b3c5d;
+      border-left: 5px solid var(--secondary);
+      padding: 6px 0 6px 12px;
+      background: linear-gradient(90deg, #eff6ff 0%, transparent 100%);
+      border-radius: 0 6px 6px 0;
+    }
+    h3 {
+      font-size: 11.8pt;
+      margin-top: 20px;
+      margin-bottom: 8px;
+      border-left: 4px solid #328cc1;
+      padding-left: 9px;
+      color: #0f3a5d;
+    }
+    h4 {
+      font-size: 10.5pt;
+      margin-top: 14px;
+      margin-bottom: 6px;
+      color: #1e293b;
+    }
+    p { margin: 0.75em 0; }
+
+    /* Sections cartes */
+    .card-block {
+      background: var(--bg-card);
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 20px 22px;
+      margin-bottom: 22px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      font-size: 8.2pt;
+      font-weight: 700;
+      border-radius: 4px;
+      background-color: #e0f2fe;
+      color: #0369a1;
+      margin-right: 4px;
+      vertical-align: middle;
+    }
+    .badge-bo { background: #0b3c5d; color: #ffffff; }
+    .badge-sim { background: #ede9fe; color: #6d28d9; border: 1px solid #ddd6fe; }
+    .badge-real { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+    .badge-cmd { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+    .badge-pwr { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+    .badge-time { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+
+    /* Encadrés pédagogiques */
+    .callout {
+      margin: 14px 0;
+      padding: 13px 16px;
+      border-radius: 8px;
+      border-left: 5px solid #0284c7;
+      background-color: #f0f9ff;
+      font-size: 9.5pt;
+    }
+    .callout-warn {
+      border-left-color: #f59e0b;
+      background-color: #fffbeb;
+    }
+    .callout-danger {
+      border-left-color: #dc2626;
+      background-color: #fef2f2;
+    }
+    .callout-tip {
+      border-left-color: #16a34a;
+      background-color: #f0fdf4;
+    }
+    .callout-proteus {
+      border-left-color: #7c3aed;
+      background-color: #f5f3ff;
+    }
+    .callout-docs {
+      border-left-color: #0f766e;
+      background-color: #f0fdfa;
+      border: 1px solid #99f6e4;
+      border-left-width: 5px;
+    }
+
+    /* Grille double protocole Proteus vs Réel */
+    .dual-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 14px 0;
+    }
+    @media (max-width: 760px) {
+      .dual-grid { grid-template-columns: 1fr; }
+    }
+    .protocol-box {
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-size: 9.4pt;
+    }
+    .protocol-proteus {
+      background: var(--sim-bg);
+      border: 1px solid #ddd6fe;
+      border-top: 4px solid var(--sim-purple);
+    }
+    .protocol-proteus h4 { color: #5b21b6; margin-top: 0; }
+    .protocol-real {
+      background: var(--real-bg);
+      border: 1px solid #bbf7d0;
+      border-top: 4px solid var(--real-green);
+    }
+    .protocol-real h4 { color: #166534; margin-top: 0; }
+
+    .zone-cmd {
+      background: var(--cmd-bg);
+      border: 1px solid #bae6fd;
+      border-top: 4px solid var(--cmd-blue);
+    }
+    .zone-cmd h4 { color: #0369a1; margin-top: 0; }
+    .zone-pwr {
+      background: var(--pwr-bg);
+      border: 1px solid #fecaca;
+      border-top: 4px solid var(--pwr-red);
+    }
+    .zone-pwr h4 { color: #b91c1c; margin-top: 0; }
+
+    /* Tableaux */
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 14px 0;
+      font-size: 9.2pt;
+      background: #ffffff;
+    }
+    th, td {
+      border: 1px solid #cbd5e1;
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: middle;
+    }
+    th {
+      background-color: #f1f5f9;
+      color: var(--primary);
+      font-weight: 700;
+    }
+    tr:nth-child(even) { background-color: #f8fafc; }
+    td.center, th.center { text-align: center; }
+    th.col-calc { background: #eff6ff; color: #1e40af; }
+    th.col-sim { background: #f5f3ff; color: #5b21b6; }
+    th.col-real { background: #f0fdf4; color: #166534; }
+    th.col-err { background: #fffbeb; color: #92400e; }
+
+    /* Zones réponses & livrables */
+    .student-answer {
+      background-color: #ffffff;
+      border: 1.5px dashed #94a3b8;
+      border-radius: 6px;
+      padding: 10px 14px;
+      margin: 10px 0;
+      color: #334155;
+      font-size: 9.3pt;
+    }
+    .step-check {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-top: 14px;
+      font-weight: 600;
+      font-size: 9.5pt;
+      color: #0f172a;
+      cursor: pointer;
+    }
+    .step-check input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: #16a34a;
+      cursor: pointer;
+    }
+
+    /* SVG Cards */
+    .svg-card {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 14px;
+      margin: 16px 0;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+      overflow-x: auto;
+    }
+    .svg-card svg {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
+    .svg-caption {
+      font-size: 8.8pt;
+      color: var(--text-muted);
+      margin-top: 8px;
+      font-style: italic;
+    }
+
+    /* Code */
+    code {
+      background-color: #f1f5f9;
+      color: #0f172a;
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-size: 8.8pt;
+      font-family: Consolas, 'Courier New', monospace;
+    }
+    .code-wrapper {
+      position: relative;
+      margin: 12px 0;
+    }
+    .copy-code-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: #334155;
+      color: #f8fafc;
+      border: 1px solid #475569;
+      border-radius: 5px;
+      padding: 4px 9px;
+      font-size: 8pt;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .copy-code-btn:hover { background: #475569; }
+    pre {
+      background-color: #0f172a;
+      color: #e2e8f0;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-size: 8.9pt;
+      line-height: 1.48;
+      overflow-x: auto;
+      font-family: Consolas, 'Courier New', monospace;
+      margin: 0;
+    }
+    pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+    }
+    .kw { color: #f472b6; font-weight: bold; }
+    .im { color: #c084fc; font-weight: bold; }
+    .fu { color: #38bdf8; font-weight: 600; }
+    .st { color: #86efac; }
+    .dv { color: #fbbf24; }
+    .co { color: #94a3b8; font-style: italic; }
+    .todo-hl { color: #fde047; font-weight: bold; }
+
+    /* Formules mathématiques propres hors-ligne */
+    .formula-box {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-left: 4px solid var(--primary);
+      border-radius: 6px;
+      padding: 10px 16px;
+      margin: 10px 0;
+      font-family: 'Cambria Math', Georgia, serif;
+      font-size: 10.5pt;
+      text-align: center;
+      color: #0f172a;
+    }
+    .frac {
+      display: inline-block;
+      vertical-align: middle;
+      text-align: center;
+      margin: 0 3px;
+    }
+    .frac > span { display: block; padding: 0 4px; }
+    .frac span.num { border-bottom: 1.2px solid #0f172a; }
+    .frac span.den { padding-top: 1px; }
+
+    /* Outils interactifs d'atelier */
+    .tools-strip {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 14px;
+      margin: 14px 0;
+    }
+    @media (max-width: 760px) {
+      .tools-strip { grid-template-columns: 1fr; }
+    }
+    .mini-tool {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 9pt;
+    }
+    .mini-tool h4 { margin: 0 0 8px 0; color: var(--primary); }
+    .mini-tool select, .mini-tool input {
+      padding: 5px 7px;
+      border: 1px solid #94a3b8;
+      border-radius: 5px;
+      font-size: 8.8pt;
+      font-family: inherit;
+    }
+    .tool-result {
+      margin-top: 8px;
+      padding: 7px 10px;
+      background: #ffffff;
+      border-radius: 5px;
+      border: 1px solid #cbd5e1;
+      font-weight: 700;
+      color: #0b3c5d;
+    }
+
+    /* Timeline 5h */
+    .timeline-bar {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 6px;
+      margin: 12px 0;
+    }
+    @media (max-width: 760px) {
+      .timeline-bar { grid-template-columns: repeat(2, 1fr); }
+    }
+    .tl-item {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-top: 3px solid var(--primary);
+      border-radius: 6px;
+      padding: 8px;
+      font-size: 8.3pt;
+      text-decoration: none;
+      color: var(--text-main);
+    }
+    .tl-item:hover { background: #e0f2fe; text-decoration: none; }
+    .tl-time { font-weight: 800; color: var(--secondary); display: block; }
+
+    .toast-copy {
+      display: none;
+      margin-top: 8px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      background: #dcfce7;
+      color: #166534;
+      border: 1px solid #86efac;
+      font-weight: 600;
+      font-size: 9pt;
+    }
+  </style>
+</head>
+<body>
+
+<!-- BARRE DE NAVIGATION ET DE SUIVI (MASQUÉE À L'IMPRESSION) -->
+<div class="top-bar no-print">
+  <div class="top-bar-left">
+    <a href="index.html" class="back-link">← Portail BTS CIEL 1</a>
+    <div class="progress-wrap" title="Cochez les validations à la fin de chaque partie pour suivre votre avancement sur les 5h">
+      <span>Avancement TP (5h) :</span>
+      <div class="progress-track"><div class="progress-fill" id="tpProgressFill"></div></div>
+      <span id="tpProgressText">0 / 7</span>
+    </div>
+  </div>
+  <div class="top-actions">
+    <button type="button" class="btn btn-docs" onclick="copierTrameClassroom()">📋 Copier la trame Google Docs (Classroom)</button>
+    <button type="button" class="btn btn-outline" onclick="window.print()">🖨️ Imprimer / PDF</button>
+  </div>
+</div>
+
+<!-- EN-TÊTE PRINCIPAL -->
+<div class="header-box">
+  <div class="header-kicker">BTS CIEL — 1<sup>re</sup> Année | Ingénierie Électronique, Simulation SPICE &amp; Systèmes Embarqués</div>
+  <h1>TP 5 : PICO-DRIVEBENCH — Des Composants de Base au Pilotage Partie Commande / Partie Puissance</h1>
+  <p class="header-subtitle">
+    Caractérisation croisée <strong>Calcul théorique ↔ Simulation Proteus ↔ Mesurage réel sur Breadboard</strong> (TI myParts Kit),
+    interfaçage d'un <strong>Moteur CC 3–6V</strong> alimenté par <strong>Powerbank Varta 5V</strong> via <strong>Relais Grove</strong> puis <strong>Transistor NPN</strong>, et commande <strong>PWM MicroPython sur Raspberry Pi Pico</strong>.
+  </p>
+  <div class="header-meta">
+    <span class="meta-pill">⏱️ <strong>Durée totale :</strong> 5h00</span>
+    <span class="meta-pill">🧰 <strong>Matériel :</strong> TI myParts Kit + Breadboard + Relais Grove + Moteur CC 3–6V + Powerbank Varta</span>
+    <span class="meta-pill">🖥️ <strong>CAO :</strong> Proteus 8 (ISIS / VSM)</span>
+    <span class="meta-pill">🐍 <strong>MCU :</strong> Raspberry Pi Pico (MicroPython)</span>
+    <span class="meta-pill">📝 <strong>Rendu :</strong> Google Docs sur Google Classroom</span>
+  </div>
+</div>
+
+<!-- PLANIFICATION HORAIRE SUR 5H -->
+<div class="card-block">
+  <h3 style="margin-top:0;">⏱️ Organisation Temporelle de l'Activité (5h00 — Travail en binôme)</h3>
+  <div class="timeline-bar">
+    <a class="tl-item" href="#sec-prep"><span class="tl-time">0h00 → 0h20 (20 min)</span><strong>Étape 0</strong><br>Inventaire TI Kit, sécurité multimètre &amp; ouverture Docs Classroom</a>
+    <a class="tl-item" href="#sec-p1"><span class="tl-time">0h20 → 1h20 (1h00)</span><strong>Partie 1</strong><br>Résistances &amp; Potentiomètre (à vide / en charge) — Proteus &amp; Réel</a>
+    <a class="tl-item" href="#sec-p2"><span class="tl-time">1h20 → 2h05 (45 min)</span><strong>Partie 2</strong><br>Caractérisation LED &amp; résistance de limitation — Proteus &amp; Réel</a>
+    <a class="tl-item" href="#sec-p3"><span class="tl-time">2h05 → 3h05 (1h00)</span><strong>Partie 3</strong><br>Commande / Puissance par <strong>Relais Grove</strong> (Isolation galvanique)</a>
+    <a class="tl-item" href="#sec-p4"><span class="tl-time">3h05 → 4h05 (1h00)</span><strong>Partie 4</strong><br>Commande / Puissance par <strong>Transistor TIP31C</strong> &amp; roue libre 1N4001</a>
+    <a class="tl-item" href="#sec-p5"><span class="tl-time">4h05 → 5h00 (55 min)</span><strong>Partie 5</strong><br>Variateur PWM Pico + Potentiomètre + Relais sécurité &amp; Rendu</a>
+  </div>
+
+  <!-- ANCRAGE BULLETIN OFFICIEL BTS CIEL -->
+  <h3>🎯 Ancrage au Bulletin Officiel (BO) du BTS CIEL (Arrêté du 25 janvier 2023)</h3>
+  <p style="font-size:9.3pt;">
+    Cette activité met en œuvre le <strong>triptyque réglementaire Modélisation — Simulation — Mesurage expérimental</strong> inscrit au référentiel du BTS Cybersécurité, Informatique et réseaux, Électronique (préparation aux épreuves <strong>E4</strong> <em>Étude et conception</em> et <strong>E5 / E6</strong> <em>Tests, validation, réalisation et codage</em>) :
+  </p>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:14%;">Code BO</th>
+        <th style="width:30%;">Compétence du Référentiel BTS CIEL</th>
+        <th style="width:56%;">Mise en situation concrète durant les 5 heures</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C04</span></td>
+        <td><strong>Analyser une structure matérielle et logicielle</strong></td>
+        <td>Identifier la frontière <strong>Partie Commande (3,3 V logique)</strong> / <strong>Partie Puissance (5 V Varta)</strong>, décoder les fiches techniques du <em>TI myParts Kit</em> (<code>TIP31C</code>, <code>2N3904</code>, <code>1N4001</code>) et du module <em>Grove Relay</em>, distinguer isolation galvanique et masse commune.</td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C05</span></td>
+        <td><strong>Concevoir et simuler un sous-ensemble électronique</strong></td>
+        <td>Dimensionner les résistances de limitation (LED) et de saturation (base de transistor), saisir les schémas normalisés sous <strong>Proteus ISIS</strong> et simuler les points de fonctionnement DC et PWM avant câblage.</td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C06</span></td>
+        <td><strong>Valider un système (Mesurage, essais, conformité)</strong></td>
+        <td>Insérer correctement voltmètre (parallèle) et ampèremètre (série), confronter <strong>Calcul / Simulation Proteus / Mesures Breadboard</strong>, calculer les écarts relatifs (&epsilon; %) et identifier les causes physiques de dispersion (tolérances, tension réelle Varta, <em>V<sub>CEsat</sub></em>, f.c.é.m. moteur).</td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C07</span></td>
+        <td><strong>Réaliser des maquettes et prototypes</strong></td>
+        <td>Implanter méthodiquement les composants discrets sur <strong>breadboard</strong> sans court-circuit, respecter les brochages (TO-220, TO-92, DO-41) et câbler la diode de roue libre aux bornes d'une charge inductive.</td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C08</span></td>
+        <td><strong>Coder et interfacer en langage embarqué</strong></td>
+        <td>Développer en <strong>MicroPython</strong> sur Raspberry Pi Pico (<code>Pin</code>, <code>ADC</code>, <code>PWM</code>) un variateur de vitesse sécurisé associant consigne analogique, contacteur relais avec hystérésis et hacheur à transistor.</td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C01</span></td>
+        <td><strong>Communiquer en situation professionnelle</strong></td>
+        <td>Rédiger au fil de l'eau un <strong>dossier d'essais numérique sous Google Docs (Google Classroom)</strong> comportant captures de simulation, photographies de mesurage annotées, tableaux comparatifs et conclusions argumentées.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- CONSIGNES COMPTE RENDU GOOGLE DOCS CLASSROOM -->
+<div class="callout callout-docs" id="trame-classroom">
+  <strong style="font-size:10.5pt; color:#0f766e;">📄 LIVRABLE ATTENDU : Compte Rendu sous Google Docs dans Google Classroom</strong>
+  <p style="margin:6px 0;">
+    Tout au long des 5 heures, vous complétez en binôme un document <strong>Google Docs</strong> directement créé dans le devoir <strong>Google Classroom</strong> du cours (<em>ne rédigez pas à la dernière minute : remplissez chaque tableau juste après vos mesures !</em>).
+  </p>
+  <ul style="margin:6px 0 10px 0;">
+    <li><strong>Étape immédiate :</strong> Ouvrez Google Classroom &rarr; Devoir <em>« TP 5 — Composants, Proteus &amp; Commande/Puissance »</em> &rarr; <em>Ajouter ou créer</em> &rarr; <strong>Docs</strong>.</li>
+    <li>Cliquez sur le bouton ci-dessous puis faites <code>Ctrl + V</code> dans votre Google Docs vierge : <strong>tous les titres, tableaux pré-formatés et cadres photos/captures Proteus seront insérés automatiquement !</strong></li>
+    <li>Chaque sous-partie du Google Docs devra obligatoirement contenir : <strong>(1) la capture d'écran Proteus</strong> avec les afficheurs des multimètres virtuels actifs, <strong>(2) une photo nette de votre breadboard</strong> montrant le multimètre réel en cours de mesure, <strong>(3) le tableau complété</strong> et <strong>(4) l'analyse technique</strong>.</li>
+  </ul>
+  <div class="no-print">
+    <button type="button" class="btn btn-docs" onclick="copierTrameClassroom()">📋 Copier la trame complète pré-formatée pour Google Docs</button>
+    <div id="copyToast" class="toast-copy">✅ Trame copiée avec sa mise en forme (tableaux + titres) ! Ouvrez votre Google Docs dans Classroom et appuyez sur <strong>Ctrl + V</strong>.</div>
+  </div>
+</div>
+
+<!-- ===================================================================== -->
+<!-- ÉTAPE 0 : INVENTAIRE, SÉCURITÉ MÉTROLOGIQUE & POWERBANK VARTA          -->
+<!-- ===================================================================== -->
+<h2 id="sec-prep">ÉTAPE 0 : Inventaire Matériel, Correspondance Proteus &amp; Règles de Sécurité (20 min)</h2>
+
+<div class="card-block">
+  <h3>0.1 Inventaire du Poste de Travail &amp; Noms des Modèles sous Proteus 8</h3>
+  <p>
+    Vérifiez la présence des éléments suivants dans votre boîte <strong>Texas Instruments (TI) myParts Kit</strong> et sur votre paillasse. Lors de vos saisies de schémas dans <strong>Proteus ISIS</strong> (touche <code>P</code> ou bouton <em>Pick Devices</em>), utilisez exactement les références indiquées dans la colonne de droite :
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Famille</th>
+        <th>Composant réel (TI myParts Kit / Paillasse CIEL)</th>
+        <th>Boîtier / Repérage physique</th>
+        <th class="col-sim">Référence exacte Proteus (<code>Pick Devices</code>)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Passifs linéaires</strong></td>
+        <td>Résistances 1/4 W : <code>220 &Omega;</code>, <code>330 &Omega;</code>, <code>470 &Omega;</code>, <code>1 k&Omega;</code>, <code>10 k&Omega;</code></td>
+        <td>Axial à bagues de couleur</td>
+        <td><code>RES</code> (éditer la valeur : <code>330</code>, <code>1k</code>, <code>10k</code>)</td>
+      </tr>
+      <tr>
+        <td><strong>Capteur / Réglage</strong></td>
+        <td>Potentiomètre ajustable (Trimmer Bourns du kit TI) <code>10 k&Omega;</code></td>
+        <td>3 broches : <code>1</code> et <code>3</code> = extrémités, <code>2</code> (milieu) = curseur</td>
+        <td><code>POT-HG</code> (potentiomètre interactif réglable en % pendant la simulation !)</td>
+      </tr>
+      <tr>
+        <td><strong>Optoélectronique</strong></td>
+        <td>LEDs 5 mm du kit TI (Rouge, Verte)</td>
+        <td>Patte longue = <strong>Anode (+)</strong> | Méplat / patte courte = <strong>Cathode (&minus;)</strong></td>
+        <td><code>LED-RED</code>, <code>LED-GREEN</code> <br><small><em>(Important : double-cliquer &rarr; <strong>Model Type : Analog</strong> !)</em></small></td>
+      </tr>
+      <tr>
+        <td><strong>Transistor de puissance (Kit TI)</strong></td>
+        <td><strong><code>TIP31C</code></strong> — Transistor bipolaire NPN (100 V, <strong>I<sub>C,max</sub> = 3 A</strong>)</td>
+        <td>Boîtier <strong>TO-220</strong> (vue de face, texte lisible de gauche à droite : <strong><code>1:Base | 2:Collecteur | 3:Émetteur</code></strong>)</td>
+        <td><code>TIP31C</code> (ou <code>TIP31</code>)</td>
+      </tr>
+      <tr>
+        <td><strong>Transistor petit signal (Kit TI)</strong></td>
+        <td><strong><code>2N3904L</code></strong> — Transistor NPN petit signal (40 V, <strong>I<sub>C,max</sub> = 200 mA</strong>)</td>
+        <td>Boîtier <strong>TO-92</strong> (méplat face à soi : <strong><code>1:Émetteur | 2:Base | 3:Collecteur</code></strong> — <em>brochage différent du TIP31C !</em>)</td>
+        <td><code>2N3904</code> (comparaison documentaire / petits courants uniquement)</td>
+      </tr>
+      <tr>
+        <td><strong>Diode de roue libre (Kit TI)</strong></td>
+        <td><strong><code>1N4001</code></strong> — Diode de redressement 50 V / 1 A</td>
+        <td>Boîtier noir DO-41 : <strong>bague argentée = Cathode (K)</strong></td>
+        <td><code>1N4001</code></td>
+      </tr>
+      <tr>
+        <td><strong>Préactionneur isolé</strong></td>
+        <td>Module <strong>Seeed Grove - Relay v1.2</strong> + câble Grove</td>
+        <td>Entrée Grove 4 fils (commande 3,3 V) / Bornier à vis vert 2 plots (contact NO puissance)</td>
+        <td><code>RELAY</code> (réglé sur <code>5V</code> ou <code>3V</code>) piloté par <code>2N3904</code> + <code>1N4001</code></td>
+      </tr>
+      <tr>
+        <td><strong>Actionneur &amp; Énergie Puissance</strong></td>
+        <td><strong>Moteur CC jaune 3–6 V</strong> (motoréducteur TT) + <strong>Powerbank Varta 5 V USB</strong> (avec adaptateur USB vers fils Dupont <code>+5V</code> / <code>GND</code>)</td>
+        <td>Moteur 2 fils non polarisés (inversion = inversion du sens de rotation)</td>
+        <td><code>MOTOR</code> (double-cliquer : <em>Nominal Voltage</em> = <code>5V</code>, <em>Coil Resistance</em> = <code>25</code> &Omega;) + source <code>DC</code> / <code>BATTERY</code> <code>5V</code></td>
+      </tr>
+      <tr>
+        <td><strong>Unité de Commande</strong></td>
+        <td><strong>Raspberry Pi Pico (RP2040)</strong> + <em>Grove Shield v1.0</em> (commutateur sur <strong><code>3V3</code></strong> !)</td>
+        <td>Logique stricte <strong>3,3 V</strong> (max 12 mA par broche GPIO)</td>
+        <td>Sources logiques <code>DC 3.3V</code> / générateur <code>PULSE</code> + Instruments virtuels (icône sonde gauche : <code>DC VOLTMETER</code>, <code>DC AMMETER</code>, <code>OSCILLOSCOPE</code>)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- MÉMO VISUEL SVG 1 : BREADBOARD, MULTIMÈTRE & BROCHAGES -->
+  <div class="svg-card">
+    <svg viewBox="0 0 920 350" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mémo câblage Breadboard, Multimètre V et A, et brochages composants TI myParts Kit">
+      <rect width="920" height="350" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+
+      <!-- BLOC 1 : BREADBOARD -->
+      <rect x="14" y="14" width="275" height="322" rx="8" fill="#ffffff" stroke="#94a3b8"/>
+      <text x="151" y="36" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="13" font-weight="bold" fill="#0b3c5d">1. Connexions Internes Breadboard</text>
+      <!-- Rails alim haut -->
+      <rect x="30" y="50" width="242" height="36" rx="4" fill="#f1f5f9" stroke="#cbd5e1"/>
+      <line x1="42" y1="60" x2="260" y2="60" stroke="#dc2626" stroke-width="3"/>
+      <text x="34" y="64" font-family="Consolas, monospace" font-size="11" font-weight="bold" fill="#dc2626">+</text>
+      <line x1="42" y1="76" x2="260" y2="76" stroke="#2563eb" stroke-width="3"/>
+      <text x="34" y="80" font-family="Consolas, monospace" font-size="11" font-weight="bold" fill="#2563eb">-</text>
+      <text x="151" y="102" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10" fill="#475569">Rails horizontaux reliés sur toute la longueur</text>
+
+      <!-- Colonnes centrales -->
+      <rect x="30" y="112" width="242" height="150" rx="4" fill="#fffbeb" stroke="#fcd34d"/>
+      <!-- Sillon central -->
+      <rect x="30" y="180" width="242" height="14" fill="#e2e8f0"/>
+      <text x="151" y="190" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9" font-weight="bold" fill="#475569">SILLON CENTRAL (ISOLATION)</text>
+      <!-- Lignes verticales exemples -->
+      <g stroke="#16a34a" stroke-width="2.5">
+        <line x1="55" y1="122" x2="55" y2="172"/><line x1="80" y1="122" x2="80" y2="172"/><line x1="105" y1="122" x2="105" y2="172"/>
+        <line x1="130" y1="122" x2="130" y2="172"/><line x1="155" y1="122" x2="155" y2="172"/><line x1="180" y1="122" x2="180" y2="172"/>
+        <line x1="205" y1="122" x2="205" y2="172"/><line x1="230" y1="122" x2="230" y2="172"/><line x1="250" y1="122" x2="250" y2="172"/>
+        <line x1="55" y1="202" x2="55" y2="252"/><line x1="80" y1="202" x2="80" y2="252"/><line x1="105" y1="202" x2="105" y2="252"/>
+        <line x1="130" y1="202" x2="130" y2="252"/><line x1="155" y1="202" x2="155" y2="252"/><line x1="180" y1="202" x2="180" y2="252"/>
+        <line x1="205" y1="202" x2="205" y2="252"/><line x1="230" y1="202" x2="230" y2="252"/><line x1="250" y1="202" x2="250" y2="252"/>
+      </g>
+      <text x="151" y="280" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10.5" font-weight="bold" fill="#b91c1c">⚠️ Ne jamais piquer les 2 pattes d'un</text>
+      <text x="151" y="295" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10.5" font-weight="bold" fill="#b91c1c">composant dans la MÊME colonne verte</text>
+      <text x="151" y="310" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10" fill="#475569">(= court-circuit immédiat du dipôle !)</text>
+
+      <!-- BLOC 2 : VOLTMÈTRE VS AMPÈREMÈTRE -->
+      <rect x="301" y="14" width="308" height="322" rx="8" fill="#ffffff" stroke="#94a3b8"/>
+      <text x="455" y="36" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="13" font-weight="bold" fill="#0b3c5d">2. Règle d'Or Multimètre : V vs A</text>
+
+      <!-- Voltmètre en parallèle -->
+      <rect x="315" y="48" width="280" height="122" rx="6" fill="#f0f9ff" stroke="#7dd3fc"/>
+      <text x="325" y="66" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#0369a1">VOLTMÈTRE = EN DÉRIVATION (PARALLÈLE)</text>
+      <line x1="335" y1="138" x2="410" y2="138" stroke="#1e293b" stroke-width="2"/>
+      <rect x="410" y="126" width="76" height="24" fill="#ffffff" stroke="#1e293b" stroke-width="2"/>
+      <text x="448" y="142" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#1e293b">R</text>
+      <line x1="486" y1="138" x2="565" y2="138" stroke="#1e293b" stroke-width="2"/>
+      <!-- Dérivation V -->
+      <line x1="385" y1="138" x2="385" y2="95" stroke="#0284c7" stroke-width="2"/>
+      <line x1="385" y1="95" x2="430" y2="95" stroke="#0284c7" stroke-width="2"/>
+      <circle cx="448" cy="95" r="17" fill="#ffffff" stroke="#0284c7" stroke-width="2.5"/>
+      <text x="448" y="100" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="14" font-weight="bold" fill="#0284c7">V</text>
+      <line x1="466" y1="95" x2="510" y2="95" stroke="#0284c7" stroke-width="2"/>
+      <line x1="510" y1="95" x2="510" y2="138" stroke="#0284c7" stroke-width="2"/>
+      <circle cx="385" cy="138" r="3.5" fill="#0284c7"/><circle cx="510" cy="138" r="3.5" fill="#0284c7"/>
+      <text x="455" y="163" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#075985">Bornes V&Omega; et COM — Circuit fermé non modifié</text>
+
+      <!-- Ampèremètre en série -->
+      <rect x="315" y="182" width="280" height="140" rx="6" fill="#fef2f2" stroke="#fca5a5"/>
+      <text x="325" y="200" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#b91c1c">AMPÈREMÈTRE = EN SÉRIE (OUVRIR LE FIL !)</text>
+      <line x1="330" y1="250" x2="375" y2="250" stroke="#dc2626" stroke-width="2.5"/>
+      <circle cx="395" cy="250" r="18" fill="#ffffff" stroke="#dc2626" stroke-width="2.5"/>
+      <text x="395" y="255" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="14" font-weight="bold" fill="#dc2626">A</text>
+      <line x1="413" y1="250" x2="465" y2="250" stroke="#dc2626" stroke-width="2.5"/>
+      <rect x="465" y="238" width="76" height="24" fill="#ffffff" stroke="#1e293b" stroke-width="2"/>
+      <text x="503" y="254" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#1e293b">Charge</text>
+      <line x1="541" y1="250" x2="580" y2="250" stroke="#1e293b" stroke-width="2"/>
+      <text x="455" y="286" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#991b1b">Bornes mA (LED/R) ou 10A (Moteur !) et COM</text>
+      <text x="455" y="302" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.2" fill="#7f1d1d">Sous Proteus : double-cliquer sur DC AMMETER</text>
+      <text x="455" y="315" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.2" fill="#7f1d1d">et régler Display Range sur mA (sinon affiche 0.00 A) !</text>
+
+      <!-- BLOC 3 : BROCHAGES COMPOSANTS TI KIT -->
+      <rect x="621" y="14" width="285" height="322" rx="8" fill="#ffffff" stroke="#94a3b8"/>
+      <text x="763" y="36" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="13" font-weight="bold" fill="#0b3c5d">3. Brochages TI myParts Kit</text>
+
+      <!-- TIP31C TO-220 -->
+      <rect x="635" y="48" width="122" height="125" rx="6" fill="#f8fafc" stroke="#cbd5e1"/>
+      <text x="696" y="64" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10.5" font-weight="bold" fill="#0b3c5d">TIP31C (TO-220)</text>
+      <rect x="664" y="72" width="64" height="14" fill="#94a3b8" stroke="#475569"/>
+      <circle cx="696" cy="79" r="4" fill="#ffffff"/>
+      <rect x="664" y="86" width="64" height="34" fill="#334155"/>
+      <text x="696" y="107" text-anchor="middle" font-family="Consolas, monospace" font-size="10" fill="#ffffff">TIP31C</text>
+      <line x1="676" y1="120" x2="676" y2="148" stroke="#64748b" stroke-width="3"/>
+      <line x1="696" y1="120" x2="696" y2="148" stroke="#64748b" stroke-width="3"/>
+      <line x1="716" y1="120" x2="716" y2="148" stroke="#64748b" stroke-width="3"/>
+      <text x="676" y="163" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10.5" font-weight="bold" fill="#0284c7">B</text>
+      <text x="696" y="163" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10.5" font-weight="bold" fill="#dc2626">C</text>
+      <text x="716" y="163" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10.5" font-weight="bold" fill="#16a34a">E</text>
+
+      <!-- 2N3904 TO-92 -->
+      <rect x="769" y="48" width="124" height="125" rx="6" fill="#f8fafc" stroke="#cbd5e1"/>
+      <text x="831" y="64" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10.5" font-weight="bold" fill="#475569">2N3904 (TO-92)</text>
+      <path d="M803,86 Q831,68 859,86 L859,120 L803,120 Z" fill="#334155"/>
+      <text x="831" y="108" text-anchor="middle" font-family="Consolas, monospace" font-size="9.5" fill="#ffffff">2N3904</text>
+      <line x1="811" y1="120" x2="811" y2="148" stroke="#64748b" stroke-width="2.5"/>
+      <line x1="831" y1="120" x2="831" y2="148" stroke="#64748b" stroke-width="2.5"/>
+      <line x1="851" y1="120" x2="851" y2="148" stroke="#64748b" stroke-width="2.5"/>
+      <text x="811" y="163" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10.5" font-weight="bold" fill="#16a34a">E</text>
+      <text x="831" y="163" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10.5" font-weight="bold" fill="#0284c7">B</text>
+      <text x="851" y="163" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10.5" font-weight="bold" fill="#dc2626">C</text>
+
+      <!-- Diode 1N4001 & LED -->
+      <rect x="635" y="183" width="258" height="140" rx="6" fill="#f8fafc" stroke="#cbd5e1"/>
+      <text x="764" y="201" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10.5" font-weight="bold" fill="#0b3c5d">Diode 1N4001 &amp; Polarité LED</text>
+      <!-- 1N4001 -->
+      <line x1="652" y1="228" x2="700" y2="228" stroke="#64748b" stroke-width="2.5"/>
+      <rect x="700" y="216" width="76" height="24" rx="3" fill="#1e293b"/>
+      <rect x="758" y="216" width="12" height="24" fill="#cbd5e1"/>
+      <line x1="776" y1="228" x2="824" y2="228" stroke="#64748b" stroke-width="2.5"/>
+      <text x="668" y="252" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#1e293b">Anode (A)</text>
+      <text x="752" y="252" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#b91c1c">Bague = Cathode (K)</text>
+      <!-- LED -->
+      <circle cx="715" cy="285" r="14" fill="#ef4444" opacity="0.85"/>
+      <line x1="708" y1="298" x2="708" y2="318" stroke="#64748b" stroke-width="2.5"/>
+      <line x1="722" y1="298" x2="722" y2="311" stroke="#64748b" stroke-width="2.5"/>
+      <text x="742" y="286" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#1e293b">Patte longue = <tspan font-weight="bold" fill="#dc2626">Anode (+)</tspan></text>
+      <text x="742" y="302" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#1e293b">Patte courte / méplat = <tspan font-weight="bold" fill="#2563eb">Cathode (&minus;)</tspan></text>
+    </svg>
+    <div class="svg-caption">Figure 0.1 — Aide-mémoire : topologie interne d'une breadboard, insertion d'un voltmètre et d'un ampèremètre, et brochage des semi-conducteurs du TI myParts Kit.</div>
+  </div>
+
+  <!-- AVERTISSEMENTS SPÉCIFIQUES POWERBANK VARTA + GROVE SHIELD -->
+  <div class="callout callout-warn">
+    <strong>🔋 PARTICULARITÉS DE LA POWERBANK VARTA 5 V SUR PAILLASSE (À LIRE ABSOLUMENT) :</strong>
+    <ol style="margin:6px 0 0 0;">
+      <li><strong>Tension réelle légèrement supérieure à 5,00 V :</strong> Une Powerbank Varta délivre typiquement entre <strong>5,05 V et 5,18 V</strong> via son convertisseur interne. <em>Mesurez toujours sa tension exacte au voltmètre avant vos calculs !</em></li>
+      <li><strong>Mise en veille automatique (<em>Auto-Shutoff</em>) à faible courant :</strong> Lorsque votre montage consomme moins de ~50 mA (cas des résistances de 1 k&Omega; / 10 k&Omega; ou du potentiomètre seul en Parties 1 et 2), la Powerbank Varta croit qu'aucun téléphone n'est branché et <strong>coupe sa sortie 5 V au bout de 20 à 30 secondes</strong> ! <em>Réflexe : appuyez sur le bouton latéral de la Powerbank juste avant chaque lecture au multimètre pour vérifier que ses LEDs témoins sont bien allumées.</em></li>
+      <li><strong>Sécurité Court-Circuit (OCP) :</strong> Si les fils <code>+5V</code> et <code>GND</code> se touchent par erreur, la Varta se met immédiatement en sécurité (0 V). Débranchez le câble USB, corrigez le câblage sur la breadboard, puis rebranchez pour réarmer.</li>
+      <li><strong>Sécurité Raspberry Pi Pico (Parties 3 à 5) :</strong> Vérifiez que le switch du <em>Grove Shield</em> est sur <strong><code>3V3</code></strong>. <strong>Ne reliez JAMAIS le <code>+5V</code> de la Powerbank Varta à une broche du Pico !</strong> Seules les masses (<code>GND</code>) seront mises en commun à la Partie 4.</li>
+    </ol>
+  </div>
+
+  <!-- MINI-OUTILS INTERACTIFS D'ATELIER (MASQUÉS À L'IMPRESSION) -->
+  <div class="tools-strip no-print">
+    <div class="mini-tool">
+      <h4>🎨 Aide-mémoire interactif : Code Couleurs Résistance (4 anneaux)</h4>
+      <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+        <select id="band1" onchange="calcResistor()">
+          <option value="1">1 - Marron</option>
+          <option value="2">2 - Rouge</option>
+          <option value="3" selected>3 - Orange</option>
+          <option value="4">4 - Jaune</option>
+          <option value="5">5 - Vert</option>
+          <option value="6">6 - Bleu</option>
+          <option value="7">7 - Violet</option>
+          <option value="8">8 - Gris</option>
+          <option value="9">9 - Blanc</option>
+        </select>
+        <select id="band2" onchange="calcResistor()">
+          <option value="0">0 - Noir</option>
+          <option value="1">1 - Marron</option>
+          <option value="2">2 - Rouge</option>
+          <option value="3" selected>3 - Orange</option>
+          <option value="4">4 - Jaune</option>
+          <option value="5">5 - Vert</option>
+          <option value="6">6 - Bleu</option>
+          <option value="7">7 - Violet</option>
+          <option value="8">8 - Gris</option>
+          <option value="9">9 - Blanc</option>
+        </select>
+        <select id="bandMult" onchange="calcResistor()">
+          <option value="1">&times;1 &Omega; - Noir</option>
+          <option value="10" selected>&times;10 &Omega; - Marron</option>
+          <option value="100">&times;100 &Omega; - Rouge</option>
+          <option value="1000">&times;1 k&Omega; - Orange</option>
+          <option value="10000">&times;10 k&Omega; - Jaune</option>
+        </select>
+        <select id="bandTol" onchange="calcResistor()">
+          <option value="5" selected>&plusmn;5 % - Or</option>
+          <option value="1">&plusmn;1 % - Marron</option>
+          <option value="2">&plusmn;2 % - Rouge</option>
+        </select>
+      </div>
+      <div class="tool-result" id="resistorResult">Valeur nominale : 330 &Omega; &plusmn;5 % (Plage conforme : 313,5 &Omega; à 346,5 &Omega;)</div>
+    </div>
+
+    <div class="mini-tool">
+      <h4>📐 Vérificateur d'Écart Relatif (&epsilon; %)</h4>
+      <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+        <input type="number" id="valRef" step="any" placeholder="Réf. Proteus" value="5.00" style="width:110px;" oninput="calcEcart()">
+        <input type="number" id="valMes" step="any" placeholder="Mesure Réelle" value="5.11" style="width:110px;" oninput="calcEcart()">
+      </div>
+      <div class="tool-result" id="ecartResult">Écart relatif &epsilon; = 2,20 % (Conforme &lt; 10 %)</div>
+    </div>
+  </div>
+
+  <label class="step-check no-print">
+    <input type="checkbox" class="tp-step-cb" data-step="0" onchange="updateProgress()">
+    <span>Étape 0 validée : Document Google Docs créé dans Classroom avec la trame collée, matériel TI myParts Kit inventorié et tension réelle de la Powerbank Varta mesurée.</span>
+  </label>
+</div>
+
+<!-- ===================================================================== -->
+<!-- PARTIE 1 : RÉSISTANCES & POTENTIOMÈTRE (TI MYPARTS KIT)               -->
+<!-- ===================================================================== -->
+<h2 id="sec-p1">PARTIE 1 : Dipôles Linéaires — Résistances &amp; Potentiomètre (Proteus vs Breadboard) <span class="badge badge-time">1h00</span></h2>
+
+<div class="card-block">
+  <h3>1.1 Identification, Loi d'Ohm et Lois de Kirchhoff sur Résistances du Kit TI</h3>
+  <p>
+    Prélevez dans votre <strong>TI myParts Kit</strong> trois résistances de valeurs distinctes :
+    <strong><code>R<sub>1</sub> = 330 &Omega;</code></strong> (ou <code>220 &Omega;</code> selon votre sachet),
+    <strong><code>R<sub>2</sub> = 1 k&Omega;</code></strong> et
+    <strong><code>R<sub>3</sub> = 10 k&Omega;</code></strong>.
+    <em>(Si une valeur exacte diffère dans votre kit, notez la valeur nominale choisie dans votre tableau Google Docs et adaptez vos simulations Proteus avec cette même valeur !)</em>
+  </p>
+
+  <ol>
+    <li><strong>Contrôle hors tension à l'ohmmètre :</strong> Avant tout câblage, mesurez à l'ohmmètre (bornes <code>&Omega;</code> et <code>COM</code>) la valeur réelle de <code>R<sub>1</sub></code>, <code>R<sub>2</sub></code> et <code>R<sub>3</sub></code> posées seules sur la table. Vérifiez qu'elles respectent leur tolérance constructeur.</li>
+    <li><strong>Montage 1A — Association Série (<code>R<sub>1</sub></code> en série avec <code>R<sub>2</sub></code> sous 5 V) :</strong> Vérifiez la loi d'Ohm et la <strong>loi des mailles</strong> (<i>U<sub>alim</sub> = U<sub>R1</sub> + U<sub>R2</sub></i>, même courant <i>I</i> partout).</li>
+    <li><strong>Montage 1B — Association Parallèle (<code>R<sub>1</sub></code> en dérivation avec <code>R<sub>2</sub></code> sous 5 V) :</strong> Vérifiez la <strong>loi des nœuds</strong> (<i>I<sub>total</sub> = I<sub>1</sub> + I<sub>2</sub></i>, même tension <i>U<sub>alim</sub></i> aux bornes de chaque branche).</li>
+  </ol>
+
+  <div class="formula-box">
+    Loi d'Ohm : <i>U</i> = <i>R</i> &times; <i>I</i> &nbsp;&nbsp;|&nbsp;&nbsp;
+    Pont diviseur (Montage 1A) : <i>U<sub>R2</sub></i> = <i>U<sub>alim</sub></i> &times;
+    <span class="frac"><span class="num"><i>R</i><sub>2</sub></span><span class="den"><i>R</i><sub>1</sub> + <i>R</i><sub>2</sub></span></span>
+    &nbsp;&nbsp;|&nbsp;&nbsp;
+    Écart relatif : &epsilon; (%) =
+    <span class="frac"><span class="num">|<i>M</i><sub>réel</sub> &minus; <i>M</i><sub>Proteus</sub>|</span><span class="den">|<i>M</i><sub>Proteus</sub>|</span></span> &times; 100
+  </div>
+
+  <div class="dual-grid">
+    <div class="protocol-box protocol-proteus">
+      <h4>🖥️ Protocole Simulation Proteus (ISIS)</h4>
+      <ol style="margin:6px 0 0 0; padding-left:18px;">
+        <li>Ajoutez (<code>P</code>) le composant <code>RES</code> et une source <code>BATTERY</code> (ou <code>CELL</code>) réglée à <code>5V</code> + un terminal <code>GROUND</code>.</li>
+        <li>Ouvrez le mode <strong>Virtual Instruments</strong> (icône oscilloscope dans la barre gauche) : placez un <code>DC AMMETER</code> <strong>en série</strong> et deux <code>DC VOLTMETER</code> <strong>en parallèle</strong> sur <code>R1</code> et <code>R2</code>.</li>
+        <li><strong>Astuce indispensable :</strong> Double-cliquez sur chaque <code>DC AMMETER</code> et passez <em>Display Range</em> de <code>Amps</code> à <strong><code>Milliamps (mA)</code></strong> !</li>
+        <li>Lancez la simulation (bouton Play &#9654; en bas à gauche) et faites une <strong>capture d'écran</strong> pour le Google Docs (Montage 1A puis 1B).</li>
+      </ol>
+    </div>
+    <div class="protocol-box protocol-real">
+      <h4>🔌 Protocole Mesurage Réel (Breadboard + Varta)</h4>
+      <ol style="margin:6px 0 0 0; padding-left:18px;">
+        <li>Hors tension, câblez <code>R<sub>1</sub></code> et <code>R<sub>2</sub></code> sur la breadboard.</li>
+        <li>Reliez la <strong>Powerbank Varta 5 V</strong> aux rails <code>+</code> (rouge) et <code>&minus;</code> (bleu/noir). Réveillez la Varta et relevez <i>U<sub>Varta</sub></i> réelle.</li>
+        <li>Mesurez <i>U<sub>R1</sub></i> et <i>U<sub>R2</sub></i> au <strong>voltmètre en parallèle</strong>.</li>
+        <li>Passez le multimètre en <strong>ampèremètre DC (borne <code>mA</code>)</strong>, <strong>ouvrez la branche</strong> sur la breadboard pour insérer vos pointes de touche en série, relevez <i>I</i> et prenez une <strong>photo</strong> pour le Docs !</li>
+      </ol>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Montage &amp; Grandeur étudiée</th>
+        <th class="col-calc">Calcul Théorique (pour 5,00 V)</th>
+        <th class="col-sim">Simulation Proteus</th>
+        <th class="col-real">Mesure Réelle Breadboard</th>
+        <th class="col-err">Écart &epsilon; (%)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Hors tension :</strong> <i>R<sub>1</sub></i> (330 &Omega;) / <i>R<sub>2</sub></i> (1 k&Omega;) / <i>R<sub>3</sub></i> (10 k&Omega;)</td>
+        <td>330 &Omega; / 1000 &Omega; / 10 000 &Omega;</td>
+        <td><em>(Valeurs saisies)</em></td>
+        <td>____ &Omega; / ____ &Omega; / ____ k&Omega;</td>
+        <td>____ %</td>
+      </tr>
+      <tr>
+        <td><strong>Série (1A) :</strong> Tension <i>U<sub>R1</sub></i> (V)</td>
+        <td><i>5 &times; 330 / 1330</i> = <strong>1,24 V</strong></td>
+        <td>________ V</td>
+        <td>________ V</td>
+        <td>____ %</td>
+      </tr>
+      <tr>
+        <td><strong>Série (1A) :</strong> Tension <i>U<sub>R2</sub></i> (V)</td>
+        <td><i>5 &times; 1000 / 1330</i> = <strong>3,76 V</strong></td>
+        <td>________ V</td>
+        <td>________ V</td>
+        <td>____ %</td>
+      </tr>
+      <tr>
+        <td><strong>Série (1A) :</strong> Courant de maille <i>I</i> (mA)</td>
+        <td><i>5 / 1330</i> = <strong>3,76 mA</strong></td>
+        <td>________ mA</td>
+        <td>________ mA</td>
+        <td>____ %</td>
+      </tr>
+      <tr>
+        <td><strong>Parallèle (1B) :</strong> Courants <i>I<sub>1</sub></i> (dans R<sub>1</sub>) et <i>I<sub>2</sub></i> (dans R<sub>2</sub>)</td>
+        <td><i>I<sub>1</sub></i> = <strong>15,15 mA</strong> | <i>I<sub>2</sub></i> = <strong>5,00 mA</strong></td>
+        <td><i>I<sub>1</sub></i>=____ mA | <i>I<sub>2</sub></i>=____ mA</td>
+        <td><i>I<sub>1</sub></i>=____ mA | <i>I<sub>2</sub></i>=____ mA</td>
+        <td>____ %</td>
+      </tr>
+      <tr>
+        <td><strong>Parallèle (1B) :</strong> Courant principal <i>I<sub>total</sub></i> (mA)</td>
+        <td><i>I<sub>1</sub> + I<sub>2</sub></i> = <strong>20,15 mA</strong></td>
+        <td>________ mA</td>
+        <td>________ mA</td>
+        <td>____ %</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <hr style="border:0; border-top:1px solid #e2e8f0; margin:20px 0;"/>
+
+  <h3>1.2 Étude du Potentiomètre (<code>10 k&Omega;</code>) : Pont Diviseur à Vide vs Effet de Charge</h3>
+  <p>
+    Prenez le potentiomètre ajustable <strong><code>10 k&Omega;</code></strong> du <em>TI myParts Kit</em>. Ses deux broches extrêmes (<code>1</code> et <code>3</code>) sont reliées à une piste résistive fixe de <i>R<sub>tot</sub></i> = 10 k&Omega;, tandis que la broche centrale (<code>2</code>, curseur mobile de position relative &alpha; &isin; [0 ; 1]) prélève une fraction de la tension d'alimentation :
+  </p>
+
+  <div class="svg-card">
+    <svg viewBox="0 0 820 215" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Schéma du potentiomètre à vide puis chargé par RL">
+      <rect width="820" height="215" rx="8" fill="#f8fafc" stroke="#cbd5e1"/>
+      <!-- Gauche : À vide -->
+      <text x="200" y="25" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="12" font-weight="bold" fill="#0b3c5d">A. Potentiomètre 10 k&Omega; À VIDE (I_sortie = 0 mA)</text>
+      <line x1="120" y1="45" x2="180" y2="45" stroke="#dc2626" stroke-width="2"/>
+      <text x="80" y="49" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#dc2626">+5V Varta</text>
+      <line x1="180" y1="45" x2="180" y2="68" stroke="#1e293b" stroke-width="2"/>
+      <rect x="166" y="68" width="28" height="80" fill="#ffffff" stroke="#1e293b" stroke-width="2"/>
+      <text x="150" y="92" text-anchor="end" font-family="Segoe UI, sans-serif" font-size="10" fill="#475569">(1-&alpha;)R</text>
+      <text x="150" y="138" text-anchor="end" font-family="Segoe UI, sans-serif" font-size="10" fill="#475569">&alpha;R</text>
+      <!-- Flèche curseur -->
+      <line x1="225" y1="108" x2="196" y2="108" stroke="#0284c7" stroke-width="2.5"/>
+      <polygon points="196,108 204,103 204,113" fill="#0284c7"/>
+      <line x1="225" y1="108" x2="310" y2="108" stroke="#0284c7" stroke-width="2"/>
+      <circle cx="310" cy="142" r="16" fill="#ffffff" stroke="#0284c7" stroke-width="2"/>
+      <text x="310" y="147" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="13" font-weight="bold" fill="#0284c7">V</text>
+      <line x1="310" y1="108" x2="310" y2="126" stroke="#0284c7" stroke-width="2"/>
+      <line x1="310" y1="158" x2="310" y2="178" stroke="#1e293b" stroke-width="2"/>
+      <line x1="180" y1="148" x2="180" y2="178" stroke="#1e293b" stroke-width="2"/>
+      <line x1="120" y1="178" x2="335" y2="178" stroke="#1e293b" stroke-width="2"/>
+      <text x="90" y="182" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#334155">GND</text>
+      <text x="275" y="98" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#0284c7">Broche 2 (V_out)</text>
+
+      <line x1="410" y1="15" x2="410" y2="200" stroke="#cbd5e1" stroke-dasharray="5,4" stroke-width="1.5"/>
+
+      <!-- Droite : En charge RL = 1 kOhm -->
+      <text x="615" y="25" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="12" font-weight="bold" fill="#b91c1c">B. À mi-course (50 %) AVEC CHARGE R_L = 1 k&Omega;</text>
+      <line x1="485" y1="45" x2="545" y2="45" stroke="#dc2626" stroke-width="2"/>
+      <text x="450" y="49" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#dc2626">+5V</text>
+      <line x1="545" y1="45" x2="545" y2="68" stroke="#1e293b" stroke-width="2"/>
+      <rect x="531" y="68" width="28" height="80" fill="#ffffff" stroke="#1e293b" stroke-width="2"/>
+      <text x="522" y="92" text-anchor="end" font-family="Segoe UI, sans-serif" font-size="10" fill="#475569">5 k&Omega;</text>
+      <text x="522" y="138" text-anchor="end" font-family="Segoe UI, sans-serif" font-size="10" fill="#475569">5 k&Omega;</text>
+      <line x1="590" y1="108" x2="561" y2="108" stroke="#dc2626" stroke-width="2.5"/>
+      <polygon points="561,108 569,103 569,113" fill="#dc2626"/>
+      <line x1="590" y1="108" x2="735" y2="108" stroke="#dc2626" stroke-width="2"/>
+      <!-- Charge RL 1k -->
+      <line x1="650" y1="108" x2="650" y2="122" stroke="#b91c1c" stroke-width="2"/>
+      <rect x="637" y="122" width="26" height="42" fill="#fee2e2" stroke="#b91c1c" stroke-width="2"/>
+      <text x="650" y="147" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#b91c1c">1k&Omega;</text>
+      <line x1="650" y1="164" x2="650" y2="178" stroke="#b91c1c" stroke-width="2"/>
+      <!-- Voltmètre -->
+      <line x1="735" y1="108" x2="735" y2="126" stroke="#0284c7" stroke-width="2"/>
+      <circle cx="735" cy="142" r="16" fill="#ffffff" stroke="#0284c7" stroke-width="2"/>
+      <text x="735" y="147" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="13" font-weight="bold" fill="#0284c7">V</text>
+      <line x1="735" y1="158" x2="735" y2="178" stroke="#1e293b" stroke-width="2"/>
+      <line x1="545" y1="148" x2="545" y2="178" stroke="#1e293b" stroke-width="2"/>
+      <line x1="485" y1="178" x2="765" y2="178" stroke="#1e293b" stroke-width="2"/>
+      <text x="650" y="198" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#b91c1c">Effondrement de V_out ! (5 k&Omega; // 1 k&Omega; = 833 &Omega;)</text>
+    </svg>
+    <div class="svg-caption">Figure 1.1 — Étude du potentiomètre 10 k&Omega; en pont diviseur de tension : fonctionnement à vide (A) et chute de tension en présence d'une charge R<sub>L</sub> = 1 k&Omega; (B).</div>
+  </div>
+
+  <ol>
+    <li><strong>Sous Proteus :</strong> Placez un <code>POT-HG</code> de <code>10k</code> alimenté en <code>5V</code>. Cliquez sur les flèches <code>+</code> / <code>&minus;</code> du composant pendant la simulation pour régler le curseur à <strong>0 %, 25 %, 50 %, 75 % et 100 %</strong> à vide, puis ajoutez à <strong>50 %</strong> une résistance de charge <code>R<sub>L</sub> = 1k</code> entre le curseur et la masse.</li>
+    <li><strong>Sur Breadboard :</strong> Câblez le potentiomètre de <code>10 k&Omega;</code> sous 5 V Varta. Réglez-le en butée basse (0 %), à mi-course exacte (ajustez au tournevis ou au doigt jusqu'à lire ~2,50 V au voltmètre !), puis en butée haute (100 %). Relevez aussi le courant consommé sur le <code>+5V</code>. Revenez ensuite à mi-course (~2,50 V à vide) et <strong>branchez votre résistance <code>R<sub>2</sub> = 1 k&Omega;</code> entre le curseur et <code>GND</code></strong> : observez l'effondrement de <i>V<sub>out</sub></i> !</li>
+  </ol>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Configuration du Potentiomètre (10 k&Omega; sous 5 V)</th>
+        <th class="col-calc">Calcul Théorique</th>
+        <th class="col-sim">Simulation Proteus</th>
+        <th class="col-real">Mesure Breadboard</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>À vide — Curseur à <strong>0 %</strong> (butée GND) : <i>V<sub>out</sub></i></td>
+        <td><strong>0,00 V</strong></td>
+        <td>________ V</td>
+        <td>________ V</td>
+      </tr>
+      <tr>
+        <td>À vide — Curseur à <strong>25 %</strong> : <i>V<sub>out</sub></i></td>
+        <td><strong>1,25 V</strong></td>
+        <td>________ V</td>
+        <td><em>(Optionnel)</em></td>
+      </tr>
+      <tr>
+        <td>À vide — Curseur à <strong>50 %</strong> (mi-course) : <i>V<sub>out</sub></i> et <i>I<sub>alim</sub></i></td>
+        <td><strong>2,50 V</strong> | <i>I</i> = <strong>0,50 mA</strong></td>
+        <td>____ V | ____ mA</td>
+        <td>____ V | ____ mA</td>
+      </tr>
+      <tr>
+        <td>À vide — Curseur à <strong>75 %</strong> : <i>V<sub>out</sub></i></td>
+        <td><strong>3,75 V</strong></td>
+        <td>________ V</td>
+        <td><em>(Optionnel)</em></td>
+      </tr>
+      <tr>
+        <td>À vide — Curseur à <strong>100 %</strong> (butée +5V) : <i>V<sub>out</sub></i></td>
+        <td><strong>5,00 V</strong></td>
+        <td>________ V</td>
+        <td>________ V</td>
+      </tr>
+      <tr>
+        <td><strong>EN CHARGE à 50 % avec <i>R<sub>L</sub></i> = 1 k&Omega; : <i>V<sub>out,chargé</sub></i></strong></td>
+        <td><i>5 &times; 833 / (5000 + 833)</i> = <strong>0,71 V</strong></td>
+        <td>________ V</td>
+        <td>________ V</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="student-answer">
+    <strong>💡 Question d'ingénierie n°1 (à rédiger dans votre Google Docs Classroom) :</strong><br>
+    Expliquez pourquoi on ne peut <strong>jamais</strong> piloter la vitesse de votre moteur CC jaune 3–6 V (équivalent à une résistance d'environ 20 à 30 &Omega;) en le branchant directement sur la sortie d'un potentiomètre de 10 k&Omega;. Pourquoi en revanche ce même potentiomètre fonctionnera-t-il parfaitement sur l'entrée analogique <code>ADC (GP26)</code> du Raspberry Pi Pico en Partie 5 ?
+  </div>
+
+  <label class="step-check no-print">
+    <input type="checkbox" class="tp-step-cb" data-step="1" onchange="updateProgress()">
+    <span>Partie 1 validée : Captures Proteus + photos Breadboard + tableaux Résistances &amp; Potentiomètre insérés dans le Google Docs.</span>
+  </label>
+</div>
+
+<!-- ===================================================================== -->
+<!-- PARTIE 2 : ÉTUDE DE LA LED (DIPÔLE NON-LINÉAIRE)                      -->
+<!-- ===================================================================== -->
+<h2 id="sec-p2">PARTIE 2 : Dipôle Non-Linéaire — Caractérisation de LEDs &amp; Résistance de Protection <span class="badge badge-time">45 min</span></h2>
+
+<div class="card-block">
+  <p>
+    Contrairement à une résistance, une <strong>LED (Diode Électroluminescente)</strong> est un composant semi-conducteur <strong>polarisé et fortement non-linéaire</strong> : dès que la tension à ses bornes dépasse sa tension de seuil directe <i>V<sub>F</sub></i> (~1,8 V à 2,2 V selon la couleur), son courant croît exponentiellement ! Branchée directement sur la Powerbank Varta 5 V sans résistance série, elle est détruite instantanément.
+  </p>
+
+  <div class="formula-box">
+    Loi des mailles : <i>U<sub>alim</sub></i> = <i>U<sub>R</sub></i> + <i>V<sub>F</sub></i> = <i>R<sub>protection</sub></i> &times; <i>I<sub>F</sub></i> + <i>V<sub>F</sub></i>
+    &nbsp;&nbsp;&rArr;&nbsp;&nbsp;
+    <i>R<sub>protection</sub></i> =
+    <span class="frac"><span class="num"><i>U<sub>alim</sub></i> &minus; <i>V<sub>F</sub></i></span><span class="den"><i>I<sub>F</sub></i></span></span>
+  </div>
+
+  <div class="callout callout-proteus">
+    <strong>🖥️ Réglage important sous Proteus pour les LEDs (<code>LED-RED</code> / <code>LED-GREEN</code>) :</strong><br>
+    Après avoir placé <code>LED-RED</code> sur votre schéma Proteus, double-cliquez dessus et vérifiez que le champ <strong>Model Type</strong> est bien positionné sur <strong><code>Analog</code></strong> (et non <code>Digital</code>), afin que Proteus calcule fidèlement la loi exponentielle SPICE de la jonction PN (<i>V<sub>F</sub></i> et <i>I<sub>F</sub></i> réalistes) !
+  </div>
+
+  <h3>2.1 Comparaison LED Rouge vs LED Verte (avec <code>R = 330 &Omega;</code> sous 5 V) &amp; Non-Linéarité</h3>
+  <ol>
+    <li><strong>Dimensionnement préalable :</strong> Pour <i>U<sub>alim</sub></i> = 5,00 V et <i>V<sub>F,estimé</sub></i> = 1,9 V, vérifiez par le calcul quel courant <i>I<sub>F</sub></i> circule avec une résistance normalisée du kit TI de <strong><code>R = 330 &Omega;</code></strong> (et vérifiez que la puissance dissipée <i>P<sub>R</sub> = U<sub>R</sub> &times; I<sub>F</sub></i> est très inférieure à 0,25 W).</li>
+    <li><strong>Simulation Proteus puis Câblage Breadboard :</strong> Mesurez simultanément (ou successivement) <i>V<sub>F</sub></i> aux bornes de la LED, <i>U<sub>R</sub></i> aux bornes de la résistance et le courant série <i>I<sub>F</sub></i> (en mA) pour :
+      <ul>
+        <li>la <strong>LED Rouge</strong> avec <code>330 &Omega;</code>, puis la <strong>LED Verte</strong> avec <code>330 &Omega;</code> ;</li>
+        <li>la <strong>LED Rouge</strong> en faisant varier la résistance du kit TI : <code>220 &Omega;</code> &rarr; <code>330 &Omega;</code> &rarr; <code>1 k&Omega;</code> &rarr; <code>10 k&Omega;</code> ;</li>
+        <li>la <strong>LED Rouge retournée en polarisation inverse</strong> (Cathode au <code>+5V</code>, Anode vers <code>R</code> et <code>GND</code>).</li>
+      </ul>
+    </li>
+  </ol>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Essai sous 5 V (Powerbank Varta / Proteus)</th>
+        <th class="col-calc">Calcul estimé (<i>I<sub>F</sub></i>)</th>
+        <th class="col-sim">Proteus : <i>V<sub>F</sub></i> (V) / <i>I<sub>F</sub></i> (mA)</th>
+        <th class="col-real">Breadboard : <i>V<sub>F</sub></i> (V) / <i>U<sub>R</sub></i> (V) / <i>I<sub>F</sub></i> (mA)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>LED Rouge</strong> + <code>R = 220 &Omega;</code> (sens passant)</td>
+        <td>~14,1 mA</td>
+        <td><i>V<sub>F</sub></i>=____ V | <i>I<sub>F</sub></i>=____ mA</td>
+        <td><i>V<sub>F</sub></i>=____ V | <i>U<sub>R</sub></i>=____ V | <i>I<sub>F</sub></i>=____ mA</td>
+      </tr>
+      <tr>
+        <td><strong>LED Rouge</strong> + <code>R = 330 &Omega;</code> (sens passant)</td>
+        <td>~9,4 mA</td>
+        <td><i>V<sub>F</sub></i>=____ V | <i>I<sub>F</sub></i>=____ mA</td>
+        <td><i>V<sub>F</sub></i>=____ V | <i>U<sub>R</sub></i>=____ V | <i>I<sub>F</sub></i>=____ mA</td>
+      </tr>
+      <tr>
+        <td><strong>LED Verte</strong> + <code>R = 330 &Omega;</code> (sens passant)</td>
+        <td>~8,8 mA</td>
+        <td><i>V<sub>F</sub></i>=____ V | <i>I<sub>F</sub></i>=____ mA</td>
+        <td><i>V<sub>F</sub></i>=____ V | <i>U<sub>R</sub></i>=____ V | <i>I<sub>F</sub></i>=____ mA</td>
+      </tr>
+      <tr>
+        <td><strong>LED Rouge</strong> + <code>R = 1 k&Omega;</code> (sens passant)</td>
+        <td>~3,1 mA</td>
+        <td><i>V<sub>F</sub></i>=____ V | <i>I<sub>F</sub></i>=____ mA</td>
+        <td><i>V<sub>F</sub></i>=____ V | <i>U<sub>R</sub></i>=____ V | <i>I<sub>F</sub></i>=____ mA</td>
+      </tr>
+      <tr>
+        <td><strong>LED Rouge</strong> + <code>R = 10 k&Omega;</code> (sens passant)</td>
+        <td>~0,32 mA</td>
+        <td><i>V<sub>F</sub></i>=____ V | <i>I<sub>F</sub></i>=____ mA</td>
+        <td><i>V<sub>F</sub></i>=____ V | <i>U<sub>R</sub></i>=____ V | <i>I<sub>F</sub></i>=____ mA</td>
+      </tr>
+      <tr>
+        <td><strong>LED Rouge retournée (sens bloqué)</strong> + <code>330 &Omega;</code></td>
+        <td><strong>0,00 mA</strong></td>
+        <td><i>U<sub>LED</sub></i>=____ V | <i>I</i>=____ mA</td>
+        <td><i>U<sub>LED</sub></i>=____ V | <i>U<sub>R</sub></i>=____ V | <i>I</i>=____ mA</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="student-answer">
+    <strong>💡 Question d'ingénierie n°2 (à rédiger dans votre Google Docs Classroom) :</strong><br>
+    Comparez l'évolution de <i>I<sub>F</sub></i> et celle de <i>V<sub>F</sub></i> lorsque <i>R</i> passe de <code>220 &Omega;</code> à <code>10 k&Omega;</code>. Pourquoi <i>V<sub>F</sub></i> varie-t-elle à peine de quelques dixièmes de volt alors que le courant est divisé par plus de 40 ? Expliquez également pourquoi <i>V<sub>F</sub></i> d'une LED verte est supérieure à celle d'une LED rouge (lien avec l'énergie des photons / longueur d'onde).
+  </div>
+
+  <label class="step-check no-print">
+    <input type="checkbox" class="tp-step-cb" data-step="2" onchange="updateProgress()">
+    <span>Partie 2 validée : Étude de la LED (passante, différentes résistances, bloquée) simulée sous Proteus, mesurée et consignée dans Google Docs.</span>
+  </label>
+</div>
+
+<!-- ===================================================================== -->
+<!-- PARTIE 3 : RELAIS ÉLECTROMÉCANIQUE GROVE (ISOLATION GALVANIQUE)       -->
+<!-- ===================================================================== -->
+<h2 id="sec-p3">PARTIE 3 : Partie Commande / Partie Puissance n°1 — Le Relais Grove (Isolation Galvanique) <span class="badge badge-time">1h00</span></h2>
+
+<div class="card-block">
+  <h3>3.1 Pourquoi une interface de puissance est-elle indispensable entre le Pico et le Moteur CC ?</h3>
+  <div class="dual-grid">
+    <div class="protocol-box zone-cmd">
+      <h4>🔵 Capacité d'une broche GPIO du Raspberry Pi Pico (Partie Commande)</h4>
+      <ul style="margin:6px 0 0 0; padding-left:18px;">
+        <li>Tension logique haute : <strong>3,3 V DC</strong></li>
+        <li>Courant maximal recommandé par broche : <strong>12 mA</strong> (destruction interne au-delà de ~16–20 mA)</li>
+        <li>Puissance électrique disponible : <i>P<sub>GPIO</sub> = 3,3 &times; 0,012</i> &approx; <strong>0,04 W (40 mW)</strong></li>
+      </ul>
+    </div>
+    <div class="protocol-box zone-pwr">
+      <h4>🔴 Besoins du Moteur CC jaune 3–6 V (Partie Puissance sur Varta 5 V)</h4>
+      <ul style="margin:6px 0 0 0; padding-left:18px;">
+        <li>Tension nominale d'emploi : <strong>5,0 V DC</strong> (Powerbank Varta)</li>
+        <li>Courant à vide : <strong>140 à 220 mA</strong> | Courant de démarrage / blocage : <strong>500 à 700 mA !</strong></li>
+        <li>Puissance électrique appelée : <strong>0,8 W à 3,5 W</strong> (jusqu'à <strong>85 fois trop</strong> pour un GPIO !)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout callout-danger">
+    <strong>⛔ INTERDICTION MATÉRIELLE STRICTE :</strong> Ne branchez <strong>jamais</strong> le moteur CC jaune directement sur une broche GPIO du Pico ni même sur la broche <code>3V3(OUT)</code> du Pico (dont le régulateur interne est limité à 300 mA et provoquerait le redémarrage brutal ou la destruction de la carte). L'énergie du moteur doit provenir <strong>exclusivement de la Powerbank Varta 5 V</strong>.
+  </div>
+
+  <h3>3.2 Architecture Interne du Module Seeed Grove Relay &amp; Isolation Galvanique</h3>
+  <p>
+    Le module <strong>Grove - Relay v1.2</strong> intègre sur son petit circuit imprimé un étage pré-amplificateur à transistor NPN (<code>S9013</code>), une bobine électromagnétique basse tension (3 V / ~90 mA alimentée par le rail <code>VCC</code> du câble Grove), une diode de roue libre interne, une LED rouge témoin et un <strong>contact mécanique Normalement Ouvert (<code>NO</code>)</strong> raccordé au bornier à vis vert à 2 plots.
+  </p>
+
+  <!-- SVG 2 : RELAIS GROVE COMMANDE VS PUISSANCE -->
+  <div class="svg-card">
+    <svg viewBox="0 0 920 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Schéma Partie Commande et Partie Puissance avec Relais Grove et Isolation Galvanique">
+      <rect width="920" height="330" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+
+      <!-- Zone Partie Commande -->
+      <rect x="14" y="14" width="426" height="302" rx="8" fill="#f0f9ff" stroke="#38bdf8" stroke-width="1.8"/>
+      <text x="227" y="36" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="13" font-weight="bold" fill="#0369a1">PARTIE COMMANDE (3,3 V — Information &amp; Basse Énergie)</text>
+
+      <!-- Bloc Pico -->
+      <rect x="28" y="80" width="128" height="175" rx="6" fill="#0f172a" stroke="#334155"/>
+      <text x="92" y="106" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11.5" font-weight="bold" fill="#38bdf8">Raspberry Pi</text>
+      <text x="92" y="122" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11.5" font-weight="bold" fill="#38bdf8">PICO (RP2040)</text>
+      <text x="92" y="142" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#fde047">Shield Switch = 3V3</text>
+      <text x="148" y="172" text-anchor="end" font-family="Consolas, monospace" font-size="10.5" fill="#f87171">3V3</text>
+      <text x="148" y="205" text-anchor="end" font-family="Consolas, monospace" font-size="10.5" fill="#fde047">GP16</text>
+      <text x="148" y="238" text-anchor="end" font-family="Consolas, monospace" font-size="10.5" fill="#94a3b8">GND</text>
+
+      <!-- Module Grove Relay interne -->
+      <rect x="205" y="62" width="222" height="225" rx="6" fill="#ffffff" stroke="#0284c7" stroke-dasharray="6,3" stroke-width="1.8"/>
+      <text x="316" y="80" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10.5" font-weight="bold" fill="#0284c7">Intérieur du Module Grove Relay</text>
+
+      <!-- Liaison 3V3 vers bobine -->
+      <line x1="156" y1="168" x2="225" y2="168" stroke="#dc2626" stroke-width="2"/>
+      <line x1="225" y1="168" x2="225" y2="98" stroke="#dc2626" stroke-width="2"/>
+      <line x1="225" y1="98" x2="380" y2="98" stroke="#dc2626" stroke-width="2"/>
+
+      <!-- Bobine relais -->
+      <rect x="364" y="114" width="32" height="62" rx="3" fill="#e0f2fe" stroke="#0369a1" stroke-width="2"/>
+      <line x1="364" y1="162" x2="396" y2="128" stroke="#0369a1" stroke-width="1.5"/>
+      <line x1="380" y1="98" x2="380" y2="114" stroke="#1e293b" stroke-width="2"/>
+      <text x="357" y="148" text-anchor="end" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#0369a1">Bobine</text>
+
+      <!-- Diode roue libre interne -->
+      <line x1="312" y1="98" x2="312" y2="126" stroke="#1e293b" stroke-width="1.5"/>
+      <polygon points="312,126 303,144 321,144" fill="#475569"/>
+      <line x1="303" y1="126" x2="321" y2="126" stroke="#1e293b" stroke-width="2.5"/>
+      <line x1="312" y1="144" x2="312" y2="176" stroke="#1e293b" stroke-width="1.5"/>
+      <line x1="312" y1="176" x2="380" y2="176" stroke="#1e293b" stroke-width="1.5"/>
+
+      <!-- Liaison GP16 + Voltmètre V_cmd + Transistor interne -->
+      <line x1="156" y1="201" x2="232" y2="201" stroke="#eab308" stroke-width="2.5"/>
+      <rect x="232" y="193" width="44" height="16" fill="#ffffff" stroke="#1e293b" stroke-width="1.8"/>
+      <text x="254" y="205" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9" fill="#1e293b">R_int</text>
+      <line x1="276" y1="201" x2="362" y2="201" stroke="#1e293b" stroke-width="2"/>
+      <!-- Transistor NPN interne -->
+      <line x1="362" y1="186" x2="362" y2="216" stroke="#1e293b" stroke-width="3"/>
+      <line x1="362" y1="194" x2="380" y2="176" stroke="#1e293b" stroke-width="2"/>
+      <line x1="362" y1="208" x2="380" y2="226" stroke="#1e293b" stroke-width="2"/>
+      <polygon points="380,226 371,223 376,216" fill="#1e293b"/>
+      <line x1="380" y1="226" x2="380" y2="235" stroke="#1e293b" stroke-width="2"/>
+      <!-- GND commande -->
+      <line x1="156" y1="235" x2="380" y2="235" stroke="#334155" stroke-width="2"/>
+      <!-- Voltmètre V_cmd -->
+      <line x1="184" y1="201" x2="184" y2="262" stroke="#0284c7" stroke-width="1.8"/>
+      <circle cx="184" cy="276" r="13" fill="#ffffff" stroke="#0284c7" stroke-width="2"/>
+      <text x="184" y="280" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10.5" font-weight="bold" fill="#0284c7">V1</text>
+      <line x1="197" y1="276" x2="255" y2="276" stroke="#0284c7" stroke-width="1.8"/>
+      <line x1="255" y1="276" x2="255" y2="235" stroke="#0284c7" stroke-width="1.8"/>
+      <text x="270" y="279" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#0284c7">U_cmd (GP16)</text>
+
+      <!-- BARRIÈRE ISOLATION GALVANIQUE -->
+      <rect x="444" y="14" width="34" height="302" fill="#fef3c7"/>
+      <line x1="461" y1="20" x2="461" y2="310" stroke="#d97706" stroke-dasharray="6,4" stroke-width="2.5"/>
+      <text x="461" y="168" text-anchor="middle" transform="rotate(-90 461 168)" font-family="Segoe UI, sans-serif" font-size="10.5" font-weight="bold" fill="#92400e">ISOLATION GALVANIQUE (0 FIL COMMUN)</text>
+      <!-- Couplage magnétique -->
+      <line x1="398" y1="145" x2="508" y2="145" stroke="#d97706" stroke-dasharray="3,3" stroke-width="2"/>
+
+      <!-- Zone Partie Puissance -->
+      <rect x="482" y="14" width="424" height="302" rx="8" fill="#fef2f2" stroke="#f87171" stroke-width="1.8"/>
+      <text x="694" y="36" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="13" font-weight="bold" fill="#b91c1c">PARTIE PUISSANCE (5 V Varta — Énergie Actionneur)</text>
+
+      <!-- Contact sec NO du relais (bornier vert) -->
+      <rect x="496" y="102" width="76" height="86" rx="6" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+      <text x="534" y="118" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#166534">Bornier Vert</text>
+      <circle cx="534" cy="134" r="4" fill="#166534"/>
+      <circle cx="534" cy="170" r="4" fill="#166534"/>
+      <line x1="534" y1="170" x2="514" y2="138" stroke="#166534" stroke-width="3"/>
+
+      <!-- Voltmètre V2 sur contact -->
+      <line x1="534" y1="90" x2="604" y2="90" stroke="#7c3aed" stroke-width="1.8"/>
+      <line x1="604" y1="90" x2="604" y2="132" stroke="#7c3aed" stroke-width="1.8"/>
+      <circle cx="604" cy="148" r="14" fill="#ffffff" stroke="#7c3aed" stroke-width="2"/>
+      <text x="604" y="152" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10.5" font-weight="bold" fill="#7c3aed">V2</text>
+      <line x1="604" y1="162" x2="604" y2="205" stroke="#7c3aed" stroke-width="1.8"/>
+      <line x1="604" y1="205" x2="534" y2="205" stroke="#7c3aed" stroke-width="1.8"/>
+      <text x="622" y="152" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#6d28d9">U_contact</text>
+
+      <!-- Powerbank Varta 5V -->
+      <rect x="780" y="115" width="110" height="90" rx="8" fill="#1e293b" stroke="#475569"/>
+      <text x="835" y="142" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#ffffff">POWERBANK</text>
+      <text x="835" y="158" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#fde047">VARTA 5 V</text>
+      <text x="835" y="177" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#cbd5e1">+5V (Rouge)</text>
+      <text x="835" y="193" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#94a3b8">GND (Noir)</text>
+
+      <!-- Boucle puissance : +5V -> Ampèremètre 10A -> Contact Relais -> Moteur CC -> GND Varta -->
+      <line x1="835" y1="115" x2="835" y2="68" stroke="#dc2626" stroke-width="2.5"/>
+      <line x1="835" y1="68" x2="718" y2="68" stroke="#dc2626" stroke-width="2.5"/>
+      <circle cx="700" cy="68" r="17" fill="#ffffff" stroke="#dc2626" stroke-width="2.5"/>
+      <text x="700" y="73" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="12" font-weight="bold" fill="#dc2626">A</text>
+      <text x="700" y="98" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#b91c1c">I_moteur (10A)</text>
+      <line x1="683" y1="68" x2="534" y2="68" stroke="#dc2626" stroke-width="2.5"/>
+      <line x1="534" y1="68" x2="534" y2="134" stroke="#dc2626" stroke-width="2.5"/>
+
+      <!-- Sortie contact -> Moteur CC jaune -->
+      <line x1="534" y1="170" x2="534" y2="255" stroke="#ea580c" stroke-width="2.5"/>
+      <line x1="534" y1="255" x2="668" y2="255" stroke="#ea580c" stroke-width="2.5"/>
+      <circle cx="696" cy="255" r="26" fill="#fef08a" stroke="#ca8a04" stroke-width="3"/>
+      <text x="696" y="253" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="14" font-weight="bold" fill="#854d0e">M</text>
+      <text x="696" y="268" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#854d0e">3–6 V</text>
+      <line x1="722" y1="255" x2="835" y2="255" stroke="#334155" stroke-width="2.5"/>
+      <line x1="835" y1="255" x2="835" y2="205" stroke="#334155" stroke-width="2.5"/>
+
+      <!-- Voltmètre V3 sur Moteur -->
+      <line x1="652" y1="255" x2="652" y2="298" stroke="#0284c7" stroke-width="1.8"/>
+      <line x1="652" y1="298" x2="682" y2="298" stroke="#0284c7" stroke-width="1.8"/>
+      <circle cx="696" cy="298" r="13" fill="#ffffff" stroke="#0284c7" stroke-width="2"/>
+      <text x="696" y="302" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10.5" font-weight="bold" fill="#0284c7">V3</text>
+      <line x1="710" y1="298" x2="740" y2="298" stroke="#0284c7" stroke-width="1.8"/>
+      <line x1="740" y1="298" x2="740" y2="255" stroke="#0284c7" stroke-width="1.8"/>
+      <text x="782" y="302" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#0284c7">U_moteur</text>
+    </svg>
+    <div class="svg-caption">Figure 3.1 — Séparation Partie Commande (3,3 V Pico) / Partie Puissance (5 V Powerbank Varta + Moteur CC jaune) par Relais Grove avec emplacement des multimètres.</div>
+  </div>
+
+  <h3>3.3 Simulation Proteus puis Prototypage Réel avec le Raspberry Pi Pico</h3>
+  <ol>
+    <li><strong>Simulation Proteus :</strong> Reproduisez le schéma de la Figure 3.1 dans Proteus ISIS (modélisez l'étage interne du module Grove avec un <code>2N3904</code>, <code>RES = 4.7k</code>, <code>1N4001</code> et un <code>RELAY</code> réglé sur <code>Component Value = 3V</code> alimenté en <code>3.3V</code> ; côté puissance, placez une source <code>5V</code>, le contact du relais et un <code>MOTOR</code> réglé sur <code>5V / 25 &Omega;</code>). Relevez toutes les grandeurs à l'état ouvert (commande <code>0V</code>) puis fermé (commande <code>3.3V</code>).</li>
+    <li><strong>Câblage Réel :</strong>
+      <ul>
+        <li>Branchez le module <strong>Grove Relay</strong> sur le port <strong><code>D16</code></strong> du <em>Grove Shield for Pi Pico</em> (switch vérifié sur <strong><code>3V3</code></strong> !).</li>
+        <li><strong>Côté bornier vert à vis du relais (Partie Puissance) :</strong> Reliez le fil <code>+5V</code> de la Powerbank Varta (en passant en série par votre multimètre sur la borne <strong><code>10A</code></strong> !) à la borne 1 du bornier vert ; reliez la borne 2 du bornier vert à un fil du <strong>moteur CC jaune 3–6 V</strong> ; reliez le second fil du moteur au <code>GND (&minus;)</code> de la Powerbank Varta. <em>Notez qu'aucun fil ne relie la Varta au Pico !</em></li>
+      </ul>
+    </li>
+    <li><strong>Script MicroPython de test TOR (Tout-Ou-Rien) :</strong> Exécutez sous Thonny le script ci-dessous qui commute lentement toutes les <strong>8 secondes</strong> afin de vous laisser tout le temps de relever vos tensions et courants au multimètre :</li>
+  </ol>
+
+  <div class="code-wrapper">
+    <button type="button" class="copy-code-btn no-print" onclick="copierCode(this)">Copier</button>
+    <pre><code><span class="co"># test_relais_tor.py — Pilotage Partie Commande (GP16) / Partie Puissance isolée (Relais Grove)</span>
+<span class="im">from</span> machine <span class="im">import</span> Pin
+<span class="im">import</span> time
+
+relais_grove = Pin(<span class="dv">16</span>, Pin.OUT)  <span class="co"># Port D16 du Grove Shield (3,3 V logique)</span>
+
+<span class="fu">print</span>(<span class="st">"=== BANC D'ESSAI RELAIS GROVE (8s OFF / 8s ON) ==="</span>)
+<span class="kw">while</span> <span class="kw">True</span>:
+    relais_grove.value(<span class="dv">0</span>)
+    <span class="fu">print</span>(<span class="st">"[COMMANDE = 0 (0V)]   -&gt; Relais OUVERT  | Mesurez l'état REPOS..."</span>)
+    time.sleep(<span class="dv">8</span>)
+
+    relais_grove.value(<span class="dv">1</span>)
+    <span class="fu">print</span>(<span class="st">"[COMMANDE = 1 (3.3V)] -&gt; Relais FERMÉ   | Mesurez l'état TRAVAIL (à vide puis freiné)..."</span>)
+    time.sleep(<span class="dv">8</span>)</code></pre>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Zone</th>
+        <th>Grandeur mesurée</th>
+        <th class="col-sim">Proteus : OFF (0) / ON (1)</th>
+        <th class="col-real">Réel : OFF (0) / ON (1)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="badge badge-cmd">Commande</span></td>
+        <td>Tension de sortie logique Pico <i>U<sub>cmd (GP16)</sub></i> (V)</td>
+        <td>____ V &nbsp;/&nbsp; ____ V</td>
+        <td>____ V &nbsp;/&nbsp; ____ V</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-cmd">Commande</span></td>
+        <td>Courant d'entrée signal <i>I<sub>SIG</sub></i> (mA) / État LED témoin</td>
+        <td>____ mA &nbsp;/&nbsp; ____ mA</td>
+        <td>LED : OFF / ON (clic audible)</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-pwr">Puissance</span></td>
+        <td>Tension aux bornes du contact du relais <i>U<sub>contact (V2)</sub></i> (V)</td>
+        <td>____ V &nbsp;/&nbsp; ____ V</td>
+        <td>____ V &nbsp;/&nbsp; ____ V</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-pwr">Puissance</span></td>
+        <td>Tension aux bornes du moteur jaune <i>U<sub>moteur (V3)</sub></i> (V)</td>
+        <td>____ V &nbsp;/&nbsp; ____ V</td>
+        <td>____ V &nbsp;/&nbsp; ____ V</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-pwr">Puissance</span></td>
+        <td>Courant moteur <strong>à vide</strong> <i>I<sub>moteur,vide</sub></i> (mA — calibre <code>10A</code>)</td>
+        <td>____ mA &nbsp;/&nbsp; ____ mA</td>
+        <td>____ mA &nbsp;/&nbsp; ____ mA</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-pwr">Puissance</span></td>
+        <td>Courant moteur <strong>légèrement freiné au doigt</strong> <i>I<sub>moteur,charge</sub></i></td>
+        <td><em>(Augmenter charge)</em></td>
+        <td>&rarr; monte jusqu'à ______ mA !</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="student-answer">
+    <strong>💡 Question d'ingénierie n°3 (à rédiger dans votre Google Docs Classroom) :</strong><br>
+    1. Pourquoi mesure-t-on environ <strong>5 V aux bornes du contact du relais lorsqu'il est ouvert</strong> et <strong>0,00 V lorsqu'il est fermé</strong> ?<br>
+    2. Expliquez physiquement pourquoi le courant <i>I<sub>moteur</sub></i> augmente fortement lorsque vous freinez légèrement l'axe jaune avec les doigts (rappel de Physique Appliquée : modèle de l'induit <i>U = E + R<sub>induit</sub>&middot;I</i> avec <i>E = k&middot;&Omega;</i>).<br>
+    3. Pourquoi est-il <strong>impossible</strong> d'utiliser ce relais mécanique pour faire varier la vitesse du moteur par MLI/PWM à 1 000 commutations par seconde (1 kHz) ?
+  </div>
+
+  <label class="step-check no-print">
+    <input type="checkbox" class="tp-step-cb" data-step="3" onchange="updateProgress()">
+    <span>Partie 3 validée : Mesures Partie Commande / Partie Puissance du Relais Grove (Proteus + Réel) complétées dans Google Docs.</span>
+  </label>
+</div>
+
+<!-- ===================================================================== -->
+<!-- PARTIE 4 : TRANSISTOR NPN (TIP31C) & DIODE DE ROUE LIBRE 1N4001       -->
+<!-- ===================================================================== -->
+<h2 id="sec-p4">PARTIE 4 : Partie Commande / Partie Puissance n°2 — Commutation Statique par Transistor NPN (<code>TIP31C</code>) <span class="badge badge-time">1h00</span></h2>
+
+<div class="card-block">
+  <h3>4.1 Choix du Transistor dans le TI myParts Kit (<code>2N3904</code> vs <code>TIP31C</code>) &amp; Dimensionnement</h3>
+  <p>
+    Pour commuter rapidement et silencieusement le moteur sans pièce mécanique en mouvement, nous remplaçons le relais par un <strong>transistor bipolaire NPN fonctionnant en commutation (Bloqué / Saturé)</strong> sur la breadboard. Le <em>TI myParts Kit</em> contient deux références NPN :
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Référence TI myParts Kit</th>
+        <th>Boîtier &amp; Brochage (vue de face)</th>
+        <th>Courant Collecteur max <i>I<sub>C,max</sub></i></th>
+        <th>Gain en courant <i>&beta; (h<sub>FE</sub>)</i></th>
+        <th>Verdict pour notre Moteur CC jaune (pics à 600 mA)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong><code>2N3904L</code></strong></td>
+        <td>TO-92 : <code>1:E | 2:B | 3:C</code></td>
+        <td><strong>200 mA max</strong></td>
+        <td>100 à 300</td>
+        <td>❌ <strong>Sous-dimensionné / Risque de destruction thermique</strong> lors du courant d'appel au démarrage ! (Adapté uniquement aux LEDs ou petits relais).</td>
+      </tr>
+      <tr>
+        <td><strong><code>TIP31C</code></strong></td>
+        <td>TO-220 : <strong><code>1:B | 2:C | 3:E</code></strong></td>
+        <td><strong>3 000 mA (3 A)</strong></td>
+        <td>25 à 50</td>
+        <td>✅ <strong>Parfaitement dimensionné</strong> pour la Partie Puissance 5 V !</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="formula-box">
+    Maille de Commande (Base) : <i>I<sub>B</sub></i> =
+    <span class="frac"><span class="num"><i>U<sub>GPIO</sub></i> &minus; <i>V<sub>BE,sat</sub></i></span><span class="den"><i>R<sub>B</sub></i></span></span>
+    =
+    <span class="frac"><span class="num">3,3 V &minus; 0,8 V</span><span class="den">330 &Omega;</span></span>
+    &approx; <strong>7,6 mA</strong> (&lt; 12 mA max du Pico !)
+    &nbsp;&nbsp;|&nbsp;&nbsp;
+    Maille de Puissance : <i>U<sub>Varta</sub></i> = <i>U<sub>moteur</sub></i> + <i>V<sub>CE,sat</sub></i>
+  </div>
+
+  <div class="callout callout-danger">
+    <strong>⚠️ DEUX RÈGLES DE CÂBLAGE VITALES SUR LA BREADBOARD :</strong>
+    <ol style="margin:6px 0 0 0;">
+      <li><strong>Diode de roue libre <code>1N4001</code> OBLIGATOIRE aux bornes du moteur :</strong> Un moteur comporte un bobinage inductif. À l'ouverture du transistor, la coupure brutale du courant génère une surtension <i>u<sub>L</sub> = L&middot;di/dt</i> pouvant dépasser 50 V et percer le transistor ! Placez la diode <code>1N4001</code> en parallèle avec le moteur, <strong>bague argentée (Cathode) impérativement vers le <code>+5V</code> Varta</strong> ! (À l'envers, elle créerait un court-circuit franc !).</li>
+      <li><strong>MASSE COMMUNE (<code>GND</code>) OBLIGATOIRE :</strong> Contrairement au relais isolé galvaniquement, le courant de commande <i>I<sub>B</sub></i> entre par la Base et ressort par l'Émetteur vers le <code>GND</code> ! Vous devez <strong>relier par un fil noir le <code>GND</code> du Raspberry Pi Pico au rail <code>&minus; (GND)</code> de la Powerbank Varta</strong> (sans jamais relier <code>3V3</code> et <code>+5V</code> !).</li>
+    </ol>
+  </div>
+
+  <!-- SVG 3 : MONTAGE TRANSISTOR TIP31C COMMANDE / PUISSANCE -->
+  <div class="svg-card">
+    <svg viewBox="0 0 920 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Schéma Commande Puissance par Transistor NPN TIP31C et diode de roue libre 1N4001">
+      <rect width="920" height="340" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+
+      <!-- Zone Partie Commande -->
+      <rect x="14" y="14" width="415" height="312" rx="8" fill="#f0f9ff" stroke="#38bdf8" stroke-width="1.8"/>
+      <text x="221" y="36" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="13" font-weight="bold" fill="#0369a1">PARTIE COMMANDE (3,3 V — Courant faible I_B ~ 7,5 mA)</text>
+
+      <!-- Pico GP18 -->
+      <rect x="28" y="128" width="120" height="150" rx="6" fill="#0f172a" stroke="#334155"/>
+      <text x="88" y="158" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11.5" font-weight="bold" fill="#38bdf8">Raspberry Pi</text>
+      <text x="88" y="174" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11.5" font-weight="bold" fill="#38bdf8">PICO</text>
+      <text x="140" y="206" text-anchor="end" font-family="Consolas, monospace" font-size="10.5" fill="#fde047">GP18 (D18)</text>
+      <text x="140" y="262" text-anchor="end" font-family="Consolas, monospace" font-size="10.5" fill="#94a3b8">GND</text>
+
+      <!-- Ampèremètre I_B + Résistance RB 330 Ohm -->
+      <line x1="148" y1="202" x2="188" y2="202" stroke="#0284c7" stroke-width="2.5"/>
+      <circle cx="205" cy="202" r="16" fill="#ffffff" stroke="#0284c7" stroke-width="2.5"/>
+      <text x="205" y="207" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="12" font-weight="bold" fill="#0284c7">A1</text>
+      <text x="205" y="178" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#0369a1">I_B (mA)</text>
+      <line x1="221" y1="202" x2="265" y2="202" stroke="#0284c7" stroke-width="2.5"/>
+
+      <rect x="265" y="190" width="70" height="24" fill="#ffffff" stroke="#1e293b" stroke-width="2"/>
+      <text x="300" y="206" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10.5" font-weight="bold" fill="#1e293b">R_B=330&Omega;</text>
+      <line x1="335" y1="202" x2="442" y2="202" stroke="#0284c7" stroke-width="2.5"/>
+
+      <!-- Voltmètre V_RB -->
+      <line x1="255" y1="202" x2="255" y2="142" stroke="#7c3aed" stroke-width="1.6"/>
+      <line x1="255" y1="142" x2="286" y2="142" stroke="#7c3aed" stroke-width="1.6"/>
+      <circle cx="300" cy="142" r="13" fill="#ffffff" stroke="#7c3aed" stroke-width="2"/>
+      <text x="300" y="146" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#7c3aed">V1</text>
+      <line x1="314" y1="142" x2="345" y2="142" stroke="#7c3aed" stroke-width="1.6"/>
+      <line x1="345" y1="142" x2="345" y2="202" stroke="#7c3aed" stroke-width="1.6"/>
+      <text x="300" y="122" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#6d28d9">U_RB</text>
+
+      <!-- Voltmètre V_BE -->
+      <line x1="382" y1="202" x2="382" y2="232" stroke="#0284c7" stroke-width="1.6"/>
+      <circle cx="382" cy="245" r="13" fill="#ffffff" stroke="#0284c7" stroke-width="2"/>
+      <text x="382" y="249" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#0284c7">V2</text>
+      <line x1="382" y1="258" x2="382" y2="286" stroke="#0284c7" stroke-width="1.6"/>
+      <text x="352" y="250" text-anchor="end" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#0369a1">V_BE</text>
+
+      <!-- Zone Partie Puissance -->
+      <rect x="435" y="14" width="471" height="312" rx="8" fill="#fef2f2" stroke="#f87171" stroke-width="1.8"/>
+      <text x="670" y="36" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="13" font-weight="bold" fill="#b91c1c">PARTIE PUISSANCE (5 V Varta — Courant fort I_C ~ 180 mA)</text>
+
+      <!-- Transistor TIP31C à la frontière -->
+      <circle cx="468" cy="202" r="28" fill="#ffffff" stroke="#1e293b" stroke-width="2.2"/>
+      <line x1="456" y1="184" x2="456" y2="220" stroke="#1e293b" stroke-width="3.5"/>
+      <line x1="442" y1="202" x2="456" y2="202" stroke="#1e293b" stroke-width="2.5"/>
+      <line x1="456" y1="192" x2="480" y2="174" stroke="#1e293b" stroke-width="2.2"/>
+      <line x1="456" y1="212" x2="480" y2="230" stroke="#1e293b" stroke-width="2.2"/>
+      <polygon points="480,230 470,227 475,219" fill="#1e293b"/>
+      <text x="444" y="194" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#0284c7">B(1)</text>
+      <text x="492" y="172" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#dc2626">C(2)</text>
+      <text x="492" y="242" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#16a34a">E(3)</text>
+      <text x="468" y="166" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10.5" font-weight="bold" fill="#0f172a">TIP31C</text>
+
+      <!-- Collecteur -> Moteur + Diode 1N4001 -> Ampèremètre I_C -> +5V Varta -->
+      <line x1="480" y1="174" x2="480" y2="152" stroke="#dc2626" stroke-width="2.5"/>
+      <line x1="480" y1="152" x2="640" y2="152" stroke="#dc2626" stroke-width="2.5"/>
+
+      <!-- Voltmètre V_CE -->
+      <line x1="480" y1="164" x2="548" y2="164" stroke="#7c3aed" stroke-width="1.6"/>
+      <line x1="548" y1="164" x2="548" y2="205" stroke="#7c3aed" stroke-width="1.6"/>
+      <circle cx="548" cy="219" r="14" fill="#ffffff" stroke="#7c3aed" stroke-width="2"/>
+      <text x="548" y="223" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#7c3aed">V3</text>
+      <line x1="548" y1="233" x2="548" y2="286" stroke="#7c3aed" stroke-width="1.6"/>
+      <text x="568" y="223" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#6d28d9">V_CE</text>
+
+      <!-- Moteur CC jaune vertical -->
+      <line x1="600" y1="66" x2="600" y2="88" stroke="#dc2626" stroke-width="2.5"/>
+      <circle cx="600" cy="112" r="24" fill="#fef08a" stroke="#ca8a04" stroke-width="3"/>
+      <text x="600" y="111" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="13" font-weight="bold" fill="#854d0e">M</text>
+      <text x="600" y="125" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9" font-weight="bold" fill="#854d0e">3–6 V</text>
+      <line x1="600" y1="136" x2="600" y2="152" stroke="#dc2626" stroke-width="2.5"/>
+
+      <!-- Diode 1N4001 roue libre en antiparallèle (Cathode en haut vers +5V !) -->
+      <line x1="665" y1="66" x2="665" y2="98" stroke="#1e293b" stroke-width="2"/>
+      <line x1="653" y1="98" x2="677" y2="98" stroke="#dc2626" stroke-width="3.5"/>
+      <polygon points="665,98 653,122 677,122" fill="#1e293b"/>
+      <line x1="665" y1="122" x2="665" y2="152" stroke="#1e293b" stroke-width="2"/>
+      <line x1="640" y1="152" x2="665" y2="152" stroke="#dc2626" stroke-width="2.5"/>
+      <text x="683" y="106" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#b91c1c">1N4001</text>
+      <text x="683" y="119" font-family="Segoe UI, sans-serif" font-size="8.8" fill="#7f1d1d">(Bague K en haut !)</text>
+
+      <!-- Voltmètre V4 sur moteur -->
+      <line x1="545" y1="66" x2="545" y2="96" stroke="#0284c7" stroke-width="1.6"/>
+      <circle cx="545" cy="110" r="13" fill="#ffffff" stroke="#0284c7" stroke-width="2"/>
+      <text x="545" y="114" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#0284c7">V4</text>
+      <line x1="545" y1="123" x2="545" y2="152" stroke="#0284c7" stroke-width="1.6"/>
+      <text x="526" y="114" text-anchor="end" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#0369a1">U_mot</text>
+
+      <!-- Rail +5V + Ampèremètre I_C + Powerbank Varta -->
+      <line x1="545" y1="66" x2="735" y2="66" stroke="#dc2626" stroke-width="2.5"/>
+      <circle cx="753" cy="66" r="16" fill="#ffffff" stroke="#dc2626" stroke-width="2.5"/>
+      <text x="753" y="71" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="12" font-weight="bold" fill="#dc2626">A2</text>
+      <text x="753" y="96" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#b91c1c">I_C (10A)</text>
+      <line x1="769" y1="66" x2="838" y2="66" stroke="#dc2626" stroke-width="2.5"/>
+      <line x1="838" y1="66" x2="838" y2="132" stroke="#dc2626" stroke-width="2.5"/>
+
+      <rect x="782" y="132" width="110" height="86" rx="8" fill="#1e293b" stroke="#475569"/>
+      <text x="837" y="160" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#ffffff">POWERBANK</text>
+      <text x="837" y="176" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#fde047">VARTA 5 V</text>
+      <text x="837" y="198" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#cbd5e1">+5V / GND</text>
+
+      <!-- Ligne de MASSE COMMUNE (GND Pico <-> Emetteur <-> GND Varta) -->
+      <line x1="480" y1="230" x2="480" y2="286" stroke="#16a34a" stroke-width="2.5"/>
+      <line x1="148" y1="258" x2="170" y2="258" stroke="#1e293b" stroke-width="2.5"/>
+      <line x1="170" y1="258" x2="170" y2="286" stroke="#1e293b" stroke-width="2.5"/>
+      <line x1="170" y1="286" x2="838" y2="286" stroke="#1e293b" stroke-width="3"/>
+      <line x1="838" y1="218" x2="838" y2="286" stroke="#1e293b" stroke-width="2.5"/>
+      <rect x="360" y="294" width="235" height="22" rx="4" fill="#dcfce7" stroke="#16a34a"/>
+      <text x="477" y="309" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#166534">LIAISON GND COMMUNE OBLIGATOIRE !</text>
+    </svg>
+    <div class="svg-caption">Figure 4.1 — Commutation statique par transistor NPN <code>TIP31C</code> (TI myParts Kit) avec diode de roue libre <code>1N4001</code>, masse commune et points de mesure Commande / Puissance.</div>
+  </div>
+
+  <h3>4.2 Simulation Proteus, Câblage Breadboard &amp; Campagne de Mesures</h3>
+  <ol>
+    <li><strong>Simulation Proteus :</strong> Saisissez le montage de la Figure 4.1 avec <code>TIP31C</code>, <code>RES = 330</code>, <code>1N4001</code>, <code>MOTOR</code> (<code>5V / 25 &Omega;</code>), les deux ampèremètres <code>A1</code> (en mA) et <code>A2</code> (en mA), et les voltmètres <code>V1..V4</code>. Relevez les grandeurs à l'état bloqué (commande <code>0V</code>) puis saturé (commande <code>3.3V</code>).</li>
+    <li><strong>Réalisation sur Breadboard :</strong> Implantez le <code>TIP31C</code> (attention au brochage de gauche à droite texte face à vous : <strong><code>1:Base | 2:Collecteur | 3:Émetteur</code></strong>), la résistance <code>R<sub>B</sub> = 330 &Omega;</code> reliée à <strong><code>GP18</code></strong> (port <code>D18</code> du Grove Shield via cordon Grove-Dupont ou broche directe du Pico), la diode <code>1N4001</code> (bague au <code>+5V</code> Varta) et le moteur jaune. Reliez bien le <code>GND</code> du Pico au <code>&minus;</code> de la Powerbank Varta !</li>
+    <li><strong>Exécutez le script de test TOR sur <code>GP18</code> :</strong> (reprenez le script de la Partie 3 en remplaçant <code>Pin(16, Pin.OUT)</code> par <strong><code>Pin(18, Pin.OUT)</code></strong>) et complétez le tableau :</li>
+  </ol>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Zone</th>
+        <th>Grandeur mesurée</th>
+        <th class="col-calc">Théorie (OFF / ON)</th>
+        <th class="col-sim">Proteus (OFF / ON)</th>
+        <th class="col-real">Breadboard (OFF / ON)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="badge badge-cmd">Commande</span></td>
+        <td>Tension aux bornes de <i>R<sub>B</sub></i> : <i>U<sub>RB (V1)</sub></i> (V)</td>
+        <td>0 V &nbsp;/&nbsp; ~2,50 V</td>
+        <td>____ V / ____ V</td>
+        <td>____ V / ____ V</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-cmd">Commande</span></td>
+        <td>Tension Base-Émetteur <i>V<sub>BE (V2)</sub></i> (V)</td>
+        <td>0 V &nbsp;/&nbsp; ~0,80 V</td>
+        <td>____ V / ____ V</td>
+        <td>____ V / ____ V</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-cmd">Commande</span></td>
+        <td>Courant de Base <i>I<sub>B (A1)</sub></i> (mA)</td>
+        <td>0 mA &nbsp;/&nbsp; ~7,6 mA</td>
+        <td>____ mA / ____ mA</td>
+        <td>____ mA / ____ mA</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-pwr">Puissance</span></td>
+        <td>Tension Collecteur-Émetteur <i>V<sub>CE (V3)</sub></i> (V)</td>
+        <td>5,0 V &nbsp;/&nbsp; <strong><i>V<sub>CEsat</sub></i> ~0,2–0,5 V</strong></td>
+        <td>____ V / ____ V</td>
+        <td>____ V / ____ V</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-pwr">Puissance</span></td>
+        <td>Tension utile aux bornes du moteur <i>U<sub>moteur (V4)</sub></i> (V)</td>
+        <td>0 V &nbsp;/&nbsp; ~4,6–4,8 V</td>
+        <td>____ V / ____ V</td>
+        <td>____ V / ____ V</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-pwr">Puissance</span></td>
+        <td>Courant de Collecteur / Moteur <i>I<sub>C (A2)</sub></i> (mA)</td>
+        <td>0 mA &nbsp;/&nbsp; ~160–220 mA</td>
+        <td>____ mA / ____ mA</td>
+        <td>____ mA / ____ mA</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>4.3 Synthèse Comparative : Relais Électromécanique Grove vs Transistor Bipolaire <code>TIP31C</code></h3>
+  <p>Complétez dans votre Google Docs ce tableau de synthèse à l'aide de vos mesures expérimentales des Parties 3 et 4 :</p>
+  <table>
+    <thead>
+      <tr>
+        <th>Critère d'ingénierie</th>
+        <th>Solution 1 : Module Relais Grove</th>
+        <th>Solution 2 : Transistor NPN <code>TIP31C</code> + <code>1N4001</code></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Isolation galvanique Commande / Puissance</strong></td>
+        <td>✅ Oui totale (contact mécanique sec, masses séparables, commutable même en 230 V AC sur relais industriel)</td>
+        <td>❌ Non (masse <code>GND</code> commune obligatoire entre Pico et Varta)</td>
+      </tr>
+      <tr>
+        <td><strong>Chute de tension à l'état passant (pertes)</strong></td>
+        <td>Quasi nulle : <i>U<sub>contact</sub></i> &approx; ______ V</td>
+        <td>Tension déchet : <i>V<sub>CE,sat</sub></i> = ______ V (perte <i>P<sub>T</sub> = V<sub>CEsat</sub>&middot;I<sub>C</sub></i> = ____ mW)</td>
+      </tr>
+      <tr>
+        <td><strong>Bruit acoustique &amp; usure mécanique</strong></td>
+        <td>Clic audible, rebonds mécaniques, durée de vie limitée (~10<sup>5</sup> cycles)</td>
+        <td>Totalement silencieux, aucune pièce mobile, durée de vie quasi illimitée</td>
+      </tr>
+      <tr>
+        <td><strong>Fréquence max &amp; Variation de vitesse PWM</strong></td>
+        <td>❌ Impossible (&lt; 5 à 10 Hz max)</td>
+        <td>✅ Excellente (commutation en microsecondes &rarr; <strong>idéal pour PWM 1 kHz !</strong>)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <label class="step-check no-print">
+    <input type="checkbox" class="tp-step-cb" data-step="4" onchange="updateProgress()">
+    <span>Partie 4 validée : Montage Transistor TIP31C + 1N4001 simulé sous Proteus, mesuré sur Breadboard et comparé au Relais dans Google Docs.</span>
+  </label>
+</div>
+
+<!-- ===================================================================== -->
+<!-- PARTIE 5 : SYNTHÈSE SYSTÈME MICROPYTHON — PICO-DRIVEBENCH             -->
+<!-- ===================================================================== -->
+<h2 id="sec-p5">PARTIE 5 : Synthèse Système en MicroPython — Variateur PWM Hybride Sécurisé « PICO-DRIVEBENCH » <span class="badge badge-time">55 min</span></h2>
+
+<div class="card-block">
+  <h3>5.1 Cahier des Charges Industriel : Combiner Relais de Sécurité + Variateur PWM à Transistor</h3>
+  <p>
+    Dans une armoire industrielle réelle (convoyeur, ventilation d'armoire serveur), on combine le meilleur des deux technologies étudiées aux Parties 3 et 4, pilotées par tous les composants caractérisés aux Parties 1 et 2 :
+  </p>
+  <ul>
+    <li><strong>Consigne opérateur (Partie 1) :</strong> Le <strong>potentiomètre <code>10 k&Omega;</code></strong> (alimenté cette fois entre <strong><code>3V3</code></strong> et <strong><code>GND</code></strong> du Pico — <em>surtout pas en 5 V !</em>) envoie une tension analogique 0–3,3 V sur l'entrée <strong><code>GP26 (ADC0 / Port A0)</code></strong>.</li>
+    <li><strong>Signalisation lumineuse sur Breadboard (Partie 2) :</strong> Une <strong>LED Rouge</strong> (<code>GP20</code> + <code>330 &Omega;</code>) signale l'état <em>Arrêt / Ligne Puissance Coupée</em> ; une <strong>LED Verte</strong> (<code>GP21</code> + <code>330 &Omega;</code>) signale l'état <em>Variateur Actif</em>.</li>
+    <li><strong>Contacteur de Ligne Sécurisé à Hystérésis (Partie 3) :</strong> Le <strong>Relais Grove (<code>GP16 / Port D16</code>)</strong> est placé en tête de la ligne <code>+5V</code> de la Powerbank Varta. Pour éviter tout claquement intempestif autour du seuil :
+      <ul>
+        <li>Il <strong>s'enclenche</strong> dès que la consigne dépasse <strong>12 %</strong> ;</li>
+        <li>Il <strong>retombe (coupe physiquement le +5 V Varta)</strong> dès que la consigne redescend sous <strong>8 %</strong>.</li>
+      </ul>
+    </li>
+    <li><strong>Hacheur Série MLI / PWM à 1 kHz (Partie 4) :</strong> Le <strong>Transistor <code>TIP31C</code> (<code>GP18 / Port D18</code> + <code>R<sub>B</sub> = 330 &Omega;</code> + diode <code>1N4001</code>)</strong> module la tension moyenne aux bornes du <strong>moteur CC jaune 3–6 V</strong> proportionnellement au rapport cyclique &alpha; :</li>
+  </ul>
+
+  <div class="formula-box">
+    Tension moyenne moteur en PWM : &lang;<i>U<sub>moteur</sub></i>&rang; &approx; &alpha; &times; (<i>U<sub>Varta</sub></i> &minus; <i>V<sub>CE,sat</sub></i>)
+    &nbsp;&nbsp;avec&nbsp;&nbsp;
+    &alpha; =
+    <span class="frac"><span class="num"><i>t<sub>ON</sub></i></span><span class="den"><i>T</i></span></span>
+    =
+    <span class="frac"><span class="num"><code>duty_u16</code></span><span class="den">65 535</span></span>
+    &nbsp;&nbsp;(<i>f<sub>PWM</sub></i> = 1 000 Hz &rArr; <i>T</i> = 1 ms)
+  </div>
+
+  <!-- SVG 4 : SYNOPTIQUE COMPLET PICO-DRIVEBENCH -->
+  <div class="svg-card">
+    <svg viewBox="0 0 920 285" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Architecture complète PICO-DRIVEBENCH réunissant Potentiomètre, LEDs, Pico, Relais Grove et Hacheur PWM TIP31C">
+      <rect width="920" height="285" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+
+      <!-- Bloc Entrées / Voyants Breadboard -->
+      <rect x="16" y="20" width="215" height="245" rx="8" fill="#ffffff" stroke="#94a3b8"/>
+      <text x="123" y="42" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11.5" font-weight="bold" fill="#0b3c5d">IHM sur Breadboard (3,3 V)</text>
+
+      <rect x="30" y="56" width="186" height="78" rx="6" fill="#eff6ff" stroke="#93c5fd"/>
+      <text x="123" y="75" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10.5" font-weight="bold" fill="#1d4ed8">Potentiomètre 10 k&Omega;</text>
+      <text x="123" y="92" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#334155">Broches 1-3 : 3V3 Pico &amp; GND</text>
+      <text x="123" y="108" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#0369a1">Curseur (2) &rarr; GP26 (ADC0)</text>
+
+      <rect x="30" y="148" width="186" height="102" rx="6" fill="#f0fdf4" stroke="#86efac"/>
+      <text x="123" y="168" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10.5" font-weight="bold" fill="#15803d">Voyants d'état (+ R = 330 &Omega;)</text>
+      <circle cx="52" cy="192" r="8" fill="#ef4444"/>
+      <text x="68" y="196" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#1e293b">GP20 : LED Rouge (Arrêt)</text>
+      <circle cx="52" cy="222" r="8" fill="#22c55e"/>
+      <text x="68" y="226" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#1e293b">GP21 : LED Verte (Marche)</text>
+
+      <!-- Flèches vers Pico -->
+      <line x1="231" y1="95" x2="278" y2="95" stroke="#0284c7" stroke-width="2.5"/>
+      <polygon points="278,95 270,90 270,100" fill="#0284c7"/>
+      <line x1="278" y1="198" x2="231" y2="198" stroke="#16a34a" stroke-width="2.5"/>
+      <polygon points="231,198 239,193 239,203" fill="#16a34a"/>
+
+      <!-- Bloc Central Pico -->
+      <rect x="280" y="38" width="205" height="210" rx="8" fill="#0f172a" stroke="#334155"/>
+      <text x="382" y="66" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="12.5" font-weight="bold" fill="#38bdf8">Raspberry Pi Pico</text>
+      <text x="382" y="84" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10" fill="#fde047">MicroPython (RP2040)</text>
+      <rect x="296" y="98" width="173" height="132" rx="5" fill="#1e293b"/>
+      <text x="382" y="118" text-anchor="middle" font-family="Consolas, monospace" font-size="9.5" fill="#e2e8f0">1. Lecture ADC(26)</text>
+      <text x="382" y="138" text-anchor="middle" font-family="Consolas, monospace" font-size="9.5" fill="#86efac">2. Hystérésis 8% / 12%</text>
+      <text x="382" y="158" text-anchor="middle" font-family="Consolas, monospace" font-size="9.5" fill="#fde047">3. GP16 &rarr; Relais Sécu</text>
+      <text x="382" y="178" text-anchor="middle" font-family="Consolas, monospace" font-size="9.5" fill="#f472b6">4. GP18 &rarr; PWM 1 kHz</text>
+      <text x="382" y="206" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9" fill="#94a3b8">GND relié au GND Varta</text>
+
+      <!-- Sorties vers Chaîne d'Énergie Puissance -->
+      <line x1="485" y1="88" x2="548" y2="88" stroke="#eab308" stroke-width="2.5"/>
+      <polygon points="548,88 540,83 540,93" fill="#eab308"/>
+      <text x="516" y="80" text-anchor="middle" font-family="Consolas, monospace" font-size="9.5" font-weight="bold" fill="#b45309">GP16 (TOR)</text>
+
+      <line x1="485" y1="196" x2="548" y2="196" stroke="#db2777" stroke-width="2.5"/>
+      <polygon points="548,196 540,191 540,201" fill="#db2777"/>
+      <text x="516" y="188" text-anchor="middle" font-family="Consolas, monospace" font-size="9.5" font-weight="bold" fill="#be185d">GP18 (PWM)</text>
+
+      <!-- Bloc Chaîne de Puissance 5V Varta -->
+      <rect x="550" y="20" width="354" height="245" rx="8" fill="#fef2f2" stroke="#f87171" stroke-width="1.8"/>
+      <text x="727" y="42" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11.5" font-weight="bold" fill="#b91c1c">Chaîne de Puissance Hybride (Powerbank Varta 5 V)</text>
+
+      <rect x="566" y="58" width="145" height="62" rx="6" fill="#ffffff" stroke="#16a34a" stroke-width="2"/>
+      <text x="638" y="79" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10.5" font-weight="bold" fill="#166534">1. Relais Grove</text>
+      <text x="638" y="95" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.2" fill="#334155">Coupe le +5V Varta</text>
+      <text x="638" y="109" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.2" fill="#166534">si consigne &lt; 8 %</text>
+
+      <rect x="566" y="162" width="145" height="72" rx="6" fill="#ffffff" stroke="#dc2626" stroke-width="2"/>
+      <text x="638" y="182" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10.5" font-weight="bold" fill="#b91c1c">2. Hacheur TIP31C</text>
+      <text x="638" y="198" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.2" fill="#334155">R_B=330&Omega; + 1N4001</text>
+      <text x="638" y="214" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.2" fill="#b91c1c">Modulation 0–100 %</text>
+
+      <!-- Liaison série Relais -> Moteur -> Transistor -->
+      <line x1="711" y1="88" x2="818" y2="88" stroke="#dc2626" stroke-width="2.5"/>
+      <line x1="818" y1="88" x2="818" y2="116" stroke="#dc2626" stroke-width="2.5"/>
+      <circle cx="818" cy="145" r="28" fill="#fef08a" stroke="#ca8a04" stroke-width="3"/>
+      <text x="818" y="143" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="13" font-weight="bold" fill="#854d0e">Moteur</text>
+      <text x="818" y="158" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#854d0e">CC 3–6V</text>
+      <line x1="818" y1="173" x2="818" y2="198" stroke="#dc2626" stroke-width="2.5"/>
+      <line x1="818" y1="198" x2="711" y2="198" stroke="#dc2626" stroke-width="2.5"/>
+      <text x="818" y="242" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#0284c7">Voltmètre DC = &lt;U_mot&gt;</text>
+    </svg>
+    <div class="svg-caption">Figure 5.1 — Synoptique du système complet « PICO-DRIVEBENCH » associant coupe-circuit par Relais Grove et hacheur PWM par Transistor TIP31C.</div>
+  </div>
+
+  <h3>5.2 Simulation du Hacheur PWM sous Proteus (Oscilloscope + Valeur Moyenne)</h3>
+  <p>
+    Dans votre schéma Proteus de la Partie 4, remplacez la source fixe <code>3.3V</code> de commande de <code>R<sub>B</sub></code> par un générateur d'impulsions <strong><code>PULSE</code></strong> (icône <em>Generator Mode</em> dans la barre gauche) configuré ainsi :
+    <code>Initial Voltage = 0</code>, <code>Pulsed Voltage = 3.3V</code>, <code>Frequency = 1k</code> (1 000 Hz) et <code>Pulse Width (%) = 25</code>, puis <code>50</code>, <code>75</code> et <code>100</code>.
+    Branchez la voie A de l'<strong><code>OSCILLOSCOPE</code></strong> virtuel sur la Base (ou la commande PWM) et la voie B sur le Collecteur du <code>TIP31C</code> : capturez les créneaux à 50 % pour votre Google Docs !
+  </p>
+
+  <h3>5.3 Programme MicroPython à Compléter sur le Raspberry Pi Pico</h3>
+  <p>
+    Copiez ce squelette dans Thonny (enregistré sous <code>main.py</code> ou <code>drivebench.py</code>), complétez les <strong>3 blocs <code># TODO</code></strong>, puis validez le fonctionnement complet :
+  </p>
+
+  <div class="code-wrapper">
+    <button type="button" class="copy-code-btn no-print" onclick="copierCode(this)">Copier</button>
+    <pre><code><span class="co"># ==============================================================================</span>
+<span class="co"># TP 5 : PICO-DRIVEBENCH — Variateur PWM Sécurisé (Relais Grove + TIP31C)</span>
+<span class="co"># Cible : Raspberry Pi Pico (MicroPython) | Fréquence PWM = 1 000 Hz</span>
+<span class="co"># ==============================================================================</span>
+<span class="im">from</span> machine <span class="im">import</span> Pin, ADC, PWM
+<span class="im">import</span> time
+
+<span class="co"># --- 1. INITIALISATION DES ENTRÉES / SORTIES ---</span>
+potentiometre = ADC(Pin(<span class="dv">26</span>))         <span class="co"># Consigne vitesse 0..3.3V (Port A0)</span>
+relais_secu   = Pin(<span class="dv">16</span>, Pin.OUT)     <span class="co"># Contacteur maître +5V Varta (Port D16)</span>
+led_rouge     = Pin(<span class="dv">20</span>, Pin.OUT)     <span class="co"># Voyant Arrêt Sécurisé (+ R=330 ohms)</span>
+led_verte     = Pin(<span class="dv">21</span>, Pin.OUT)     <span class="co"># Voyant Marche PWM     (+ R=330 ohms)</span>
+
+pwm_moteur = PWM(Pin(<span class="dv">18</span>))            <span class="co"># Commande base TIP31C (+ R_B=330 ohms)</span>
+pwm_moteur.freq(<span class="dv">1000</span>)                <span class="co"># Fréquence de découpage MLI : 1 kHz</span>
+pwm_moteur.duty_u16(<span class="dv">0</span>)
+
+puissance_autorisee = <span class="kw">False</span>          <span class="co"># Mémoire d'état de l'hystérésis (8% / 12%)</span>
+
+<span class="fu">print</span>(<span class="st">"=== PICO-DRIVEBENCH OPÉRATIONNEL ==="</span>)
+
+<span class="kw">while</span> <span class="kw">True</span>:
+    <span class="co"># Lecture brute sur 16 bits (0 à 65535)</span>
+    val_adc = potentiometre.read_u16()
+
+    <span class="co"># TODO 1 : Calculer le rapport cyclique en % (de 0.0 à 100.0) et la tension lue (0.0 à 3.3 V)</span>
+    rapport_pct = <span class="todo-hl">0.0</span>   <span class="co"># &lt;--- À remplacer par la formule utilisant val_adc</span>
+    tension_pot = <span class="todo-hl">0.0</span>   <span class="co"># &lt;--- À remplacer par la formule utilisant val_adc</span>
+
+    <span class="co"># TODO 2 : Gestion du Relais Grove avec hystérésis anti-battement</span>
+    <span class="co">#   - Si puissance_autorisee est False et rapport_pct &gt;= 12.0 -&gt; passer puissance_autorisee à True</span>
+    <span class="co">#   - Si puissance_autorisee est True  et rapport_pct &lt;= 8.0  -&gt; passer puissance_autorisee à False</span>
+    <span class="todo-hl"># (Écrire ici le bloc if / elif d'hystérésis)</span>
+
+    <span class="co"># TODO 3 : Pilotage coordonné Relais + Voyants LEDs + Transistor PWM</span>
+    <span class="kw">if</span> puissance_autorisee:
+        relais_secu.value(<span class="dv">1</span>)          <span class="co"># Ferme la ligne +5V Varta</span>
+        led_rouge.value(<span class="dv">0</span>)
+        led_verte.value(<span class="dv">1</span>)
+        <span class="co"># Appliquer le rapport cyclique sur le transistor TIP31C :</span>
+        pwm_moteur.duty_u16(<span class="todo-hl">0</span>)        <span class="co"># &lt;--- À remplacer par la consigne 16 bits</span>
+    <span class="kw">else</span>:
+        pwm_moteur.duty_u16(<span class="dv">0</span>)        <span class="co"># Coupe d'abord le transistor (commutation douce !)</span>
+        relais_secu.value(<span class="dv">0</span>)          <span class="co"># Ouvre le relais de sécurité</span>
+        led_rouge.value(<span class="dv">1</span>)
+        led_verte.value(<span class="dv">0</span>)
+
+    <span class="fu">print</span>(<span class="st">f"Pot={tension_pot:.2f}V | Alpha={rapport_pct:5.1f}% | Relais={'ON ' if puissance_autorisee else 'OFF'} | ADC={val_adc}"</span>)
+    time.sleep_ms(<span class="dv">200</span>)</code></pre>
+  </div>
+
+  <h3>5.4 Campagne de Validation Finale du Variateur PWM (Proteus vs Réel)</h3>
+  <p>
+    Tournez progressivement le potentiomètre pour atteindre les 5 rapports cycliques affichés dans la console Thonny et relevez au voltmètre DC la tension moyenne aux bornes du moteur CC jaune :
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Consigne &alpha; (%)</th>
+        <th>État Relais Grove</th>
+        <th class="col-calc">&lang;<i>U<sub>moteur</sub></i>&rang; théorique</th>
+        <th class="col-sim">Proteus : &lang;<i>U<sub>moteur</sub></i>&rang; (V)</th>
+        <th class="col-real">Réel : &lang;<i>U<sub>moteur</sub></i>&rang; (V) &amp; Comportement moteur</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>0 %</strong> (&lt; 8 %)</td>
+        <td>OUVERT (LED Rouge)</td>
+        <td>0,00 V</td>
+        <td>________ V</td>
+        <td>________ V — Arrêt sécurisé total</td>
+      </tr>
+      <tr>
+        <td><strong>25 %</strong></td>
+        <td>FERMÉ (LED Verte)</td>
+        <td>~1,15 V</td>
+        <td>________ V</td>
+        <td>________ V — Tourne-t-il déjà ou grogne-t-il ?</td>
+      </tr>
+      <tr>
+        <td><strong>50 %</strong></td>
+        <td>FERMÉ (LED Verte)</td>
+        <td>~2,30 V</td>
+        <td>________ V</td>
+        <td>________ V — Rotation modérée régulière</td>
+      </tr>
+      <tr>
+        <td><strong>75 %</strong></td>
+        <td>FERMÉ (LED Verte)</td>
+        <td>~3,45 V</td>
+        <td>________ V</td>
+        <td>________ V — Rotation rapide</td>
+      </tr>
+      <tr>
+        <td><strong>100 %</strong></td>
+        <td>FERMÉ (LED Verte)</td>
+        <td>~4,65 V</td>
+        <td>________ V</td>
+        <td>________ V — Pleine vitesse nominale</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="student-answer">
+    <strong>💡 Question d'ingénierie n°4 (Synthèse finale dans Google Docs) :</strong><br>
+    1. À partir de quel rapport cyclique minimal &alpha;<sub>min</sub> (%) votre moteur CC jaune parvient-il réellement à démarrer depuis l'arrêt ? Pourquoi ne tourne-t-il pas dès 5 % ou 10 % (couple de frottement sec du réducteur mécanique jaune) ?<br>
+    2. Expliquez pourquoi, dans le bloc <code>else</code> du programme MicroPython, il est préférable de mettre <code>pwm_moteur.duty_u16(0)</code> <strong>avant</strong> d'ouvrir <code>relais_secu.value(0)</code> (protection des contacts du relais contre l'arc électrique d'ouverture en charge !).
+  </div>
+
+  <label class="step-check no-print">
+    <input type="checkbox" class="tp-step-cb" data-step="5" onchange="updateProgress()">
+    <span>Partie 5 validée : Variateur PWM hybride fonctionnel sur Pico, captures oscilloscope Proteus + tableau PWM complétés.</span>
+  </label>
+</div>
+
+<!-- ===================================================================== -->
+<!-- CHECKLIST CLASSROOM & GRILLE D'ÉVALUATION OFFICIELLE (/20)            -->
+<!-- ===================================================================== -->
+<h2 id="sec-eval">📝 Dépôt Google Classroom &amp; Grille d'Évaluation par Compétences BTS CIEL (sur 20 pts)</h2>
+
+<div class="card-block">
+  <div class="callout callout-tip">
+    <strong>✅ CHECKLIST AVANT DE CLIQUER SUR « RENDRE LE DEVOIR » DANS GOOGLE CLASSROOM :</strong>
+    <ul style="margin:6px 0 0 0;">
+      <li>Les <strong>noms des deux étudiants du binôme</strong>, la date et la tension à vide exacte de votre <strong>Powerbank Varta</strong> figurent en haut du Google Docs.</li>
+      <li>Les <strong>5 captures d'écran Proteus</strong> sont nettes, recadrées et montrent clairement les valeurs affichées dans les cadres des voltmètres/ampèremètres virtuels (et l'oscillogramme PWM en Partie 5).</li>
+      <li>Au moins <strong>4 photographies réelles de votre paillasse</strong> montrent la breadboard câblée proprement + l'écran du multimètre en cours de mesure (dont une mesure de courant en série et le montage complet Partie 5).</li>
+      <li>Tous les <strong>écarts relatifs &epsilon; (%)</strong> sont calculés et les <strong>4 questions d'ingénierie</strong> sont rédigées avec un vocabulaire technique précis.</li>
+      <li>Votre code MicroPython final commenté est collé en annexe du Google Docs (et la paillasse + le <em>TI myParts Kit</em> sont rangés par valeur !).</li>
+    </ul>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width:12%;">Compétence BO</th>
+        <th style="width:28%;">Domaine évalué</th>
+        <th style="width:44%;">Indicateurs de réussite</th>
+        <th class="center" style="width:8%;">Barème</th>
+        <th class="center" style="width:8%;">Note</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C05</span></td>
+        <td><strong>Modélisation &amp; Simulations Proteus</strong></td>
+        <td>Schémas ISIS complets et fonctionnels (Parties 1 à 5), modèles analogiques bien paramétrés (LED Analog, ampèremètres en mA, générateur PULSE 1 kHz + oscilloscope).</td>
+        <td class="center"><strong>4 pts</strong></td>
+        <td class="center"></td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C07</span></td>
+        <td><strong>Prototypage Breadboard &amp; Sécurité</strong></td>
+        <td>Câblages propres sur breadboard sans court-circuit, respect des brochages (<code>TIP31C</code> TO-220, polarité LED, diode de roue libre <code>1N4001</code>, masse commune <code>GND</code>, switch <code>3V3</code>).</td>
+        <td class="center"><strong>4 pts</strong></td>
+        <td class="center"></td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C06</span></td>
+        <td><strong>Mesurage Expérimental (U, I, R) &amp; Écarts</strong></td>
+        <td>Utilisation autonome et sûre du voltmètre et de l'ampèremètre (aucun fusible grillé !), cohérence des mesures Partie Commande / Partie Puissance, calcul juste des écarts &epsilon; (%).</td>
+        <td class="center"><strong>5 pts</strong></td>
+        <td class="center"></td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C04</span></td>
+        <td><strong>Analyse Physique &amp; Ingénierie</strong></td>
+        <td>Pertinence des réponses aux 4 questions d'ingénierie (effet de charge du potentiomètre, non-linéarité LED, isolation galvanique vs commutation statique, f.c.é.m. moteur).</td>
+        <td class="center"><strong>3 pts</strong></td>
+        <td class="center"></td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C08</span></td>
+        <td><strong>Programmation MicroPython (Pico)</strong></td>
+        <td>Conversion ADC 16 bits exacte, hystérésis 8 % / 12 % sans battement du relais, modulation PWM 1 kHz fluide et coupure hors charge.</td>
+        <td class="center"><strong>2 pts</strong></td>
+        <td class="center"></td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C01</span></td>
+        <td><strong>Qualité du Compte Rendu Google Docs</strong></td>
+        <td>Document Classroom structuré, captures et photos légendées, unités systématiquement précisées (V, mA, &Omega;, Hz, %), rangement exemplaire du kit TI.</td>
+        <td class="center"><strong>2 pts</strong></td>
+        <td class="center"></td>
+      </tr>
+      <tr>
+        <td colspan="3" style="text-align:right; font-weight:bold;">TOTAL GÉNÉRAL (Durée : 5h00) :</td>
+        <td class="center"><strong>/ 20</strong></td>
+        <td class="center"></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <label class="step-check no-print">
+    <input type="checkbox" class="tp-step-cb" data-step="6" onchange="updateProgress()">
+    <span>Rendu final effectué : Google Docs relu, complet, remis dans Google Classroom et composants du TI myParts Kit triés et rangés ! 🎉</span>
+  </label>
+</div>
+
+<!-- ===================================================================== -->
+<!-- SCRIPTS INTERACTIFS : OUTILS ATELIER + COPIE TRAME GOOGLE DOCS RICHE   -->
+<!-- ===================================================================== -->
+<script>
+  // 1. Calculateur Code Couleurs 4 anneaux
+  function calcResistor() {
+    const d1 = parseInt(document.getElementById('band1').value, 10);
+    const d2 = parseInt(document.getElementById('band2').value, 10);
+    const mult = parseFloat(document.getElementById('bandMult').value);
+    const tol = parseFloat(document.getElementById('bandTol').value);
+    const val = (d1 * 10 + d2) * mult;
+    const minV = val * (1 - tol / 100);
+    const maxV = val * (1 + tol / 100);
+
+    function fmtOhm(x) {
+      if (x >= 1000) return (x / 1000).toLocaleString('fr-FR', { maximumFractionDigits: 3 }) + ' kΩ';
+      return x.toLocaleString('fr-FR', { maximumFractionDigits: 1 }) + ' Ω';
+    }
+    document.getElementById('resistorResult').textContent =
+      `Valeur nominale : ${fmtOhm(val)} ±${tol} % (Plage conforme : ${fmtOhm(minV)} à ${fmtOhm(maxV)})`;
+  }
+
+  // 2. Vérificateur d'écart relatif
+  function calcEcart() {
+    const ref = parseFloat(document.getElementById('valRef').value);
+    const mes = parseFloat(document.getElementById('valMes').value);
+    const out = document.getElementById('ecartResult');
+    if (isNaN(ref) || isNaN(mes) || ref === 0) {
+      out.textContent = 'Saisissez une référence Proteus non nulle et votre mesure réelle.';
+      return;
+    }
+    const eps = (Math.abs(mes - ref) / Math.abs(ref)) * 100;
+    const verdict = eps <= 10 ? '✅ Très bonne concordance (≤ 10 %)' : '⚠️ Écart significatif (> 10 %) : expliquez-en l\'origine physique !';
+    out.textContent = `Écart relatif ε = ${eps.toFixed(2).replace('.', ',')} % — ${verdict}`;
+  }
+
+  // 3. Barre de progression sauvegardée dans localStorage
+  const STORAGE_KEY = 'bts_ciel1_tp5_progress_v1';
+  function updateProgress() {
+    const boxes = document.querySelectorAll('.tp-step-cb');
+    let done = 0;
+    const state = {};
+    boxes.forEach(cb => {
+      state[cb.dataset.step] = cb.checked;
+      if (cb.checked) done++;
+    });
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+    const pct = Math.round((done / boxes.length) * 100);
+    document.getElementById('tpProgressFill').style.width = pct + '%';
+    document.getElementById('tpProgressText').textContent = `${done} / ${boxes.length}`;
+  }
+
+  (function restoreProgress() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+      document.querySelectorAll('.tp-step-cb').forEach(cb => {
+        if (saved[cb.dataset.step]) cb.checked = true;
+      });
+    } catch (e) {}
+    updateProgress();
+  })();
+
+  // 4. Copie d'un bloc de code MicroPython
+  function copierCode(btn) {
+    const codeText = btn.parentElement.querySelector('code').innerText;
+    navigator.clipboard.writeText(codeText).then(() => {
+      const old = btn.textContent;
+      btn.textContent = '✅ Copié !';
+      setTimeout(() => { btn.textContent = old; }, 1800);
+    });
+  }
+
+  // 5. Copie HTML riche de la trame complète pour Google Docs (Classroom)
+  async function copierTrameClassroom() {
+    const htmlTemplate = `
+      <div style="font-family: Arial, sans-serif; color: #1e293b; line-height: 1.45;">
+        <h1 style="color:#0b3c5d; border-bottom:2px solid #0b3c5d;">COMPTE RENDU DE TP (5H) — BTS CIEL 1re Année</h1>
+        <h2 style="color:#1d4ed8;">TP 5 : PICO-DRIVEBENCH — Composants de Base (TI myParts Kit), Simulation Proteus &amp; Interfaçage Commande / Puissance</h2>
+        <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; width:100%; margin-bottom:14px;">
+          <tr style="background:#f1f5f9;">
+            <td><b>Binôme (NOM Prénom 1 &amp; 2) :</b></td><td>....................................................</td>
+            <td><b>Date :</b></td><td>.... / .... / 202..</td>
+          </tr>
+          <tr>
+            <td><b>Tension à vide Powerbank Varta mesurée :</b></td><td><b>U_Varta = ........ V</b></td>
+            <td><b>Poste / Paillasse n° :</b></td><td>........</td>
+          </tr>
+        </table>
+
+        <h2 style="color:#0b3c5d;">PARTIE 1 — Résistances &amp; Potentiomètre (Proteus vs Breadboard)</h2>
+        <h3>1.1 Mesures sur Résistances (Série &amp; Dérivation)</h3>
+        <p><i>[📷 Insérer ici la capture Proteus (Série + Parallèle) et la photo Breadboard + Multimètre]</i></p>
+        <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; width:100%;">
+          <tr style="background:#e0f2fe; font-weight:bold;">
+            <th>Grandeur étudiée</th><th>Calcul Théorique</th><th>Simulation Proteus</th><th>Mesure Breadboard</th><th>Écart ε (%)</th>
+          </tr>
+          <tr><td>Ohmmètre hors tension : R1 / R2 / R3</td><td>330 Ω / 1 kΩ / 10 kΩ</td><td>-</td><td></td><td></td></tr>
+          <tr><td>Montage Série (1A) : U_R1 (V)</td><td>1,24 V</td><td></td><td></td><td></td></tr>
+          <tr><td>Montage Série (1A) : U_R2 (V)</td><td>3,76 V</td><td></td><td></td><td></td></tr>
+          <tr><td>Montage Série (1A) : Courant I (mA)</td><td>3,76 mA</td><td></td><td></td><td></td></tr>
+          <tr><td>Montage Parallèle (1B) : I1 et I2 (mA)</td><td>15,15 mA / 5,00 mA</td><td></td><td></td><td></td></tr>
+          <tr><td>Montage Parallèle (1B) : I_total (mA)</td><td>20,15 mA</td><td></td><td></td><td></td></tr>
+        </table>
+
+        <h3>1.2 Potentiomètre 10 kΩ à vide puis en charge (R_L = 1 kΩ)</h3>
+        <p><i>[📷 Insérer ici la capture Proteus du potentiomètre chargé par 1 kΩ]</i></p>
+        <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; width:100%;">
+          <tr style="background:#e0f2fe; font-weight:bold;">
+            <th>Position Curseur</th><th>Calcul Théorique</th><th>Simulation Proteus</th><th>Mesure Breadboard</th>
+          </tr>
+          <tr><td>À vide — 0 %</td><td>0,00 V</td><td></td><td></td></tr>
+          <tr><td>À vide — 50 % (V_out et I_alim)</td><td>2,50 V | 0,50 mA</td><td></td><td></td></tr>
+          <tr><td>À vide — 100 %</td><td>5,00 V</td><td></td><td></td></tr>
+          <tr><td><b>En charge à 50 % avec R_L = 1 kΩ</b></td><td><b>0,71 V</b></td><td></td><td></td></tr>
+        </table>
+        <p><b>Réponse Question d'ingénierie n°1 (Effet de charge : pourquoi impossible sur moteur mais idéal sur ADC Pico) :</b><br>........................................................................................................</p>
+
+        <h2 style="color:#0b3c5d;">PARTIE 2 — Caractérisation de LEDs &amp; Résistance de Protection</h2>
+        <p><i>[📷 Insérer ici la capture Proteus LED + la photo Breadboard LED allumée avec mesure de I_F ou V_F]</i></p>
+        <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; width:100%;">
+          <tr style="background:#e0f2fe; font-weight:bold;">
+            <th>Configuration (sous 5V)</th><th>Calcul I_F</th><th>Proteus (V_F / I_F)</th><th>Réel Breadboard (V_F / U_R / I_F)</th>
+          </tr>
+          <tr><td>LED Rouge + 220 Ω</td><td>~14,1 mA</td><td></td><td></td></tr>
+          <tr><td>LED Rouge + 330 Ω</td><td>~9,4 mA</td><td></td><td></td></tr>
+          <tr><td>LED Verte + 330 Ω</td><td>~8,8 mA</td><td></td><td></td></tr>
+          <tr><td>LED Rouge + 1 kΩ</td><td>~3,1 mA</td><td></td><td></td></tr>
+          <tr><td>LED Rouge + 10 kΩ</td><td>~0,32 mA</td><td></td><td></td></tr>
+          <tr><td>LED Rouge inversée (bloquée)</td><td>0,00 mA</td><td></td><td></td></tr>
+        </table>
+        <p><b>Réponse Question d'ingénierie n°2 (Non-linéarité V_F et différence LED Rouge / Verte) :</b><br>........................................................................................................</p>
+
+        <h2 style="color:#0b3c5d;">PARTIE 3 — Commande / Puissance par Relais Grove (Isolation Galvanique)</h2>
+        <p><i>[📷 Insérer ici la capture Proteus Relais + photo du câblage réel Pico + Relais Grove + Varta + Moteur jaune]</i></p>
+        <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; width:100%;">
+          <tr style="background:#fee2e2; font-weight:bold;">
+            <th>Zone</th><th>Grandeur</th><th>Proteus (OFF / ON)</th><th>Réel (OFF / ON)</th>
+          </tr>
+          <tr><td>Commande</td><td>U_cmd GP16 (V)</td><td></td><td></td></tr>
+          <tr><td>Puissance</td><td>U_contact bornier relais (V)</td><td></td><td></td></tr>
+          <tr><td>Puissance</td><td>U_moteur (V)</td><td></td><td></td></tr>
+          <tr><td>Puissance</td><td>I_moteur à vide (mA)</td><td></td><td></td></tr>
+          <tr><td>Puissance</td><td>I_moteur freiné au doigt (mA)</td><td>-</td><td></td></tr>
+        </table>
+        <p><b>Réponse Question d'ingénierie n°3 (U_contact, hausse de I_moteur en charge, impossibilité du PWM sur relais) :</b><br>........................................................................................................</p>
+
+        <h2 style="color:#0b3c5d;">PARTIE 4 — Commande / Puissance par Transistor TIP31C &amp; Diode 1N4001</h2>
+        <p><i>[📷 Insérer ici la capture Proteus TIP31C + photo du câblage Breadboard TIP31C + 1N4001]</i></p>
+        <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; width:100%;">
+          <tr style="background:#fee2e2; font-weight:bold;">
+            <th>Zone</th><th>Grandeur</th><th>Théorie (OFF / ON)</th><th>Proteus (OFF / ON)</th><th>Breadboard (OFF / ON)</th>
+          </tr>
+          <tr><td>Commande</td><td>U_RB (V)</td><td>0 V / ~2,5 V</td><td></td><td></td></tr>
+          <tr><td>Commande</td><td>V_BE (V)</td><td>0 V / ~0,8 V</td><td></td><td></td></tr>
+          <tr><td>Commande</td><td>I_B (mA)</td><td>0 mA / ~7,6 mA</td><td></td><td></td></tr>
+          <tr><td>Puissance</td><td>V_CE (V)</td><td>5 V / V_CEsat</td><td></td><td></td></tr>
+          <tr><td>Puissance</td><td>U_moteur (V)</td><td>0 V / ~4,7 V</td><td></td><td></td></tr>
+          <tr><td>Puissance</td><td>I_C moteur (mA)</td><td>0 mA / ~180 mA</td><td></td><td></td></tr>
+        </table>
+        <p><b>Calcul des puissances à l'état passant :</b> P_commande = ........ mW | P_moteur = ........ mW | Pertes transistor P_T = ........ mW.</p>
+
+        <h2 style="color:#0b3c5d;">PARTIE 5 — Variateur PWM Hybride « PICO-DRIVEBENCH » (MicroPython)</h2>
+        <p><i>[📷 Insérer ici l'oscillogramme PWM Proteus (1 kHz) + photo finale du banc complet]</i></p>
+        <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; width:100%;">
+          <tr style="background:#dcfce7; font-weight:bold;">
+            <th>Rapport cyclique α (%)</th><th>État Relais</th><th>&lt;U_moteur&gt; Proteus (V)</th><th>&lt;U_moteur&gt; Réel (V)</th><th>Observation mécanique moteur</th>
+          </tr>
+          <tr><td>0 %</td><td>OUVERT</td><td></td><td></td><td></td></tr>
+          <tr><td>25 %</td><td>FERMÉ</td><td></td><td></td><td></td></tr>
+          <tr><td>50 %</td><td>FERMÉ</td><td></td><td></td><td></td></tr>
+          <tr><td>75 %</td><td>FERMÉ</td><td></td><td></td><td></td></tr>
+          <tr><td>100 %</td><td>FERMÉ</td><td></td><td></td><td></td></tr>
+        </table>
+        <p><b>Réponse Question d'ingénierie n°4 (Seuil de démarrage α_min et séquence de coupure PWM avant relais) :</b><br>........................................................................................................</p>
+        <h3>Annexe : Code MicroPython final complété</h3>
+        <pre style="background:#f8fafc; padding:10px; border:1px solid #cbd5e1;">[Coller ici votre code MicroPython fonctionnel]</pre>
+      </div>`;
+
+    const plainFallback = "COMPTE RENDU TP 5 BTS CIEL — PICO-DRIVEBENCH (5h)\nBinôme : ...\nTension Powerbank Varta : ... V\n\nCollez ce modèle dans Google Docs (Classroom) pour obtenir les tableaux formatés.";
+
+    try {
+      if (window.ClipboardItem) {
+        const blobHtml = new Blob([htmlTemplate], { type: 'text/html' });
+        const blobText = new Blob([plainFallback], { type: 'text/plain' });
+        await navigator.clipboard.write([new ClipboardItem({ 'text/html': blobHtml, 'text/plain': blobText })]);
+      } else {
+        await navigator.clipboard.writeText(plainFallback);
+      }
+      const toast = document.getElementById('copyToast');
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 7000);
+    } catch (err) {
+      alert("Copie automatique bloquée par le navigateur : ouvrez ce fichier dans Chrome/Edge et réessayez.");
+    }
+  }
+</script>
+
+</body>
+</html>
