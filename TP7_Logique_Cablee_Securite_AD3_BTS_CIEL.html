@@ -1,0 +1,2151 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>TP 7 : PICO-SAFELOCK — Logique Câblée (74LSxx), Verrouillage d'Arrêt d'Urgence, CD4511 &amp; Analyseur Logique AD3 — BTS CIEL Option B (5h)</title>
+  <style>
+    :root {
+      --primary: #0b3c5d;
+      --primary-light: #e0f2fe;
+      --secondary: #1d4ed8;
+      --accent: #d97706;
+      --ad3-teal: #0d9488;
+      --ad3-bg: #f0fdfa;
+      --sim-purple: #7c3aed;
+      --sim-bg: #f5f3ff;
+      --cmd-blue: #0284c7;
+      --cmd-bg: #f0f9ff;
+      --pwr-red: #dc2626;
+      --pwr-bg: #fef2f2;
+      --real-green: #15803d;
+      --real-bg: #f0fdf4;
+      --bg-page: #f8fafc;
+      --bg-card: #ffffff;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --border: #cbd5e1;
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      color: var(--text-main);
+      background-color: var(--bg-page);
+      scroll-behavior: smooth;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.58;
+      color: var(--text-main);
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 18px 20px 70px 20px;
+    }
+
+    @page {
+      margin: 1.3cm;
+      size: A4;
+    }
+
+    @media print {
+      body {
+        max-width: 100%;
+        padding: 0;
+        font-size: 9.5pt;
+        color: #000;
+        background: #fff;
+      }
+      .no-print { display: none !important; }
+      .card-block {
+        box-shadow: none !important;
+        border: 1px solid #cbd5e1 !important;
+      }
+      pre, blockquote, table, .svg-card, .callout { page-break-inside: avoid; }
+      h1, h2, h3, h4 { page-break-after: avoid; }
+      a { color: #000; text-decoration: underline; }
+    }
+
+    /* Barre supérieure collante */
+    .top-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 16px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+    }
+    .top-bar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .back-link {
+      font-weight: 700;
+      color: var(--primary);
+      text-decoration: none;
+      font-size: 9.5pt;
+      padding: 5px 10px;
+      border-radius: 6px;
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+    }
+    .back-link:hover { background: #e2e8f0; text-decoration: none; }
+
+    .progress-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 9pt;
+      font-weight: 600;
+      color: #334155;
+    }
+    .progress-track {
+      width: 150px;
+      height: 10px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #0d9488, #1d4ed8);
+      transition: width 0.25s ease;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+      padding: 7px 13px;
+      font-size: 9pt;
+      font-weight: 700;
+      font-family: inherit;
+      transition: transform 0.1s ease, opacity 0.15s ease;
+      text-decoration: none;
+    }
+    .btn:hover { opacity: 0.93; text-decoration: none; }
+    .btn:active { transform: translateY(1px); }
+    .btn-docs {
+      background: linear-gradient(135deg, #0f766e, #15803d);
+      color: #ffffff;
+      box-shadow: 0 2px 6px rgba(15, 118, 110, 0.25);
+    }
+    .btn-outline {
+      background: #ffffff;
+      color: #1e293b;
+      border: 1px solid #cbd5e1;
+    }
+    .btn-rearm {
+      background: #15803d;
+      color: #ffffff;
+      padding: 5px 10px;
+      font-size: 8.5pt;
+    }
+    .btn-estop {
+      background: #dc2626;
+      color: #ffffff;
+      padding: 5px 10px;
+      font-size: 8.5pt;
+    }
+
+    /* En-tête principal */
+    .header-box {
+      background: linear-gradient(135deg, #0b3c5d 0%, #1e3a8a 55%, #0f766e 100%);
+      color: #ffffff;
+      border-radius: 12px;
+      padding: 24px 26px;
+      margin-bottom: 22px;
+      box-shadow: 0 6px 18px rgba(11, 60, 93, 0.2);
+    }
+    .header-kicker {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.18);
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 8.5pt;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .header-box h1 {
+      color: #ffffff;
+      font-size: 18pt;
+      margin: 0 0 10px 0;
+      border: none;
+      padding: 0;
+      line-height: 1.25;
+    }
+    .header-subtitle {
+      color: #e0f2fe;
+      font-size: 10.2pt;
+      margin: 0 0 14px 0;
+    }
+    .header-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 9pt;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.22);
+    }
+    .meta-pill {
+      background: rgba(15, 23, 42, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 4px 10px;
+      border-radius: 6px;
+      color: #f8fafc;
+    }
+
+    /* Titres */
+    h1, h2, h3, h4 {
+      color: var(--primary);
+      font-weight: 700;
+      line-height: 1.28;
+    }
+    h2 {
+      font-size: 14.5pt;
+      margin-top: 30px;
+      margin-bottom: 12px;
+      color: #0b3c5d;
+      border-left: 5px solid var(--ad3-teal);
+      padding: 6px 0 6px 12px;
+      background: linear-gradient(90deg, #f0fdfa 0%, transparent 100%);
+      border-radius: 0 6px 6px 0;
+    }
+    h3 {
+      font-size: 11.8pt;
+      margin-top: 20px;
+      margin-bottom: 8px;
+      border-left: 4px solid #328cc1;
+      padding-left: 9px;
+      color: #0f3a5d;
+    }
+    h4 {
+      font-size: 10.5pt;
+      margin-top: 14px;
+      margin-bottom: 6px;
+      color: #1e293b;
+    }
+    p { margin: 0.75em 0; }
+
+    /* Sections cartes */
+    .card-block {
+      background: var(--bg-card);
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 20px 22px;
+      margin-bottom: 22px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      font-size: 8.2pt;
+      font-weight: 700;
+      border-radius: 4px;
+      background-color: #e0f2fe;
+      color: #0369a1;
+      margin-right: 4px;
+      vertical-align: middle;
+    }
+    .badge-bo { background: #0b3c5d; color: #ffffff; }
+    .badge-optb { background: #0f766e; color: #ffffff; }
+    .badge-sim { background: #ede9fe; color: #6d28d9; border: 1px solid #ddd6fe; }
+    .badge-ad3 { background: #ccfbf1; color: #0f766e; border: 1px solid #99f6e4; }
+    .badge-cmd { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+    .badge-pwr { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+    .badge-time { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+
+    /* Encadrés */
+    .callout {
+      margin: 14px 0;
+      padding: 13px 16px;
+      border-radius: 8px;
+      border-left: 5px solid #0284c7;
+      background-color: #f0f9ff;
+      font-size: 9.5pt;
+    }
+    .callout-warn { border-left-color: #f59e0b; background-color: #fffbeb; }
+    .callout-danger { border-left-color: #dc2626; background-color: #fef2f2; }
+    .callout-tip { border-left-color: #16a34a; background-color: #f0fdf4; }
+    .callout-proteus { border-left-color: #7c3aed; background-color: #f5f3ff; }
+    .callout-ad3 { border-left-color: #0d9488; background-color: #f0fdfa; }
+    .callout-docs {
+      border-left-color: #0f766e;
+      background-color: #f0fdfa;
+      border: 1px solid #99f6e4;
+      border-left-width: 5px;
+    }
+
+    /* Grille double protocole Proteus vs AD3 WaveForms */
+    .dual-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 14px 0;
+    }
+    @media (max-width: 760px) {
+      .dual-grid { grid-template-columns: 1fr; }
+    }
+    .protocol-box {
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-size: 9.4pt;
+    }
+    .protocol-proteus {
+      background: var(--sim-bg);
+      border: 1px solid #ddd6fe;
+      border-top: 4px solid var(--sim-purple);
+    }
+    .protocol-proteus h4 { color: #5b21b6; margin-top: 0; }
+    .protocol-ad3 {
+      background: var(--ad3-bg);
+      border: 1px solid #99f6e4;
+      border-top: 4px solid var(--ad3-teal);
+    }
+    .protocol-ad3 h4 { color: #0f766e; margin-top: 0; }
+
+    /* Tableaux */
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 14px 0;
+      font-size: 9.2pt;
+      background: #ffffff;
+    }
+    th, td {
+      border: 1px solid #cbd5e1;
+      padding: 7px 9px;
+      text-align: left;
+      vertical-align: middle;
+    }
+    th {
+      background-color: #f1f5f9;
+      color: var(--primary);
+      font-weight: 700;
+    }
+    tr:nth-child(even) { background-color: #f8fafc; }
+    td.center, th.center { text-align: center; }
+    th.col-calc { background: #eff6ff; color: #1e40af; }
+    th.col-sim { background: #f5f3ff; color: #5b21b6; }
+    th.col-ad3 { background: #f0fdfa; color: #0f766e; }
+    th.col-err { background: #fffbeb; color: #92400e; }
+
+    /* Zones réponses & jalons */
+    .student-answer {
+      background-color: #ffffff;
+      border: 1.5px dashed #94a3b8;
+      border-radius: 6px;
+      padding: 10px 14px;
+      margin: 10px 0;
+      color: #334155;
+      font-size: 9.3pt;
+    }
+    .step-check {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-top: 14px;
+      font-weight: 600;
+      font-size: 9.5pt;
+      color: #0f172a;
+      cursor: pointer;
+    }
+    .step-check input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: #0d9488;
+      cursor: pointer;
+    }
+
+    /* SVG Cards */
+    .svg-card {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 14px;
+      margin: 16px 0;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+      overflow-x: auto;
+    }
+    .svg-card svg {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
+    .svg-caption {
+      font-size: 8.8pt;
+      color: var(--text-muted);
+      margin-top: 8px;
+      font-style: italic;
+    }
+
+    /* Code */
+    code {
+      background-color: #f1f5f9;
+      color: #0f172a;
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-size: 8.8pt;
+      font-family: Consolas, 'Courier New', monospace;
+    }
+    .code-wrapper {
+      position: relative;
+      margin: 12px 0;
+    }
+    .copy-code-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: #334155;
+      color: #f8fafc;
+      border: 1px solid #475569;
+      border-radius: 5px;
+      padding: 4px 9px;
+      font-size: 8pt;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .copy-code-btn:hover { background: #475569; }
+    pre {
+      background-color: #0f172a;
+      color: #e2e8f0;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-size: 8.9pt;
+      line-height: 1.48;
+      overflow-x: auto;
+      font-family: Consolas, 'Courier New', monospace;
+      margin: 0;
+    }
+    pre code { background: transparent; color: inherit; padding: 0; }
+    .kw { color: #f472b6; font-weight: bold; }
+    .im { color: #c084fc; font-weight: bold; }
+    .fu { color: #38bdf8; font-weight: 600; }
+    .st { color: #86efac; }
+    .dv { color: #fbbf24; }
+    .co { color: #94a3b8; font-style: italic; }
+    .todo-hl { color: #fde047; font-weight: bold; }
+
+    /* Formules hors-ligne */
+    .formula-box {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-left: 4px solid var(--ad3-teal);
+      border-radius: 6px;
+      padding: 10px 16px;
+      margin: 10px 0;
+      font-family: 'Cambria Math', Georgia, serif;
+      font-size: 10.5pt;
+      text-align: center;
+      color: #0f172a;
+    }
+    .frac {
+      display: inline-block;
+      vertical-align: middle;
+      text-align: center;
+      margin: 0 3px;
+    }
+    .frac > span { display: block; padding: 0 4px; }
+    .frac span.num { border-bottom: 1.2px solid #0f172a; }
+    .frac span.den { padding-top: 1px; }
+    .overbar { text-decoration: overline; }
+
+    /* Outils interactifs d'atelier */
+    .tools-strip {
+      display: grid;
+      grid-template-columns: 1.25fr 0.75fr;
+      gap: 14px;
+      margin: 14px 0;
+    }
+    @media (max-width: 780px) {
+      .tools-strip { grid-template-columns: 1fr; }
+    }
+    .mini-tool {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 9pt;
+    }
+    .mini-tool h4 { margin: 0 0 8px 0; color: var(--primary); }
+    .mini-tool select, .mini-tool input[type="number"] {
+      padding: 5px 7px;
+      border: 1px solid #94a3b8;
+      border-radius: 5px;
+      font-size: 8.8pt;
+      font-family: inherit;
+    }
+    .tool-result {
+      margin-top: 8px;
+      padding: 7px 10px;
+      background: #ffffff;
+      border-radius: 5px;
+      border: 1px solid #cbd5e1;
+      font-weight: 700;
+      color: #0b3c5d;
+    }
+    .sim-sw-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 6px 0;
+    }
+    .sim-sw {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+    }
+    .seven-seg-box {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #0f172a;
+      color: #22c55e;
+      font-family: Consolas, 'Courier New', monospace;
+      font-size: 16pt;
+      font-weight: 900;
+      padding: 2px 11px;
+      border-radius: 6px;
+      border: 2px solid #334155;
+      letter-spacing: 1px;
+      min-width: 44px;
+    }
+
+    /* Timeline 5h */
+    .timeline-bar {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 6px;
+      margin: 12px 0;
+    }
+    @media (max-width: 760px) {
+      .timeline-bar { grid-template-columns: repeat(2, 1fr); }
+    }
+    .tl-item {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-top: 3px solid var(--ad3-teal);
+      border-radius: 6px;
+      padding: 8px;
+      font-size: 8.3pt;
+      text-decoration: none;
+      color: var(--text-main);
+    }
+    .tl-item:hover { background: #ccfbf1; text-decoration: none; }
+    .tl-time { font-weight: 800; color: #0f766e; display: block; }
+
+    .toast-copy {
+      display: none;
+      margin-top: 8px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      background: #dcfce7;
+      color: #166534;
+      border: 1px solid #86efac;
+      font-weight: 600;
+      font-size: 9pt;
+    }
+  </style>
+</head>
+<body>
+
+<!-- BARRE DE NAVIGATION ET DE SUIVI -->
+<div class="top-bar no-print">
+  <div class="top-bar-left">
+    <a href="index.html" class="back-link">← Portail BTS CIEL 1</a>
+    <div class="progress-wrap" title="Cochez chaque étape validée au fil des 5 heures">
+      <span>Avancement TP 7 (5h) :</span>
+      <div class="progress-track"><div class="progress-fill" id="tpProgressFill"></div></div>
+      <span id="tpProgressText">0 / 7</span>
+    </div>
+  </div>
+  <div class="top-actions">
+    <button type="button" class="btn btn-docs" onclick="copierTrameClassroom()">📋 Copier la trame Google Docs (Classroom)</button>
+    <button type="button" class="btn btn-outline" onclick="window.print()">🖨️ Imprimer / PDF</button>
+  </div>
+</div>
+
+<!-- EN-TÊTE PRINCIPAL -->
+<div class="header-box">
+  <div class="header-kicker">BTS CIEL — Option B : Électronique et Réseaux (1<sup>re</sup> Année — Semestre 2) | Logique Câblée &amp; Sûreté Matérielle</div>
+  <h1>TP 7 : PICO-SAFELOCK — Logique Combinatoire &amp; Séquentielle (<code>SN74LSxx</code>), Décodage 7-Segments (<code>CD4511</code>) &amp; Analyseur Logique AD3</h1>
+  <p class="header-subtitle">
+    Suite des TP 5 et TP 6 : conception d'un <strong>verrouillage matériel d'arrêt d'urgence machine</strong> (<em>Hardware Safety Interlock</em> conforme à l'esprit IEC 60204-1) associant portes <code>SN74LS04/08/32/00</code>, mémoire d'état par bascule D <code>SN74LS74N</code> et afficheur de diagnostic <code>CD4511BE</code>, validé au <strong>Pattern Generator &amp; Logic Analyzer 16 voies de l'Analog Discovery 3</strong>, simulé sous <strong>Proteus 8</strong> et couplé au <strong>Raspberry Pi Pico + Moteur CC 5 V Varta</strong>.
+  </p>
+  <div class="header-meta">
+    <span class="meta-pill">⏱️ <strong>Durée :</strong> 5h00</span>
+    <span class="meta-pill">🔬 <strong>Instrumentation :</strong> Digilent Analog Discovery 3 (Supplies +5V, Patterns, Logic 16 voies, Static I/O 7-Seg)</span>
+    <span class="meta-pill">🧰 <strong>CI Kit TI :</strong> <code>SN74LS00/04/08/32N</code>, <code>SN74LS74N</code>, <code>CD4511BE</code>, <code>TIP31C</code></span>
+    <span class="meta-pill">🖥️ <strong>CAO :</strong> Proteus 8 (ISIS / Chronogrammes logiques)</span>
+    <span class="meta-pill">📝 <strong>Livrable :</strong> Google Docs (Classroom)</span>
+  </div>
+</div>
+
+<!-- PLANIFICATION HORAIRE & RÉFÉRÉTIEL OPTION B -->
+<div class="card-block">
+  <h3 style="margin-top:0;">⏱️ Découpage Temporel des 5 Heures (Continuité TP 5 &rarr; TP 6 &rarr; TP 7 Semestre 2)</h3>
+  <div class="timeline-bar">
+    <a class="tl-item" href="#sec-prep"><span class="tl-time">0h00 → 0h20 (20 min)</span><strong>Étape 0</strong><br>Rail +5 V AD3, niveaux TTL 5 V vs LVCMOS 3,3 V &amp; Docs Classroom</a>
+    <a class="tl-item" href="#sec-p1"><span class="tl-time">0h20 → 1h15 (55 min)</span><strong>Partie 1</strong><br>Portes <code>74LS04/08/32/00</code>, De Morgan &amp; Compteur <em>Patterns</em> AD3</a>
+    <a class="tl-item" href="#sec-p2"><span class="tl-time">1h15 → 2h15 (1h00)</span><strong>Partie 2</strong><br>Synthèse combinatoire 4 variables (Karnaugh) &amp; Test 16 états AD3</a>
+    <a class="tl-item" href="#sec-p3"><span class="tl-time">2h15 → 3h20 (1h05)</span><strong>Partie 3</strong><br>Bascule D <code>SN74LS74N</code> : Arrêt d'Urgence verrouillé &amp; Anti-rebond RC</a>
+    <a class="tl-item" href="#sec-p4"><span class="tl-time">3h20 → 4h05 (45 min)</span><strong>Partie 4</strong><br>Décodeur BCD 7-segments <code>CD4511BE</code> &amp; Afficheur virtuel AD3</a>
+    <a class="tl-item" href="#sec-p5"><span class="tl-time">4h05 → 5h00 (55 min)</span><strong>Partie 5</strong><br>Verrou matériel PWM sur Moteur CC, Pico &amp; Crash-Test logiciel !</a>
+  </div>
+
+  <h3>🎯 Ancrage au Référentiel Officiel BTS CIEL — Option B : Électronique et Réseaux (BO du 25/01/2023)</h3>
+  <p style="font-size:9.3pt;">
+    Dans l'industrie, un <strong>arrêt d'urgence (AU)</strong> ou un contact de <strong>capot de sécurité</strong> ne doit <strong>jamais reposer uniquement sur le logiciel d'un microcontrôleur</strong> : si le programme plante avec la sortie PWM bloquée à 100 %, l'opérateur est en danger ! Après la chaîne d'actionnement (<a href="TP5_Composants_Commande_Puissance_BTS_CIEL.html">TP 5</a>) et le conditionnement analogique (<a href="TP6_Acquisition_Conditionnement_AD3_BTS_CIEL.html">TP 6</a>), ce TP du <strong>Semestre 2 Option B</strong> aborde les <strong>Fonctions Numériques Câblées Combinatoires, Séquentielles et l'Interfaçage Inter-Familles Logiques</strong> :
+  </p>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:13%;">Code BO</th>
+        <th style="width:29%;">Compétence BTS CIEL Option B</th>
+        <th style="width:58%;">Savoirs Associés (Physique Appliquée / STI) &amp; Activités du TP 7</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C04</span></td>
+        <td><strong>Analyser une structure matérielle et logicielle</strong></td>
+        <td>Familles logiques <strong>TTL Schottky <code>74LS</code> (5 V)</strong> vs <strong>LVCMOS (3,3 V)</strong>, gabarits de tension (<i>V<sub>IL</sub>, V<sub>IH</sub>, V<sub>OL</sub>, V<sub>OH</sub></i>), marges de bruit, sortance asymétrique (<i>I<sub>OL</sub></i> vs <i>I<sub>OH</sub></i>), sorties émetteur-suiveur du <code>CD4511BE</code>, entrées asynchrones prioritaires (<code>/PRE</code>, <code>/CLR</code>) d'une bascule D.</td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C05</span></td>
+        <td><strong>Concevoir et simuler un sous-ensemble numérique</strong></td>
+        <td>Algèbre de Boole, théorèmes de De Morgan, simplification par <strong>table de Karnaugh</strong> (4 variables), logigrammes normalisés CEI, cellule RC d'anti-rebond mécanique, simulation logique interactive et chronogrammes sous <strong>Proteus 8</strong>.</td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C06</span></td>
+        <td><strong>Valider un système par l'instrumentation logique</strong></td>
+        <td>Génération de vecteurs de test binaires automatiques au <strong>Pattern Generator</strong> et capture multi-voies synchrone + bus hexadécimal/décimal au <strong>Logic Analyzer 16 voies</strong> de l'<strong>Analog Discovery 3 (WaveForms)</strong> + afficheur 7-segments virtuel <em>Static I/O</em>.</td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C07</span></td>
+        <td><strong>Réaliser et interfacer des prototypes mixtes</strong></td>
+        <td>Câblage multi-boîtiers DIP-14 / DIP-16 avec découplage <code>100 nF</code>, mise au potentiel des entrées TTL inutilisées, adaptation de niveau <strong>5 V &rarr; 3,3 V</strong> (<code>1 k&Omega; / 2,2 k&Omega;</code>) vers le RP2040 et verrouillage matériel d'un hacheur <code>TIP31C</code>.</td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C08</span></td>
+        <td><strong>Coder et tester la sûreté embarquée</strong></td>
+        <td>Supervision MicroPython horodatée (<code>ticks_ms()</code>, <code>IRQ_FALLING | IRQ_RISING</code>), pilotage d'un bus BCD 3 bits vers <code>CD4511BE</code> et protocole d'<strong>injection de défaillance logicielle (<em>Fault Injection</em>)</strong> prouvant l'autonomie du verrou matériel.</td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C01</span></td>
+        <td><strong>Communiquer en situation professionnelle</strong></td>
+        <td>Rédaction d'un dossier de qualification sécurité sous <strong>Google Docs (Classroom)</strong> avec chronogrammes WaveForms AD3 / Proteus légendés et analyse de conformité.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- LIVRABLE CLASSROOM + OUTILS INTERACTIFS D'ATELIER -->
+<div class="callout callout-docs" id="trame-classroom">
+  <strong style="font-size:10.5pt; color:#0f766e;">📄 LIVRABLE ATTENDU : Dossier de Qualification « PICO-SAFELOCK » sous Google Docs (Classroom)</strong>
+  <p style="margin:6px 0;">
+    Ouvrez le devoir <strong>« TP 7 — Logique Câblée, Sécurité Machine &amp; Analyseur Logique AD3 »</strong> dans Google Classroom, créez un document <strong>Google Docs</strong> vierge, cliquez sur le bouton ci-dessous puis appuyez sur <code>Ctrl + V</code> : tous les tableaux de vérité, chronogrammes attendus et encadrés d'analyse seront collés avec leur mise en forme !
+  </p>
+  <div class="no-print">
+    <button type="button" class="btn btn-docs" onclick="copierTrameClassroom()">📋 Copier la trame complète TP 7 pour Google Docs</button>
+    <div id="copyToast" class="toast-copy">✅ Trame TP 7 copiée ! Ouvrez votre Google Docs Classroom et faites <strong>Ctrl + V</strong>.</div>
+  </div>
+</div>
+
+<!-- MINI-OUTILS INTERACTIFS POUR VÉRIFIER VOS ÉQUATIONS ET ADAPTATIONS EN DIRECT -->
+<div class="tools-strip no-print">
+  <div class="mini-tool">
+    <h4>🛡️ Simulateur Interactif du Verrou « PICO-SAFELOCK » (Parties 2, 3 &amp; 4)</h4>
+    <div class="sim-sw-grid">
+      <label class="sim-sw"><input type="checkbox" id="swC" checked onchange="simSafeLock()"> <code>C</code> Capot fermé</label>
+      <label class="sim-sw"><input type="checkbox" id="swS" onchange="simSafeLock()"> <code>S</code> Surchauffe</label>
+      <label class="sim-sw"><input type="checkbox" id="swP" checked onchange="simSafeLock()"> <code>P</code> Marche Pico</label>
+      <label class="sim-sw"><input type="checkbox" id="swF" onchange="simSafeLock()"> <code>F</code> Forçage Maint.</label>
+    </div>
+    <div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:8px;">
+      <button type="button" class="btn btn-rearm" onclick="pulseRearm()">🟢 Front &uarr; RÉARMEMENT (<code>1CLK</code>)</button>
+      <button type="button" class="btn btn-estop" onclick="pulseEstop()">🛑 Coup de poing AU (<code>/1CLR=0</code>)</button>
+      <span style="margin-left:auto; display:inline-flex; align-items:center; gap:6px;">
+        <span>CD4511 :</span>
+        <span class="seven-seg-box" id="sim7Seg">0.</span>
+      </span>
+    </div>
+    <div class="tool-result" id="safeLockResult">A_comb = 1 | Bascule 74LS74 : 1Q = 0 (VERROUILLÉ au démarrage — cliquez sur RÉARMEMENT !) | Moteur = COUPÉ</div>
+  </div>
+
+  <div class="mini-tool">
+    <h4>⚡ Calculateur Adaptation 5 V &rarr; 3,3 V &amp; Anti-Rebond RC</h4>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
+      <label><i>V<sub>OH</sub></i> TTL (V) :<br><input type="number" id="inpVoh" value="4.1" step="0.1" style="width:100%;" oninput="calcInterf()"></label>
+      <label><i>R</i><sub>1</sub> série / <i>R</i><sub>2</sub> masse (k&Omega;) :<br>
+        <select id="selDiv" style="width:100%;" onchange="calcInterf()">
+          <option value="1,2.2" selected>1 k&Omega; / 2,2 k&Omega; (Recommandé)</option>
+          <option value="2.2,3.3">2,2 k&Omega; / 3,3 k&Omega;</option>
+          <option value="10,10">10 k&Omega; / 10 k&Omega; (Trop bas ?)</option>
+          <option value="0,1">Direct sans pont (DANGER !)</option>
+        </select>
+      </label>
+      <label><i>R<sub>anti-rebond</sub></i> (k&Omega;) :<br><input type="number" id="inpRdb" value="10" step="1" style="width:100%;" oninput="calcInterf()"></label>
+      <label><i>C<sub>anti-rebond</sub></i> (nF) :<br><input type="number" id="inpCdb" value="100" step="10" style="width:100%;" oninput="calcInterf()"></label>
+    </div>
+    <div class="tool-result" id="interfResult">V_GP19 = 2,82 V (✅ Sûr pour Pico ≤ 3,3 V) | &tau;_RC = 1,00 ms</div>
+  </div>
+</div>
+
+<!-- ===================================================================== -->
+<!-- ÉTAPE 0 : ALIMENTATION +5V AD3, FAMILLES LOGIQUES & BROCHAGES DIP-14  -->
+<!-- ===================================================================== -->
+<h2 id="sec-prep">ÉTAPE 0 : Rail +5 V (AD3), Compatibilité TTL 5 V ↔ LVCMOS 3,3 V &amp; Brochages DIP-14 <span class="badge badge-time">20 min</span></h2>
+
+<div class="card-block">
+  <h3>0.1 Inventaire des Boîtiers Logiques (TI myParts Kit) &amp; Références Proteus 8</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Fonction numérique</th>
+        <th>Référence TI myParts Kit</th>
+        <th>Alimentation &amp; Particularités électriques</th>
+        <th class="col-sim">Modèle Proteus 8 (<code>Pick Devices</code>)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>6 Inverseurs (NON / NOT)</strong></td>
+        <td><code>SN74LS04N</code> (DIP-14)</td>
+        <td><code>Broche 14 = +5 V</code>, <code>Broche 7 = GND</code></td>
+        <td><code>74LS04</code></td>
+      </tr>
+      <tr>
+        <td><strong>4 Portes ET à 2 entrées (AND)</strong></td>
+        <td><code>SN74LS08N</code> (DIP-14)</td>
+        <td><code>Broche 14 = +5 V</code>, <code>Broche 7 = GND</code> (<i>I<sub>OL</sub></i> = 8 mA / <i>I<sub>OH</sub></i> = &minus;0,4 mA)</td>
+        <td><code>74LS08</code></td>
+      </tr>
+      <tr>
+        <td><strong>4 Portes OU à 2 entrées (OR)</strong></td>
+        <td><code>SN74LS32N</code> (DIP-14)</td>
+        <td><code>Broche 14 = +5 V</code>, <code>Broche 7 = GND</code></td>
+        <td><code>74LS32</code></td>
+      </tr>
+      <tr>
+        <td><strong>4 Portes NON-ET à 2 entrées (NAND)</strong></td>
+        <td><code>SN74LS00N</code> (DIP-14)</td>
+        <td><code>Broche 14 = +5 V</code>, <code>Broche 7 = GND</code> — Porte universelle</td>
+        <td><code>74LS00</code></td>
+      </tr>
+      <tr>
+        <td><strong>Double Bascule D (Flip-Flop)</strong></td>
+        <td><code>SN74LS74N</code> (DIP-14)</td>
+        <td>Front montant <code>CLK &uarr;</code>, <code>/PRE</code> et <code>/CLR</code> asynchrones actifs à <code>0</code></td>
+        <td><code>74LS74</code></td>
+      </tr>
+      <tr>
+        <td><strong>Décodeur BCD &rarr; 7-Segments</strong></td>
+        <td><code>CD4511BE</code> (DIP-16)</td>
+        <td><code>Broche 16 = +5 V</code>, <code>Broche 8 = GND</code> — Sorties NPN émetteur-suiveur</td>
+        <td><code>4511</code> + <code>7SEG-COM-CAT-GRN</code></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>0.2 Compatibilité des Familles Logiques : Pourquoi l'AD3 tolère 5 V mais PAS le Raspberry Pi Pico !</h3>
+  <p>
+    Dans ce TP, vous faites dialoguer trois technologies numériques différentes partageant une <strong>masse commune (<code>GND</code>)</strong> :
+    les circuits bipolaires <strong>TTL Low-Power Schottky <code>SN74LSxx</code></strong> alimentés sous <strong><code>+5,00 V</code></strong> (fourni par le fil rouge <code>V+</code> de l'Analog Discovery 3),
+    les 16 voies numériques <strong><code>DIO 0..15</code> de l'AD3</strong> (LVCMOS 3,3 V <strong>tolérantes 5 V</strong> en entrée),
+    et les broches <strong><code>GPIO</code> du Raspberry Pi Pico</strong> (LVCMOS 3,3 V <strong>strictement limitées à 3,6 V max</strong> !).
+  </p>
+
+  <!-- SVG 1 : GABARITS DE NIVEAUX LOGIQUES TTL vs LVCMOS + BROCHAGES DIP-14 -->
+  <div class="svg-card">
+    <svg viewBox="0 0 920 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Niveaux logiques TTL 74LS vs LVCMOS 3,3 V et brochages DIP-14">
+      <rect x="0" y="0" width="920" height="330" fill="#f8fafc" rx="8"/>
+
+      <!-- PARTIE GAUCHE : GABARITS DE TENSION -->
+      <rect x="14" y="14" width="456" height="302" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+      <text x="242" y="35" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11.5" font-weight="bold" fill="#0b3c5d">Gabarits Électriques : TTL 74LS (5 V) ↔ LVCMOS (3,3 V)</text>
+
+      <!-- Échelle verticale 0V..5V (y=275 -> 0V, y=65 -> 5.0V => 42 px/V) -->
+      <line x1="48" y1="62" x2="48" y2="278" stroke="#475569" stroke-width="1.5"/>
+      <text x="42" y="69" text-anchor="end" font-family="Consolas, monospace" font-size="9.5" fill="#dc2626" font-weight="bold">5,0V</text>
+      <text x="42" y="136" text-anchor="end" font-family="Consolas, monospace" font-size="9.5" fill="#0284c7" font-weight="bold">3,3V</text>
+      <text x="42" y="162" text-anchor="end" font-family="Consolas, monospace" font-size="9" fill="#334155">2,7V</text>
+      <text x="42" y="191" text-anchor="end" font-family="Consolas, monospace" font-size="9.5" fill="#15803d" font-weight="bold">2,0V</text>
+      <text x="42" y="241" text-anchor="end" font-family="Consolas, monospace" font-size="9.5" fill="#b45309" font-weight="bold">0,8V</text>
+      <text x="42" y="278" text-anchor="end" font-family="Consolas, monospace" font-size="9.5" fill="#334155">0,0V</text>
+
+      <!-- Lignes pointillées de référence -->
+      <line x1="48" y1="136" x2="455" y2="136" stroke="#0284c7" stroke-width="1" stroke-dasharray="3,3"/>
+      <line x1="48" y1="191" x2="455" y2="191" stroke="#16a34a" stroke-width="1" stroke-dasharray="3,3"/>
+      <line x1="48" y1="241" x2="455" y2="241" stroke="#d97706" stroke-width="1" stroke-dasharray="3,3"/>
+
+      <!-- Col 1 : Sortie AD3 / Pico 3,3V -->
+      <rect x="65" y="136" width="68" height="14" fill="#bae6fd" stroke="#0284c7" stroke-width="1.5"/>
+      <text x="99" y="146" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.5" font-weight="bold" fill="#0369a1">V_OH≈3,3V</text>
+      <rect x="65" y="264" width="68" height="11" fill="#fed7aa" stroke="#ea580c" stroke-width="1.2"/>
+      <text x="99" y="293" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.8" font-weight="bold" fill="#0f172a">Sortie 3,3V</text>
+      <text x="99" y="305" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8" fill="#475569">(AD3 / Pico)</text>
+
+      <!-- Flèche directe OK vers Entrée 74LS -->
+      <path d="M 134 143 L 163 160" stroke="#16a34a" stroke-width="2.2" fill="none"/>
+      <text x="149" y="132" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.5" font-weight="bold" fill="#15803d">OK direct !</text>
+
+      <!-- Col 2 : Entrée TTL 74LS -->
+      <rect x="165" y="65" width="74" height="126" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+      <text x="202" y="125" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9" font-weight="bold" fill="#166534">ÉTAT 1</text>
+      <text x="202" y="138" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8" fill="#166534">(≥ 2,0 V)</text>
+      <rect x="165" y="191" width="74" height="50" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1"/>
+      <text x="202" y="219" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8" fill="#64748b">Indéterminé</text>
+      <rect x="165" y="241" width="74" height="34" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+      <text x="202" y="261" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.5" font-weight="bold" fill="#92400e">ÉTAT 0 (≤0,8V)</text>
+      <text x="202" y="293" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.8" font-weight="bold" fill="#0f172a">Entrée 74LS</text>
+      <text x="202" y="305" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8" fill="#475569">(Seuil 2,0 V)</text>
+
+      <!-- Col 3 : Sortie TTL 74LS -->
+      <rect x="262" y="96" width="74" height="66" fill="#dcfce7" stroke="#15803d" stroke-width="1.5"/>
+      <text x="299" y="118" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.5" font-weight="bold" fill="#166534">V_OH TTL</text>
+      <text x="299" y="131" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8" fill="#166534">2,7 à 4,2 V</text>
+      <rect x="262" y="254" width="74" height="21" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+      <text x="299" y="268" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8" font-weight="bold" fill="#92400e">V_OL ≤ 0,5V</text>
+      <text x="299" y="293" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.8" font-weight="bold" fill="#0f172a">Sortie 74LS</text>
+      <text x="299" y="305" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8" fill="#475569">(Sous +5 V)</text>
+
+      <!-- Col 4 : Entrées AD3 (5V tol.) vs Pico (3,6V max !) -->
+      <rect x="364" y="65" width="88" height="62" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+      <text x="408" y="83" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8" font-weight="bold" fill="#b91c1c">AD3 DIO : OK !</text>
+      <text x="408" y="96" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8" font-weight="bold" fill="#dc2626">PICO : DANGER</text>
+      <text x="408" y="109" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="7.8" fill="#991b1b">Pont 1k/2,2k !</text>
+
+      <rect x="364" y="127" width="88" height="64" fill="#ccfbf1" stroke="#0d9488" stroke-width="1.5"/>
+      <text x="408" y="156" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.2" font-weight="bold" fill="#0f766e">Zone sûre 1</text>
+      <text x="408" y="169" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="7.8" fill="#0f766e">(2,0 à 3,3 V)</text>
+      <text x="408" y="293" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.8" font-weight="bold" fill="#0f172a">Entrées 3,3V</text>
+      <text x="408" y="305" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8" fill="#475569">AD3 vs Pico</text>
+
+      <!-- PARTIE DROITE : BROCHAGES DIP-14 VUE DE DESSUS -->
+      <rect x="482" y="14" width="424" height="302" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+      <text x="694" y="35" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11.5" font-weight="bold" fill="#0b3c5d">Brochage Standardisé DIP-14 (Vue de dessus — Encoche en haut)</text>
+
+      <!-- Boîtier 1 : 74LS00 / 74LS08 / 74LS32 -->
+      <text x="588" y="56" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#5b21b6">74LS00 (NAND) / 08 (ET) / 32 (OU)</text>
+      <rect x="536" y="66" width="104" height="196" rx="6" fill="#1e293b" stroke="#0f172a" stroke-width="2"/>
+      <path d="M 574 66 A 14 14 0 0 0 602 66" fill="#f8fafc" stroke="#0f172a" stroke-width="1.5"/>
+      <circle cx="550" cy="80" r="3.5" fill="#fbbf24"/>
+
+      <!-- Broches Gauche 1..7 -->
+      <text x="530" y="85" text-anchor="end" font-family="Consolas, monospace" font-size="9" fill="#0f172a">1A [1]</text>
+      <text x="530" y="112" text-anchor="end" font-family="Consolas, monospace" font-size="9" fill="#0f172a">1B [2]</text>
+      <text x="530" y="139" text-anchor="end" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#0284c7">1Y [3]</text>
+      <text x="530" y="166" text-anchor="end" font-family="Consolas, monospace" font-size="9" fill="#0f172a">2A [4]</text>
+      <text x="530" y="193" text-anchor="end" font-family="Consolas, monospace" font-size="9" fill="#0f172a">2B [5]</text>
+      <text x="530" y="220" text-anchor="end" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#0284c7">2Y [6]</text>
+      <text x="530" y="247" text-anchor="end" font-family="Consolas, monospace" font-size="9.5" font-weight="bold" fill="#334155">GND [7]</text>
+
+      <!-- Broches Droite 14..8 -->
+      <text x="646" y="85" font-family="Consolas, monospace" font-size="9.5" font-weight="bold" fill="#dc2626">[14] +5V</text>
+      <text x="646" y="112" font-family="Consolas, monospace" font-size="9" fill="#0f172a">[13] 4B</text>
+      <text x="646" y="139" font-family="Consolas, monospace" font-size="9" fill="#0f172a">[12] 4A</text>
+      <text x="646" y="166" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#0284c7">[11] 4Y</text>
+      <text x="646" y="193" font-family="Consolas, monospace" font-size="9" fill="#0f172a">[10] 3B</text>
+      <text x="646" y="220" font-family="Consolas, monospace" font-size="9" fill="#0f172a">[9]  3A</text>
+      <text x="646" y="247" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#0284c7">[8]  3Y</text>
+
+      <text x="588" y="165" text-anchor="middle" font-family="Consolas, monospace" font-size="10" font-weight="bold" fill="#f8fafc">SN74LSxx</text>
+
+      <!-- Boîtier 2 : 74LS04 (6 Inverseurs) -->
+      <text x="802" y="56" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#0f766e">SN74LS04N (6 × NON)</text>
+      <rect x="754" y="66" width="96" height="196" rx="6" fill="#1e293b" stroke="#0f172a" stroke-width="2"/>
+      <path d="M 788 66 A 14 14 0 0 0 816 66" fill="#f8fafc" stroke="#0f172a" stroke-width="1.5"/>
+      <circle cx="768" cy="80" r="3.5" fill="#fbbf24"/>
+
+      <text x="748" y="85" text-anchor="end" font-family="Consolas, monospace" font-size="9" fill="#0f172a">1A [1]</text>
+      <text x="748" y="112" text-anchor="end" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#0284c7">1Y [2]</text>
+      <text x="748" y="139" text-anchor="end" font-family="Consolas, monospace" font-size="9" fill="#0f172a">2A [3]</text>
+      <text x="748" y="166" text-anchor="end" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#0284c7">2Y [4]</text>
+      <text x="748" y="193" text-anchor="end" font-family="Consolas, monospace" font-size="9" fill="#0f172a">3A [5]</text>
+      <text x="748" y="220" text-anchor="end" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#0284c7">3Y [6]</text>
+      <text x="748" y="247" text-anchor="end" font-family="Consolas, monospace" font-size="9.5" font-weight="bold" fill="#334155">GND [7]</text>
+
+      <text x="855" y="85" font-family="Consolas, monospace" font-size="9.5" font-weight="bold" fill="#dc2626">[14]+5V</text>
+      <text x="855" y="112" font-family="Consolas, monospace" font-size="9" fill="#0f172a">[13] 6A</text>
+      <text x="855" y="139" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#0284c7">[12] 6Y</text>
+      <text x="855" y="166" font-family="Consolas, monospace" font-size="9" fill="#0f172a">[11] 5A</text>
+      <text x="855" y="193" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#0284c7">[10] 5Y</text>
+      <text x="855" y="220" font-family="Consolas, monospace" font-size="9" fill="#0f172a">[9]  4A</text>
+      <text x="855" y="247" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#0284c7">[8]  4Y</text>
+
+      <text x="802" y="165" text-anchor="middle" font-family="Consolas, monospace" font-size="10" font-weight="bold" fill="#f8fafc">SN74LS04</text>
+
+      <!-- Rappel découplage -->
+      <rect x="500" y="274" width="388" height="30" rx="5" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.2"/>
+      <text x="694" y="293" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.8" font-weight="bold" fill="#92400e">Règle d'or TTL : Broche 14 = +5,00 V (V+ AD3) + condensateur 100 nF au plus près | Broche 7 = GND</text>
+    </svg>
+    <div class="svg-caption">Figure 0.1 — Compatibilité des seuils logiques TTL <code>74LS</code> (5 V) ↔ LVCMOS 3,3 V (AD3 tolérant 5 V vs Pico limité à 3,6 V) et brochages DIP-14 standardisés.</div>
+  </div>
+
+  <div class="callout callout-ad3">
+    <strong>🔬 Mise sous tension +5,00 V avec WaveForms (Analog Discovery 3) :</strong>
+    <ol style="margin:6px 0 0 0;">
+      <li>Enfichez vos boîtiers DIP à cheval sur le sillon central de la breadboard (encoche en U orientée vers le haut ou la gauche, de façon identique pour tous les circuits !).</li>
+      <li>Dans <strong>WaveForms</strong> &rarr; ouvrez <strong><code>Supplies</code></strong> : réglez <strong>Positive Supply (<code>V+</code>, fil Rouge)</strong> sur <strong><code>5.00 V</code></strong> (laissez <code>V-</code> désactivé). Reliez un fil Noir <strong><code>GND</code></strong> de l'AD3 au rail bleu (<code>&minus;</code>) et le fil Rouge <strong><code>V+</code></strong> au rail rouge (<code>+5 V</code>) de la breadboard.</li>
+      <li>Activez <strong>Master Enable</strong> et contrôlez au multimètre que vous avez bien <strong>+5,00 V &plusmn; 0,05 V</strong> entre les broches <code>14</code> et <code>7</code> avant tout câblage logique.</li>
+    </ol>
+  </div>
+
+  <div class="callout callout-warn">
+    <strong>⚠️ Piège classique de la famille bipolaire <code>74LS</code> (Question fréquente d'examen E5 !) :</strong>
+    Contrairement à une entrée CMOS haute impédance, l'étage d'entrée d'une porte <code>SN74LSxx</code> comporte un émetteur polarisé en interne vers <code>+5 V</code> : <strong>une entrée <code>74LS</code> laissée « en l'air » (non câblée) se comporte comme un niveau logique HAUT (<code>1</code>)</strong> tout en agissant comme une antenne à parasites ! Ne laissez jamais d'entrée utile flottante.
+  </div>
+
+  <label class="step-check no-print">
+    <input type="checkbox" class="tp-step-cb" data-step="0" onchange="updateProgress()">
+    <span>Étape 0 validée : Trame Google Docs créée dans Classroom, rail +5,00 V de l'AD3 vérifié au multimètre et brochages DIP-14 repérés.</span>
+  </label>
+</div>
+
+<!-- ===================================================================== -->
+<!-- PARTIE 1 : CARACTÉRISATION DYNAMIQUE DES PORTES COMBINATOIRES & NAND  -->
+<!-- ===================================================================== -->
+<h2 id="sec-p1">PARTIE 1 : Portes Combinatoires (<code>74LS04</code>, <code>08</code>, <code>32</code>, <code>00</code>), Chronogrammes AD3 &amp; Universalité NAND <span class="badge badge-time">55 min</span></h2>
+
+<div class="card-block">
+  <h3>1.1 Relevé Automatique des 4 Portes Fondamentales au <em>Pattern Generator</em> &amp; <em>Logic Analyzer</em> AD3</h3>
+  <p>
+    Plutôt que de déplacer manuellement des fils cavaliers entre <code>0 V</code> et <code>+5 V</code>, un technicien supérieur Option B utilise un <strong>générateur de motifs numériques (<em>Pattern Generator</em>)</strong> couplé à un <strong>analyseur logique synchrone (<em>Logic Analyzer</em>)</strong> pour balayer automatiquement les 4 combinaisons binaires <code>(B, A) &isin; {00, 01, 10, 11}</code> en quelques millisecondes !
+  </p>
+
+  <div class="dual-grid">
+    <div class="protocol-box protocol-proteus">
+      <h4>🟣 Protocole Simulation Proteus 8 (ISIS)</h4>
+      <ol style="margin:6px 0 0 0; padding-left:18px;">
+        <li>Placez une porte de chaque circuit : <code>74LS04</code> (NON), <code>74LS08</code> (ET), <code>74LS32</code> (OU) et <code>74LS00</code> (NAND).</li>
+        <li>Connectez deux entrées interactives <code>LOGICSTATE</code> nommées <code>A</code> et <code>B</code> en parallèle sur les entrées (<code>A</code> seule sur l'inverseur <code>74LS04</code>) et 4 sondes <code>LOGICPROBE (BIG)</code> sur les sorties.</li>
+        <li>Testez les 4 états <code>00, 01, 10, 11</code> puis ajoutez deux générateurs d'horloge <code>DCLOCK</code> (<code>A</code> à <code>1 kHz</code>, <code>B</code> à <code>500 Hz</code>) et un graphe <strong><code>DIGITAL</code></strong> sur <code>4 ms</code> pour tracer les 6 chronogrammes simultanés.</li>
+      </ol>
+    </div>
+
+    <div class="protocol-box protocol-ad3">
+      <h4>🟢 Protocole Réel Breadboard + WaveForms (AD3)</h4>
+      <ol style="margin:6px 0 0 0; padding-left:18px;">
+        <li>Alimentez les boîtiers (<code>14 = +5V</code>, <code>7 = GND</code> + <code>100 nF</code>). Reliez <strong><code>DIO 0</code></strong> (signal <code>A</code>) et <strong><code>DIO 1</code></strong> (signal <code>B</code>) aux entrées <code>1A (1)</code> et <code>1B (2)</code> de vos portes.</li>
+        <li>Reliez les sorties vers l'AD3 : <code>1Y</code> du <code>74LS04</code> &rarr; <strong><code>DIO 2</code></strong> ; <code>1Y</code> du <code>74LS08</code> &rarr; <strong><code>DIO 3</code></strong> ; <code>1Y</code> du <code>74LS32</code> &rarr; <strong><code>DIO 4</code></strong> ; <code>1Y</code> du <code>74LS00</code> &rarr; <strong><code>DIO 5</code></strong>.</li>
+        <li>Dans <strong><code>Patterns</code></strong> : cliquez <em>Add &rarr; Bus</em> sur <code>DIO 1..0</code>, choisissez <strong>Type : <code>Binary Counter</code></strong>, <strong>Output : <code>PP</code> (Push-Pull)</strong>, <strong>Frequency : <code>1 kHz</code></strong> puis cliquez <strong>Run</strong>.</li>
+        <li>Dans <strong><code>Logic</code></strong> : ajoutez un bus <code>BA (DIO 1..0)</code> + les signaux <code>DIO 0</code> à <code>DIO 5</code>, réglez la base de temps sur <code>500 &mu;s/div</code>, déclenchez sur front descendant de <code>DIO 1</code> et cliquez <strong>Single / Run</strong> !</li>
+      </ol>
+    </div>
+  </div>
+
+  <h3>1.2 Tableau de Vérité &amp; Mesure Électrique des Niveaux Réels TTL (<i>V<sub>OL</sub></i> / <i>V<sub>OH</sub></i>)</h3>
+  <p>
+    Complétez la table à partir de vos chronogrammes, puis mettez <code>Patterns</code> en pause (ou utilisez <code>Static I/O</code>) pour mesurer au <strong>multimètre réel</strong> les tensions exactes de sortie d'une porte <code>SN74LS00N</code> à l'état BAS (<i>V<sub>OL</sub></i>) et à l'état HAUT (<i>V<sub>OH</sub></i>) :
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th class="center">Déc.</th>
+        <th class="center"><code>B</code> (<code>DIO 1</code>)</th>
+        <th class="center"><code>A</code> (<code>DIO 0</code>)</th>
+        <th class="center col-calc">NON <code>A</code><br>(<code>74LS04</code>)</th>
+        <th class="center col-calc"><code>A &middot; B</code><br>(<code>74LS08</code>)</th>
+        <th class="center col-calc"><code>A + B</code><br>(<code>74LS32</code>)</th>
+        <th class="center col-sim">NAND <code>74LS00</code><br>(Proteus)</th>
+        <th class="center col-ad3">NAND <code>74LS00</code><br>(Logic AD3 + Tension V)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="center"><strong>0</strong></td><td class="center">0</td><td class="center">0</td>
+        <td class="center">____</td><td class="center">____</td><td class="center">____</td>
+        <td class="center">____</td><td class="center">État : ____ &nbsp;|&nbsp; <i>V<sub>OH</sub></i> = ________ V</td>
+      </tr>
+      <tr>
+        <td class="center"><strong>1</strong></td><td class="center">0</td><td class="center">1</td>
+        <td class="center">____</td><td class="center">____</td><td class="center">____</td>
+        <td class="center">____</td><td class="center">État : ____ &nbsp;|&nbsp; <i>V</i> = ________ V</td>
+      </tr>
+      <tr>
+        <td class="center"><strong>2</strong></td><td class="center">1</td><td class="center">0</td>
+        <td class="center">____</td><td class="center">____</td><td class="center">____</td>
+        <td class="center">____</td><td class="center">État : ____ &nbsp;|&nbsp; <i>V</i> = ________ V</td>
+      </tr>
+      <tr>
+        <td class="center"><strong>3</strong></td><td class="center">1</td><td class="center">1</td>
+        <td class="center">____</td><td class="center">____</td><td class="center">____</td>
+        <td class="center">____</td><td class="center">État : ____ &nbsp;|&nbsp; <i>V<sub>OL</sub></i> = ________ V</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>1.3 Défi De Morgan : Synthétiser un OU exclusivement avec un seul boîtier <code>SN74LS00N</code> (NAND)</h3>
+  <div class="formula-box">
+    Théorème de De Morgan (Universalité de la porte NON-ET) :
+    &nbsp;&nbsp;
+    <i>A</i> + <i>B</i> =
+    <span class="overbar"><span class="overbar"><i>A</i></span> &middot; <span class="overbar"><i>B</i></span></span>
+    =
+    <span class="overbar">(<i>A &middot; A</i>) &middot; (<i>B &middot; B</i>)</span>
+    &nbsp;&nbsp; <em>(3 portes NAND d'un seul boîtier <code>SN74LS00N</code> !)</em>
+  </div>
+  <p>
+    Sur votre breadboard, utilisez les 3 premières portes du <strong>même boîtier <code>SN74LS00N</code></strong> :
+    reliez <code>1A (1)</code> et <code>1B (2)</code> ensemble à <code>A</code> (&rarr; sortie <code>1Y (3) = /A</code>),
+    reliez <code>2A (4)</code> et <code>2B (5)</code> ensemble à <code>B</code> (&rarr; sortie <code>2Y (6) = /B</code>),
+    puis envoyez <code>1Y (3)</code> et <code>2Y (6)</code> sur <code>3A (9)</code> et <code>3B (10)</code> !
+    Connectez la sortie <code>3Y (8)</code> sur <strong><code>DIO 6</code></strong> de l'Analyseur Logique AD3 : vérifiez que le chronogramme de <code>DIO 6</code> est <strong>strictement identique</strong> à celui de la porte OU <code>SN74LS32N</code> (<code>DIO 4</code>), et capturez l'écran WaveForms pour votre Google Docs.
+  </p>
+
+  <div class="student-answer">
+    <strong>💡 Question d'analyse Option B n°1 (À rédiger dans votre Google Docs) :</strong><br>
+    D'après vos mesures multimètre à la section 1.2, la tension <i>V<sub>OH</sub></i> d'une porte TTL <code>SN74LS00N</code> alimentée sous +5,00 V vaut typiquement autour de <strong>3,4 V à 4,1 V</strong> (et non 5,00 V !). Expliquez brièvement pourquoi l'étage de sortie <em>Totem-Pole</em> d'une porte TTL bipolaire ne monte pas jusqu'au rail +5 V, et calculez vos deux <strong>marges de bruit réelles</strong> : <i>NM<sub>H</sub> = V<sub>OH,mes</sub> &minus; V<sub>IH,min</sub></i> et <i>NM<sub>L</sub> = V<sub>IL,max</sub> &minus; V<sub>OL,mes</sub></i>.
+  </div>
+
+  <label class="step-check no-print">
+    <input type="checkbox" class="tp-step-cb" data-step="1" onchange="updateProgress()">
+    <span>Partie 1 validée : Chronogrammes des 4 portes + synthèse De Morgan (100 % NAND) capturés sur Proteus et WaveForms AD3.</span>
+  </label>
+</div>
+
+<!-- ===================================================================== -->
+<!-- PARTIE 2 : SYNTHÈSE COMBINATOIRE 4 VARIABLES (KARNAUGH & TEST AD3)    -->
+<!-- ===================================================================== -->
+<h2 id="sec-p2">PARTIE 2 : Synthèse Combinatoire d'Autorisation Machine (Karnaugh &amp; Test 16 États AD3) <span class="badge badge-time">1h00</span></h2>
+
+<div class="card-block">
+  <h3>2.1 Cahier des Charges Industriel de l'Autorisation Combinatoire <i>A<sub>comb</sub></i></h3>
+  <p>
+    Avant d'alimenter le groupe moto-ventilateur CC 5 V, l'armoire électrique évalue en permanence <strong>4 variables binaires de terrain</strong> :
+  </p>
+  <ul>
+    <li><strong><code>C</code> (Capot de protection) :</strong> <code>C = 1</code> si le capot est bien fermé ; <code>C = 0</code> s'il est ouvert.</li>
+    <li><strong><code>S</code> (Surchauffe thermique) :</strong> <code>S = 1</code> en cas de surchauffe critique ; <code>S = 0</code> si la température est normale.</li>
+    <li><strong><code>P</code> (Demande Auto Pico) :</strong> <code>P = 1</code> si le microcontrôleur demande la rotation ; <code>P = 0</code> sinon.</li>
+    <li><strong><code>F</code> (Forçage Maintenance) :</strong> <code>F = 1</code> si le technicien appuie sur « Marche Forcée » ; <code>F = 0</code> sinon.</li>
+  </ul>
+  <div class="callout callout-tip">
+    <strong>📜 Règle fonctionnelle à synthétiser :</strong> L'autorisation combinatoire <i>A<sub>comb</sub></i> vaut <strong><code>1</code></strong> <strong>uniquement si</strong> le capot est fermé (<code>C = 1</code>), qu'aucune surchauffe n'est présente (<code>S = 0</code>), et qu'au moins un ordre de marche est actif (<code>P = 1</code> <strong>ou</strong> <code>F = 1</code>). Dans tous les autres cas, <i>A<sub>comb</sub></i> = <strong><code>0</code></strong> !
+  </div>
+
+  <h3>2.2 Table de Karnaugh (Code Gray) &amp; Équation Booléenne Factorisée</h3>
+  <p>
+    Complétez sur votre Google Docs le <strong>tableau de Karnaugh à 16 cases</strong> ci-dessous (attention à l'ordre du code de Gray <code>00, 01, 11, 10</code> !), entourez les regroupements et vérifiez l'équation factorisée minimale :
+  </p>
+
+  <div class="dual-grid">
+    <div>
+      <table>
+        <thead>
+          <tr>
+            <th class="center"><i>CS</i> \ <i>PF</i></th>
+            <th class="center"><code>00</code></th>
+            <th class="center"><code>01</code></th>
+            <th class="center"><code>11</code></th>
+            <th class="center"><code>10</code></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th class="center"><code>00</code></th>
+            <td class="center">0</td><td class="center">0</td><td class="center">0</td><td class="center">0</td>
+          </tr>
+          <tr>
+            <th class="center"><code>01</code></th>
+            <td class="center">0</td><td class="center">0</td><td class="center">0</td><td class="center">0</td>
+          </tr>
+          <tr>
+            <th class="center"><code>11</code></th>
+            <td class="center">0</td><td class="center">0</td><td class="center">0</td><td class="center">0</td>
+          </tr>
+          <tr>
+            <th class="center" style="background:#dcfce7; color:#166534;"><code>10</code> (C=1, S=0)</th>
+            <td class="center">____</td>
+            <td class="center" style="background:#f0fdf4; font-weight:bold;">____ <small>(#9)</small></td>
+            <td class="center" style="background:#f0fdf4; font-weight:bold;">____ <small>(#11)</small></td>
+            <td class="center" style="background:#f0fdf4; font-weight:bold;">____ <small>(#10)</small></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="display:flex; flex-direction:column; justify-content:center;">
+      <div class="formula-box" style="margin:0;">
+        Équation minimale factorisée (3 boîtiers du kit TI) :<br><br>
+        <strong><i>A<sub>comb</sub></i> = <i>C</i> &middot; <span class="overbar"><i>S</i></span> &middot; (<i>P</i> + <i>F</i>)</strong><br>
+        <span style="font-size:9pt; color:#475569;">Active uniquement pour <code>(C,S,P,F)</code> &isin; {<code>1001</code> (9), <code>1010</code> (10), <code>1011</code> (11)}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SVG 2 : LOGIGRAMME CEI DE A_COMB + CHRONOGRAMME 16 ÉTATS AD3 -->
+  <div class="svg-card">
+    <svg viewBox="0 0 920 295" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Logigramme CEI de A_comb et chronogramme 16 états sur AD3">
+      <rect x="0" y="0" width="920" height="295" fill="#f8fafc" rx="8"/>
+
+      <!-- Zone Gauche : Logigramme Normalisé CEI avec numéros de broches -->
+      <rect x="14" y="14" width="536" height="267" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+      <text x="282" y="35" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11.5" font-weight="bold" fill="#0b3c5d">Logigramme Normalisé CEI (IEC 60617) &amp; Brochage Câblé</text>
+
+      <!-- Entrées AD3 DIO 3..0 -->
+      <text x="30" y="75" font-family="Consolas, monospace" font-size="10.5" font-weight="bold" fill="#0f766e">DIO 3 : C</text>
+      <line x1="98" y1="71" x2="290" y2="71" stroke="#0f766e" stroke-width="2"/>
+
+      <text x="30" y="125" font-family="Consolas, monospace" font-size="10.5" font-weight="bold" fill="#dc2626">DIO 2 : S</text>
+      <line x1="98" y1="121" x2="145" y2="121" stroke="#dc2626" stroke-width="2"/>
+
+      <text x="30" y="185" font-family="Consolas, monospace" font-size="10.5" font-weight="bold" fill="#1d4ed8">DIO 1 : P</text>
+      <line x1="98" y1="181" x2="145" y2="181" stroke="#1d4ed8" stroke-width="2"/>
+
+      <text x="30" y="225" font-family="Consolas, monospace" font-size="10.5" font-weight="bold" fill="#7c3aed">DIO 0 : F</text>
+      <line x1="98" y1="221" x2="145" y2="221" stroke="#7c3aed" stroke-width="2"/>
+
+      <!-- Porte NON CEI (74LS04 : 1 -> 2) -->
+      <rect x="145" y="101" width="46" height="40" fill="#f0fdf4" stroke="#15803d" stroke-width="2"/>
+      <text x="168" y="126" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="13" font-weight="bold" fill="#15803d">1</text>
+      <circle cx="196" cy="121" r="5" fill="#ffffff" stroke="#15803d" stroke-width="2"/>
+      <text x="137" y="116" text-anchor="end" font-family="Consolas, monospace" font-size="8.5" fill="#475569">[1]</text>
+      <text x="206" y="116" font-family="Consolas, monospace" font-size="8.5" fill="#475569">[2]</text>
+      <text x="170" y="95" text-anchor="middle" font-family="Consolas, monospace" font-size="8.5" font-weight="bold" fill="#15803d">74LS04</text>
+      <line x1="201" y1="121" x2="255" y2="121" stroke="#15803d" stroke-width="2"/>
+      <line x1="255" y1="121" x2="255" y2="97" stroke="#15803d" stroke-width="2"/>
+      <line x1="255" y1="97" x2="290" y2="97" stroke="#15803d" stroke-width="2"/>
+      <text x="232" y="136" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#15803d">/S</text>
+
+      <!-- Porte OU CEI >=1 (74LS32 : 1,2 -> 3) -->
+      <rect x="145" y="168" width="54" height="66" fill="#eff6ff" stroke="#1d4ed8" stroke-width="2"/>
+      <text x="172" y="206" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="13" font-weight="bold" fill="#1d4ed8">≥1</text>
+      <text x="139" y="177" text-anchor="end" font-family="Consolas, monospace" font-size="8.5" fill="#475569">[1]</text>
+      <text x="139" y="217" text-anchor="end" font-family="Consolas, monospace" font-size="8.5" fill="#475569">[2]</text>
+      <text x="206" y="196" font-family="Consolas, monospace" font-size="8.5" fill="#475569">[3]</text>
+      <text x="172" y="161" text-anchor="middle" font-family="Consolas, monospace" font-size="8.5" font-weight="bold" fill="#1d4ed8">74LS32</text>
+      <line x1="199" y1="201" x2="380" y2="201" stroke="#1d4ed8" stroke-width="2"/>
+      <line x1="380" y1="201" x2="380" y2="148" stroke="#1d4ed8" stroke-width="2"/>
+      <line x1="380" y1="148" x2="405" y2="148" stroke="#1d4ed8" stroke-width="2"/>
+      <text x="295" y="194" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#1d4ed8">P + F</text>
+
+      <!-- Porte ET #1 CEI & (74LS08 Porte 1 : 1,2 -> 3) -->
+      <rect x="290" y="56" width="54" height="56" fill="#f5f3ff" stroke="#6d28d9" stroke-width="2"/>
+      <text x="317" y="89" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="14" font-weight="bold" fill="#6d28d9">&amp;</text>
+      <text x="284" y="67" text-anchor="end" font-family="Consolas, monospace" font-size="8.5" fill="#475569">[1]</text>
+      <text x="284" y="93" text-anchor="end" font-family="Consolas, monospace" font-size="8.5" fill="#475569">[2]</text>
+      <text x="350" y="80" font-family="Consolas, monospace" font-size="8.5" fill="#475569">[3]</text>
+      <text x="317" y="50" text-anchor="middle" font-family="Consolas, monospace" font-size="8.5" font-weight="bold" fill="#6d28d9">74LS08 (1/4)</text>
+      <line x1="344" y1="84" x2="380" y2="84" stroke="#6d28d9" stroke-width="2"/>
+      <line x1="380" y1="84" x2="380" y2="122" stroke="#6d28d9" stroke-width="2"/>
+      <line x1="380" y1="122" x2="405" y2="122" stroke="#6d28d9" stroke-width="2"/>
+
+      <!-- Porte ET #2 CEI & (74LS08 Porte 2 : 4,5 -> 6) -->
+      <rect x="405" y="107" width="54" height="56" fill="#f5f3ff" stroke="#6d28d9" stroke-width="2"/>
+      <text x="432" y="140" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="14" font-weight="bold" fill="#6d28d9">&amp;</text>
+      <text x="400" y="118" text-anchor="end" font-family="Consolas, monospace" font-size="8.5" fill="#475569">[4]</text>
+      <text x="400" y="159" text-anchor="end" font-family="Consolas, monospace" font-size="8.5" fill="#475569">[5]</text>
+      <text x="464" y="131" font-family="Consolas, monospace" font-size="8.5" fill="#475569">[6]</text>
+      <text x="432" y="100" text-anchor="middle" font-family="Consolas, monospace" font-size="8.5" font-weight="bold" fill="#6d28d9">74LS08 (2/4)</text>
+
+      <!-- Sortie A_comb vers DIO 4 -->
+      <line x1="459" y1="135" x2="536" y2="135" stroke="#0d9488" stroke-width="2.6"/>
+      <text x="498" y="123" text-anchor="middle" font-family="Consolas, monospace" font-size="10" font-weight="bold" fill="#0f766e">A_comb</text>
+      <text x="498" y="152" text-anchor="middle" font-family="Consolas, monospace" font-size="9.5" font-weight="bold" fill="#0d9488">→ DIO 4</text>
+
+      <rect x="34" y="246" width="496" height="24" rx="4" fill="#f0fdfa" stroke="#99f6e4" stroke-width="1"/>
+      <text x="282" y="262" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.8" fill="#0f766e" font-weight="bold">Seulement 3 circuits intégrés : 1/6 SN74LS04N + 1/4 SN74LS32N + 2/4 SN74LS08N !</text>
+
+      <!-- Zone Droite : Chronogramme 16 états attendu sur WaveForms Logic -->
+      <rect x="562" y="14" width="344" height="267" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1.5"/>
+      <text x="734" y="35" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#38bdf8">Capture Attendue — WaveForms Logic (16 états)</text>
+
+      <!-- Bus Décimal 0..15 (x de 582 à 886 = 304 px => 19 px par état) -->
+      <text x="582" y="62" font-family="Consolas, monospace" font-size="8.5" fill="#94a3b8">Bus {C,S,P,F} (Binary Counter 1 kHz sur DIO 3..0) :</text>
+      <rect x="582" y="70" width="304" height="22" fill="#1e293b" stroke="#64748b" stroke-width="1"/>
+      <rect x="753" y="70" width="57" height="22" fill="#065f46" stroke="#34d399" stroke-width="1.5"/>
+      <text x="665" y="85" text-anchor="middle" font-family="Consolas, monospace" font-size="8.5" fill="#cbd5e1">0  1  2  3  4  5  6  7  8</text>
+      <text x="781" y="85" text-anchor="middle" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#6ee7b7">9 10 11</text>
+      <text x="848" y="85" text-anchor="middle" font-family="Consolas, monospace" font-size="8.5" fill="#cbd5e1">12..15</text>
+
+      <!-- Signal C (DIO 3) : 0 sur 0..7 (582..734), 1 sur 8..15 (734..886) -->
+      <text x="582" y="114" font-family="Consolas, monospace" font-size="8.5" fill="#5eead4">DIO 3 (C)</text>
+      <polyline points="582,130 734,130 734,117 886,117" fill="none" stroke="#2dd4bf" stroke-width="2"/>
+
+      <!-- Signal S (DIO 2) : 0(0..3), 1(4..7), 0(8..11), 1(12..15) -->
+      <text x="582" y="152" font-family="Consolas, monospace" font-size="8.5" fill="#fca5a5">DIO 2 (S)</text>
+      <polyline points="582,168 658,168 658,155 734,155 734,168 810,168 810,155 886,155" fill="none" stroke="#f87171" stroke-width="2"/>
+
+      <!-- Sortie A_comb (DIO 4) : 1 uniquement sur états 9, 10, 11 (x=753 à 810) ! -->
+      <text x="582" y="198" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#fde047">DIO 4 (A_comb = C · /S · (P+F))</text>
+      <polyline points="582,226 753,226 753,205 810,205 810,226 886,226" fill="none" stroke="#facc15" stroke-width="2.8"/>
+
+      <text x="781" y="246" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.8" font-weight="bold" fill="#fde047">Créneau = 3 ms (États 9, 10, 11)</text>
+      <text x="734" y="266" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.2" fill="#94a3b8">Validation exhaustive des 16 lignes en une seule capture !</text>
+    </svg>
+    <div class="svg-caption">Figure 2.1 — Logigramme CEI câblé (avec numéros de broches DIP-14) et validation automatique des 16 combinaisons sur l'Analyseur Logique AD3.</div>
+  </div>
+
+  <h3>2.3 Validation Croisée des 16 Combinaisons (Proteus 8 vs WaveForms AD3)</h3>
+  <ol>
+    <li><strong>Sous Proteus 8 :</strong> Saisissez le logigramme de la Figure 2.1 avec 4 entrées <code>LOGICSTATE</code> (ou un compteur 4 bits / 4 générateurs <code>DCLOCK</code> à <code>62,5 Hz, 125 Hz, 250 Hz, 500 Hz</code>) et vérifiez que la sonde de sortie s'allume <strong>exclusivement</strong> pour les 3 combinaisons <code>1001</code>, <code>1010</code> et <code>1011</code>.</li>
+    <li><strong>Sur Breadboard + AD3 :</strong> Câblez le montage en suivant scrupuleusement les numéros de broches entre crochets de la Figure 2.1. Dans <strong>WaveForms &rarr; <code>Patterns</code></strong>, créez un <strong>Bus 4 bits sur <code>DIO 3..0</code></strong> (<code>DIO 3 = MSB = C</code>, <code>DIO 0 = LSB = F</code>) en mode <strong><code>Binary Counter</code> à <code>1 kHz</code></strong>.</li>
+    <li>Dans <strong>WaveForms &rarr; <code>Logic</code></strong>, affichez le bus <code>DIO 3..0</code> (format <em>Decimal</em>) ainsi que la sortie <strong><code>DIO 4</code> (<i>A<sub>comb</sub></i>)</strong>. Vérifiez que le créneau haut dure exactement <strong>3,0 ms</strong> sur les codes <strong><code>9</code>, <code>10</code> et <code>11</code></strong>, puis insérez la capture dans votre Google Docs !</li>
+  </ol>
+
+  <label class="step-check no-print">
+    <input type="checkbox" class="tp-step-cb" data-step="2" onchange="updateProgress()">
+    <span>Partie 2 validée : Équation combinatoire 4 variables simplifiée par Karnaugh, simulée sous Proteus et validée sur les 16 états à l'AD3.</span>
+  </label>
+</div>
+
+<!-- ===================================================================== -->
+<!-- PARTIE 3 : LOGIQUE SÉQUENTIELLE — VERROU D'ARRÊT D'URGENCE 74LS74N    -->
+<!-- ===================================================================== -->
+<h2 id="sec-p3">PARTIE 3 : Logique Séquentielle — Verrouillage d'Arrêt d'Urgence (<code>SN74LS74N</code>) &amp; Anti-Rebond RC <span class="badge badge-time">1h05</span></h2>
+
+<div class="card-block">
+  <h3>3.1 Pourquoi la Logique Combinatoire Seule est Interdite en Sécurité Machine !</h3>
+  <div class="callout callout-danger">
+    <strong>🛑 Exigence normative de non-redémarrage automatique (IEC 60204-1) :</strong>
+    Avec un montage purement combinatoire, si un opérateur appuie brièvement sur un bouton d'<strong>Arrêt d'Urgence (AU)</strong> fugitif ou entrouvre un capot pendant 1 seconde, le moteur repart <strong>tout seul par surprise</strong> dès que le contact revient au repos ! Pour garantir la sécurité, il faut une <strong>mémoire matérielle d'état (logique séquentielle)</strong> :
+    <ul style="margin:6px 0 0 0;">
+      <li>Un appui fugitif sur <strong><code>ARRÊT D'URGENCE</code></strong> force <strong>immédiatement et de façon asynchrone</strong> la sortie d'autorisation <code>1Q</code> à <code>0</code>, et <strong>la maintient verrouillée à <code>0</code></strong> même après relâchement du bouton AU !</li>
+      <li>La remise sous tension (réarmement <code>1Q = 1</code>) exige une <strong>action volontaire distincte (front montant <code>&uarr;</code>)</strong> sur un bouton poussoir <strong><code>RÉARMEMENT</code></strong>.</li>
+    </ul>
+  </div>
+
+  <h3>3.2 Étude de la Bascule D <code>SN74LS74N</code>, Anti-Rebond RC &amp; Pilotage TTL des LEDs Témoins</h3>
+  <p>
+    Le boîtier DIP-14 <strong><code>SN74LS74N</code></strong> intègre deux bascules D déclenchées sur <strong>front montant d'horloge (<code>1CLK &uarr;</code>, broche 3)</strong>, dotées de deux entrées de forçage <strong>asynchrones prioritaires actives à l'état BAS</strong> (repérées par une bulle d'inversion) : <strong><code>/1PRE</code> (broche 4)</strong> qui force <code>1Q = 1</code>, et <strong><code>/1CLR</code> (broche 1)</strong> qui force instantanément <strong><code>1Q = 0</code></strong> !
+  </p>
+
+  <!-- SVG 3 : SCHÉMA BASCULE D SN74LS74N + ANTI-REBOND RC + CHRONOGRAMME SÉQUENTIEL -->
+  <div class="svg-card">
+    <svg viewBox="0 0 920 335" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Schéma du verrou d'arrêt d'urgence à bascule D SN74LS74N et chronogramme">
+      <rect x="0" y="0" width="920" height="335" fill="#f8fafc" rx="8"/>
+
+      <!-- Zone Schéma Gauche -->
+      <rect x="14" y="14" width="552" height="307" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+      <text x="290" y="35" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11.5" font-weight="bold" fill="#0b3c5d">Schéma du Verrou Matériel d'Arrêt d'Urgence — SN74LS74N (1/2)</text>
+
+      <!-- Rail +5V haut -->
+      <line x1="36" y1="54" x2="546" y2="54" stroke="#dc2626" stroke-width="2.2"/>
+      <text x="42" y="48" font-family="Consolas, monospace" font-size="9.5" font-weight="bold" fill="#dc2626">+5,00 V (AD3 V+)</text>
+
+      <!-- Cellule Anti-Rebond sur BP RÉARMEMENT -> 1CLK (broche 3) -->
+      <!-- +5V -> BP REARM -> noeud RC ; 10k vers GND, 100nF vers GND (ou R série) : faisons Pull-down 10k + BP vers +5V via 1k + 100nF sur 1CLK?
+           ATTENTION EN TTL 74LS : I_IL = -0,4 mA ! Une résistance de pull-down de 10 kΩ donne 0,4 mA * 10 kΩ = 4,0 V (JAMAIS 0 V en TTL 74LS !!).
+           EXCELLENTE VÉRIFICATION ÉLECTRONIQUE : En TTL 74LS, on ne met JAMAIS une 10 kΩ de pull-down !
+           On utilise TOUJOURS un pull-up de 10 kΩ vers +5V et un bouton vers GND (ou 10k vers +5V + 100nF vers GND : au repos = +5V, appui = 0V, relâchement = front montant propre RC vers +5V !!). -->
+
+      <!-- Pull-up 10k sur RÉARMEMENT (broche 3 = 1CLK) -->
+      <line x1="95" y1="54" x2="95" y2="78" stroke="#dc2626" stroke-width="1.8"/>
+      <rect x="86" y="78" width="18" height="38" fill="#ffffff" stroke="#1e293b" stroke-width="1.8"/>
+      <text x="79" y="101" text-anchor="end" font-family="Consolas, monospace" font-size="8.5" font-weight="bold" fill="#0f172a">10 kΩ</text>
+      <line x1="95" y1="116" x2="95" y2="152" stroke="#0284c7" stroke-width="2"/>
+      <circle cx="95" cy="152" r="3.5" fill="#0284c7"/>
+
+      <!-- Fil vers 1CLK (broche 3) via R_série 330Ω de protection décharge capa -->
+      <line x1="95" y1="152" x2="235" y2="152" stroke="#0284c7" stroke-width="2.2"/>
+      <text x="165" y="145" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.5" font-weight="bold" fill="#0369a1">Front ↑ au relâchement</text>
+
+      <!-- BP RÉARMEMENT vers GND + Condensateur 100 nF anti-rebond en parallèle -->
+      <line x1="72" y1="152" x2="72" y2="188" stroke="#0284c7" stroke-width="1.8"/>
+      <line x1="65" y1="188" x2="65" y2="214" stroke="#15803d" stroke-width="2.8"/>
+      <circle cx="72" cy="188" r="2.5" fill="#0f172a"/>
+      <circle cx="72" cy="214" r="2.5" fill="#0f172a"/>
+      <line x1="72" y1="214" x2="72" y2="292" stroke="#334155" stroke-width="1.8"/>
+      <text x="58" y="204" text-anchor="end" font-family="Segoe UI, sans-serif" font-size="8.5" font-weight="bold" fill="#15803d">BP RÉARM.</text>
+
+      <!-- Condensateur 100 nF en parallèle sur le BP -->
+      <line x1="125" y1="152" x2="125" y2="195" stroke="#0284c7" stroke-width="1.8"/>
+      <line x1="113" y1="195" x2="137" y2="195" stroke="#0b3c5d" stroke-width="2.5"/>
+      <line x1="113" y1="203" x2="137" y2="203" stroke="#0b3c5d" stroke-width="2.5"/>
+      <line x1="125" y1="203" x2="125" y2="292" stroke="#334155" stroke-width="1.8"/>
+      <text x="141" y="203" font-family="Consolas, monospace" font-size="8.5" font-weight="bold" fill="#0b3c5d">100 nF</text>
+
+      <!-- Pull-up 10k vers /1PRE (broche 4) et 1D (broche 2) -->
+      <line x1="195" y1="54" x2="195" y2="74" stroke="#dc2626" stroke-width="1.8"/>
+      <rect x="187" y="74" width="16" height="32" fill="#ffffff" stroke="#1e293b" stroke-width="1.6"/>
+      <text x="182" y="94" text-anchor="end" font-family="Consolas, monospace" font-size="8" fill="#334155">10k</text>
+      <line x1="195" y1="106" x2="195" y2="118" stroke="#16a34a" stroke-width="1.8"/>
+      <!-- Vers /1PRE (broche 4 en haut du symbole) et 1D (broche 2) -->
+      <line x1="195" y1="118" x2="295" y2="118" stroke="#16a34a" stroke-width="1.8"/>
+      <line x1="295" y1="118" x2="295" y2="124" stroke="#16a34a" stroke-width="1.8"/>
+      <line x1="195" y1="118" x2="235" y2="118" stroke="#16a34a" stroke-width="1.8"/>
+
+      <!-- Symbole Bascule D SN74LS74N -->
+      <rect x="235" y="102" width="120" height="126" rx="4" fill="#f8fafc" stroke="#0b3c5d" stroke-width="2.4"/>
+      <text x="295" y="170" text-anchor="middle" font-family="Consolas, monospace" font-size="10.5" font-weight="bold" fill="#0b3c5d">SN74LS74N</text>
+      <text x="295" y="184" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8" fill="#475569">(14=+5V, 7=GND)</text>
+
+      <!-- /1PRE en haut (broche 4) -->
+      <circle cx="295" cy="97" r="4.5" fill="#ffffff" stroke="#0b3c5d" stroke-width="1.8"/>
+      <line x1="295" y1="78" x2="295" y2="92" stroke="#16a34a" stroke-width="1.8"/>
+      <line x1="195" y1="78" x2="295" y2="78" stroke="#16a34a" stroke-width="1.8"/>
+      <text x="304" y="92" font-family="Consolas, monospace" font-size="8.5" font-weight="bold" fill="#166534">/1PRE [4]=1</text>
+
+      <!-- 1D (broche 2) -->
+      <text x="243" y="122" font-family="Consolas, monospace" font-size="9.5" font-weight="bold" fill="#0f172a">1D</text>
+      <text x="230" y="114" text-anchor="end" font-family="Consolas, monospace" font-size="8.5" fill="#475569">[2]</text>
+
+      <!-- Triangle front montant 1CLK (broche 3) -->
+      <polygon points="235,146 246,152 235,158" fill="none" stroke="#0284c7" stroke-width="1.8"/>
+      <text x="250" y="156" font-family="Consolas, monospace" font-size="9.5" font-weight="bold" fill="#0284c7">C1</text>
+      <text x="230" y="166" text-anchor="end" font-family="Consolas, monospace" font-size="8.5" fill="#475569">[3]</text>
+
+      <!-- /1CLR en bas (broche 1) + BP ARRÊT D'URGENCE -->
+      <circle cx="295" cy="233" r="4.5" fill="#ffffff" stroke="#dc2626" stroke-width="2"/>
+      <text x="295" y="221" text-anchor="middle" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#dc2626">/1CLR [1]</text>
+      <line x1="295" y1="238" x2="295" y2="255" stroke="#dc2626" stroke-width="2.2"/>
+      <!-- Pull-up 10k vers +5V sur /1CLR -->
+      <line x1="205" y1="255" x2="295" y2="255" stroke="#dc2626" stroke-width="2"/>
+      <line x1="205" y1="54" x2="205" y2="210" stroke="#dc2626" stroke-width="1.4" stroke-dasharray="3,2"/>
+      <rect x="197" y="210" width="16" height="30" fill="#ffffff" stroke="#dc2626" stroke-width="1.6"/>
+      <text x="192" y="229" text-anchor="end" font-family="Consolas, monospace" font-size="8" font-weight="bold" fill="#b91c1c">10k</text>
+      <line x1="205" y1="240" x2="205" y2="255" stroke="#dc2626" stroke-width="1.8"/>
+      <!-- BP Arrêt d'Urgence vers GND -->
+      <line x1="295" y1="255" x2="295" y2="266" stroke="#dc2626" stroke-width="2"/>
+      <line x1="286" y1="266" x2="286" y2="282" stroke="#dc2626" stroke-width="3.2"/>
+      <line x1="295" y1="282" x2="295" y2="292" stroke="#334155" stroke-width="2"/>
+      <text x="306" y="278" font-family="Segoe UI, sans-serif" font-size="9" font-weight="bold" fill="#dc2626">🛑 BP AU (vers GND)</text>
+
+      <!-- Sortie 1Q [5] et /1Q [6] avec LEDs câblées en absorption TTL (Sinking vers +5V) -->
+      <text x="348" y="132" text-anchor="end" font-family="Consolas, monospace" font-size="9.5" font-weight="bold" fill="#15803d">1Q</text>
+      <text x="360" y="123" font-family="Consolas, monospace" font-size="8.5" fill="#475569">[5]</text>
+      <line x1="355" y1="128" x2="542" y2="128" stroke="#15803d" stroke-width="2.4"/>
+      <text x="492" y="119" text-anchor="middle" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#15803d">1Q (AUTORISATION)</text>
+
+      <circle cx="360" cy="202" r="4.5" fill="#ffffff" stroke="#b91c1c" stroke-width="1.8"/>
+      <text x="348" y="206" text-anchor="end" font-family="Consolas, monospace" font-size="9.5" font-weight="bold" fill="#b91c1c">/1Q</text>
+      <text x="368" y="195" font-family="Consolas, monospace" font-size="8.5" fill="#475569">[6]</text>
+      <line x1="365" y1="202" x2="542" y2="202" stroke="#b91c1c" stroke-width="2"/>
+
+      <!-- LED Rouge (AU Verrouillé) entre +5V + 470Ω et 1Q (s'allume quand 1Q=0 !) -->
+      <line x1="418" y1="54" x2="418" y2="68" stroke="#dc2626" stroke-width="1.6"/>
+      <rect x="411" y="68" width="14" height="24" fill="#ffffff" stroke="#1e293b" stroke-width="1.5"/>
+      <text x="407" y="84" text-anchor="end" font-family="Consolas, monospace" font-size="7.8" fill="#334155">470Ω</text>
+      <polygon points="411,98 425,98 418,110" fill="#ef4444" stroke="#991b1b" stroke-width="1.4"/>
+      <line x1="411" y1="110" x2="425" y2="110" stroke="#991b1b" stroke-width="2"/>
+      <line x1="418" y1="110" x2="418" y2="128" stroke="#15803d" stroke-width="1.6"/>
+      <circle cx="418" cy="128" r="3" fill="#15803d"/>
+      <text x="430" y="106" font-family="Segoe UI, sans-serif" font-size="8" font-weight="bold" fill="#b91c1c">LED Rouge (AU)</text>
+
+      <!-- LED Verte (Système Armé) entre +5V + 470Ω et /1Q (s'allume quand /1Q=0 <=> 1Q=1 !) -->
+      <line x1="468" y1="142" x2="520" y2="142" stroke="#dc2626" stroke-width="1.6"/>
+      <text x="524" y="146" font-family="Consolas, monospace" font-size="8" font-weight="bold" fill="#dc2626">+5V</text>
+      <line x1="468" y1="142" x2="468" y2="152" stroke="#dc2626" stroke-width="1.6"/>
+      <rect x="461" y="152" width="14" height="22" fill="#ffffff" stroke="#1e293b" stroke-width="1.5"/>
+      <text x="457" y="167" text-anchor="end" font-family="Consolas, monospace" font-size="7.8" fill="#334155">470Ω</text>
+      <polygon points="461,179 475,179 468,191" fill="#22c55e" stroke="#166534" stroke-width="1.4"/>
+      <line x1="461" y1="191" x2="475" y2="191" stroke="#166534" stroke-width="2"/>
+      <line x1="468" y1="191" x2="468" y2="202" stroke="#b91c1c" stroke-width="1.6"/>
+      <circle cx="468" cy="202" r="3" fill="#b91c1c"/>
+      <text x="480" y="188" font-family="Segoe UI, sans-serif" font-size="8" font-weight="bold" fill="#15803d">LED Verte (ARMÉ)</text>
+
+      <!-- Rail GND bas -->
+      <line x1="36" y1="292" x2="546" y2="292" stroke="#334155" stroke-width="2.2"/>
+      <text x="42" y="308" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#334155">GND commun (Broche 7 du SN74LS74N)</text>
+
+      <!-- Zone Chronogramme Séquentiel Droite -->
+      <rect x="578" y="14" width="328" height="307" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1.5"/>
+      <text x="742" y="35" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#38bdf8">Chronogramme Séquentiel (Logic AD3)</text>
+
+      <!-- /1CLR (AU actif à 0) : impulsion basse au départ, puis à t2 -->
+      <text x="594" y="64" font-family="Consolas, monospace" font-size="8.5" font-weight="bold" fill="#fca5a5">DIO 0 : /1CLR (BP AU actif à 0)</text>
+      <polyline points="594,74 620,74 620,92 645,92 645,74 775,74 775,92 802,92 802,74 890,74" fill="none" stroke="#f87171" stroke-width="2.2"/>
+
+      <!-- 1CLK (BP Réarmement : front montant à t1=695 et t3=845) -->
+      <text x="594" y="122" font-family="Consolas, monospace" font-size="8.5" font-weight="bold" fill="#7dd3fc">DIO 1 : 1CLK (Front ↑ au relâchement Réarm.)</text>
+      <polyline points="594,132 672,132 672,150 700,150 700,132 822,132 822,150 850,150 850,132 890,132" fill="none" stroke="#38bdf8" stroke-width="2.2"/>
+      <text x="700" y="164" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8" font-weight="bold" fill="#38bdf8">↑ Réarm.</text>
+      <text x="850" y="164" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8" font-weight="bold" fill="#38bdf8">↑ Réarm.</text>
+
+      <!-- 1Q (Autorisation mémorisée) -->
+      <text x="594" y="192" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#86efac">DIO 2 : 1Q (AUTORISATION VERROUILLÉE)</text>
+      <polyline points="594,222 700,222 700,200 775,200 775,222 850,222 850,200 890,200" fill="none" stroke="#4ade80" stroke-width="2.6"/>
+
+      <!-- Annotations clés -->
+      <line x1="775" y1="74" x2="775" y2="232" stroke="#facc15" stroke-width="1.2" stroke-dasharray="3,3"/>
+      <text x="742" y="254" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.5" font-weight="bold" fill="#fde047">1) Coupure asynchrone instantanée (~18 ns) sur /1CLR=0</text>
+      <text x="742" y="272" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.3" fill="#cbd5e1">2) Relâcher l'AU (/1CLR→1) NE redémarre PAS 1Q !</text>
+      <text x="742" y="290" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.3" fill="#86efac">3) Seul un nouveau front ↑ sur 1CLK réarme 1Q=1.</text>
+    </svg>
+    <div class="svg-caption">Figure 3.1 — Verrouillage matériel d'arrêt d'urgence par bascule D <code>SN74LS74N</code> (anti-rebond RC 10 k&Omega; / 100 nF et LEDs câblées en absorption TTL).</div>
+  </div>
+
+  <div class="callout callout-tip">
+    <strong>💡 Savoir-faire Ingénieur Option B — Deux subtilités vitales de la technologie <code>74LS</code> sur la Figure 3.1 :</strong>
+    <ol style="margin:6px 0 0 0;">
+      <li><strong>Pourquoi ne met-on jamais de résistance de <em>pull-down</em> de 10 k&Omega; sur une entrée <code>74LS</code> ?</strong> Une entrée <code>74LS</code> fournit un courant interne <i>I<sub>IL</sub></i> &approx; 0,4 mA vers la masse : à travers 10 k&Omega;, cela créerait <code>0,4 mA &times; 10 k&Omega; = 4,0 V</code> (état HAUT permanent !). En TTL <code>74LS</code>, on utilise donc <strong>toujours des <em>pull-ups</em> de 10 k&Omega; vers +5 V et des boutons reliés à <code>GND</code></strong> ! Sur <code>1CLK</code>, l'appui décharge le condensateur <code>100 nF</code> à <code>0 V</code>, et le relâchement produit une rampe exponentielle propre (&tau; = 1 ms) générant <strong>un unique front montant <code>&uarr;</code> sans rebond</strong> !</li>
+      <li><strong>Pourquoi les LEDs témoins sont-elles reliées au <code>+5 V</code> (mode <em>Sinking</em>) ?</strong> Une sortie <code>74LS</code> absorbe jusqu'à <strong>8 mA à l'état BAS</strong> (<i>I<sub>OL</sub></i>), mais ne peut fournir que <strong>0,4 mA garantis à l'état HAUT</strong> (<i>I<sub>OH</sub></i>). Relier les LEDs vers <code>+5 V</code> via <code>470 &Omega;</code> permet un allumage franc sans jamais écrouler la tension haute de <code>1Q</code> ! (<em>Bonus sécurité</em> : mettez les entrées inutilisées <code>2D(12), 2CLK(11), /2PRE(10), /2CLR(13)</code> de la 2<sup>e</sup> bascule au <code>+5 V</code> via <code>10 k&Omega;</code>).</li>
+    </ol>
+  </div>
+
+  <h3>3.3 Manipulation : Observation des Rebonds au <em>Scope</em> AD3 puis Validation du Verrou au <em>Logic Analyzer</em></h3>
+  <ol>
+    <li><strong>Sous Proteus 8 :</strong> Saisissez le schéma de la Figure 3.1 (<code>74LS74</code> + deux boutons <code>BUTTON</code>) et vérifiez la séquence : mise sous tension &rarr; coup d'AU &rarr; relâchement AU (reste verrouillé à 0 !) &rarr; appui/relâchement Réarmement (passe à 1 !).</li>
+    <li><strong>Au <em>Scope</em> AD3 (<code>1+</code> sur la broche <code>3 = 1CLK</code>, <code>1-</code> à <code>GND</code>) :</strong> Retirez momentanément le condensateur <code>100 nF</code>, réglez le déclenchement en mode <em>Single</em> (seuil <code>1,5 V</code>, base de temps <code>500 &mu;s/div</code>) et relâchez le bouton poussoir : observez les rebonds mécaniques ! Remettez le <code>100 nF</code> et capturez la montée exponentielle propre (&tau; = <i>R &middot; C</i> = 1,0 ms).</li>
+    <li><strong>Au <em>Logic Analyzer</em> AD3 :</strong> Reliez <code>/1CLR (1)</code> &rarr; <code>DIO 0</code>, <code>1CLK (3)</code> &rarr; <code>DIO 1</code>, <code>1Q (5)</code> &rarr; <code>DIO 2</code> et <code>/1Q (6)</code> &rarr; <code>DIO 3</code>. Enregistrez (mode <em>Record / Scan Shift</em> sur 5 secondes) un cycle complet <strong>Réarmement &rarr; Arrêt d'Urgence &rarr; Relâchement AU &rarr; Nouveau Réarmement</strong> !</li>
+  </ol>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Étape séquentielle testée</th>
+        <th class="center"><code>/1CLR</code> [1]</th>
+        <th class="center"><code>1CLK</code> [3]</th>
+        <th class="center col-sim">Proteus : <code>1Q</code> / <code>/1Q</code></th>
+        <th class="center col-ad3">Réel Breadboard : <code>1Q</code> (V) &amp; LEDs allumées</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>1. Appui maintenu sur BP AU</strong></td>
+        <td class="center"><code>0</code></td><td class="center"><code>1</code></td>
+        <td class="center">____ / ____</td>
+        <td class="center"><i>V<sub>1Q</sub></i> = ______ V &nbsp;|&nbsp; LED : ____________</td>
+      </tr>
+      <tr>
+        <td><strong>2. Relâchement du BP AU</strong> (Mémoire !)</td>
+        <td class="center"><code>1</code></td><td class="center"><code>1</code></td>
+        <td class="center">____ / ____</td>
+        <td class="center"><i>V<sub>1Q</sub></i> = ______ V &nbsp;|&nbsp; LED : ____________</td>
+      </tr>
+      <tr>
+        <td><strong>3. Appui + relâchement BP RÉARMEMENT</strong></td>
+        <td class="center"><code>1</code></td><td class="center"><code>0 &rarr; 1 (&uarr;)</code></td>
+        <td class="center">____ / ____</td>
+        <td class="center"><i>V<sub>1Q</sub></i> = ______ V &nbsp;|&nbsp; LED : ____________</td>
+      </tr>
+      <tr>
+        <td><strong>4. Conflit : Réarmement pendant AU appuyé !</strong></td>
+        <td class="center"><code>0</code></td><td class="center"><code>0 &rarr; 1 (&uarr;)</code></td>
+        <td class="center">____ / ____</td>
+        <td class="center">Priorité constatée : __________________</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <label class="step-check no-print">
+    <input type="checkbox" class="tp-step-cb" data-step="3" onchange="updateProgress()">
+    <span>Partie 3 validée : Verrouillage matériel d'arrêt d'urgence SN74LS74N + anti-rebond RC validés au Scope et au Logic Analyzer AD3.</span>
+  </label>
+</div>
+
+<!-- ===================================================================== -->
+<!-- PARTIE 4 : DÉCODEUR BCD 7-SEGMENTS CD4511BE & AFFICHEUR VIRTUEL AD3   -->
+<!-- ===================================================================== -->
+<h2 id="sec-p4">PARTIE 4 : Décodage BCD 7-Segments (<code>CD4511BE</code>) &amp; Afficheur Virtuel WaveForms (<em>Static I/O</em>) <span class="badge badge-time">45 min</span></h2>
+
+<div class="card-block">
+  <h3>4.1 Architecture du <code>CD4511BE</code> (DIP-16) &amp; Astuce de l'Afficheur 7-Segments Virtuel AD3</h3>
+  <p>
+    Pour indiquer en façade le code diagnostic de notre machine (<code>0</code> = Défaut AU verrouillé, <code>1</code> = Veille, <code>2..4</code> = Paliers vitesse, <code>7</code> = Alerte Crash CPU), le <em>TI myParts Kit</em> fournit le circuit CMOS <strong><code>CD4511BE</code></strong> (verrou / décodeur / driver BCD vers 7-segments à cathode commune).
+    <br>Comme la boîte <em>TI myParts Kit</em> ne contient pas d'afficheur 7-segments physique à LEDs, l'outil <strong><code>Static I/O</code> de Digilent WaveForms</strong> intègre un <strong>véritable afficheur 7-segments virtuel temps réel sur les voies <code>DIO 15..8</code></strong> !
+  </p>
+
+  <!-- SVG 4 : BROCHAGE ET CÂBLAGE DU CD4511BE VERS STATIC I/O AD3 (ET PROTEUS) -->
+  <div class="svg-card">
+    <svg viewBox="0 0 920 285" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Câblage du décodeur BCD 7-segments CD4511BE vers l'afficheur virtuel 7-segments AD3">
+      <rect x="0" y="0" width="920" height="285" fill="#f8fafc" rx="8"/>
+
+      <rect x="14" y="14" width="892" height="257" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+      <text x="460" y="36" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11.5" font-weight="bold" fill="#0b3c5d">Décodeur CD4511BE (DIP-16) → Afficheur 7-Segments Cathode Commune (Proteus) &amp; Static I/O AD3 (DIO 8..15)</text>
+
+      <!-- Entrées BCD (Gauche) -->
+      <rect x="36" y="64" width="190" height="118" rx="6" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="131" y="83" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.8" font-weight="bold" fill="#1e40af">Entrées BCD (3,3 V ou 5 V)</text>
+      <text x="48" y="105" font-family="Consolas, monospace" font-size="9" fill="#0f172a">Bit A (2⁰, LSB) ──► [7]  A</text>
+      <text x="48" y="125" font-family="Consolas, monospace" font-size="9" fill="#0f172a">Bit B (2¹)      ──► [1]  B</text>
+      <text x="48" y="145" font-family="Consolas, monospace" font-size="9" fill="#0f172a">Bit C (2²)      ──► [2]  C</text>
+      <text x="48" y="165" font-family="Consolas, monospace" font-size="9" fill="#0f172a">Bit D (2³, MSB) ──► [6]  D</text>
+
+      <!-- Entrées de commande du CD4511 -->
+      <rect x="36" y="192" width="190" height="66" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.4"/>
+      <text x="48" y="211" font-family="Consolas, monospace" font-size="8.6" font-weight="bold" fill="#92400e">/LT [3] ──► +5 V (Test lampes)</text>
+      <text x="48" y="229" font-family="Consolas, monospace" font-size="8.6" font-weight="bold" fill="#92400e">/BL [4] ──► +5 V (Non éteint)</text>
+      <text x="48" y="247" font-family="Consolas, monospace" font-size="8.6" font-weight="bold" fill="#0f172a">LE  [5] ──► GND  (Transparent)</text>
+
+      <!-- Boîtier central CD4511BE -->
+      <rect x="280" y="58" width="175" height="198" rx="6" fill="#1e293b" stroke="#0f172a" stroke-width="2.2"/>
+      <text x="367" y="92" text-anchor="middle" font-family="Consolas, monospace" font-size="12" font-weight="bold" fill="#38bdf8">CD4511BE</text>
+      <text x="367" y="109" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.5" fill="#cbd5e1">DIP-16 (TI myParts Kit)</text>
+      <text x="367" y="132" text-anchor="middle" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#fca5a5">VDD [16] = +5,00 V</text>
+      <text x="367" y="148" text-anchor="middle" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#94a3b8">VSS [8]  = GND</text>
+      <rect x="294" y="166" width="147" height="74" rx="4" fill="#0f172a" stroke="#475569" stroke-width="1"/>
+      <text x="367" y="185" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.3" font-weight="bold" fill="#fde047">Sorties NPN Émetteur-Suiveur</text>
+      <text x="367" y="201" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8" fill="#e2e8f0">État 1 : fournit ~4,2 V</text>
+      <text x="367" y="216" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8" fill="#fca5a5">État 0 : OUVERT (Haute-Z) !</text>
+      <text x="367" y="231" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8" fill="#5eead4">→ Pull-down AD3 requis !</text>
+
+      <!-- Liaisons des 7 segments a..g vers DIO 8..14 -->
+      <line x1="226" y1="120" x2="280" y2="120" stroke="#3b82f6" stroke-width="2"/>
+      <line x1="226" y1="224" x2="280" y2="224" stroke="#d97706" stroke-width="2"/>
+
+      <text x="466" y="76" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#0f766e">[13] SEG a ──────► DIO 8</text>
+      <text x="466" y="98" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#0f766e">[12] SEG b ──────► DIO 9</text>
+      <text x="466" y="120" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#0f766e">[11] SEG c ──────► DIO 10</text>
+      <text x="466" y="142" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#0f766e">[10] SEG d ──────► DIO 11</text>
+      <text x="466" y="164" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#0f766e">[9]  SEG e ──────► DIO 12</text>
+      <text x="466" y="186" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#0f766e">[15] SEG f ──────► DIO 13</text>
+      <text x="466" y="208" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#0f766e">[14] SEG g ──────► DIO 14</text>
+      <text x="466" y="236" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#dc2626">/1Q (74LS74 [6]) ► DIO 15 (DP)</text>
+
+      <!-- Afficheur Virtuel 7-Segments WaveForms Static I/O -->
+      <rect x="678" y="56" width="210" height="200" rx="8" fill="#0f172a" stroke="#0d9488" stroke-width="2.2"/>
+      <text x="783" y="77" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#5eead4">WaveForms : Static I/O</text>
+      <text x="783" y="91" text-anchor="middle" font-family="Consolas, monospace" font-size="8.2" fill="#94a3b8">Group DIO 15..8 = "7-Segment"</text>
+
+      <!-- Dessin d'un chiffre 7-segments avec repères a..g + DP -->
+      <!-- Segment a -->
+      <rect x="756" y="106" width="44" height="7" rx="3" fill="#22c55e"/>
+      <text x="778" y="102" text-anchor="middle" font-family="Consolas, monospace" font-size="8" fill="#86efac">a</text>
+      <!-- Segment f -->
+      <rect x="748" y="114" width="7" height="38" rx="3" fill="#22c55e"/>
+      <text x="740" y="136" text-anchor="end" font-family="Consolas, monospace" font-size="8" fill="#86efac">f</text>
+      <!-- Segment b -->
+      <rect x="801" y="114" width="7" height="38" rx="3" fill="#22c55e"/>
+      <text x="815" y="136" font-family="Consolas, monospace" font-size="8" fill="#86efac">b</text>
+      <!-- Segment g -->
+      <rect x="756" y="153" width="44" height="7" rx="3" fill="#334155"/>
+      <text x="778" y="150" text-anchor="middle" font-family="Consolas, monospace" font-size="8" fill="#94a3b8">g</text>
+      <!-- Segment e -->
+      <rect x="748" y="161" width="7" height="38" rx="3" fill="#22c55e"/>
+      <text x="740" y="183" text-anchor="end" font-family="Consolas, monospace" font-size="8" fill="#86efac">e</text>
+      <!-- Segment c -->
+      <rect x="801" y="161" width="7" height="38" rx="3" fill="#22c55e"/>
+      <text x="815" y="183" font-family="Consolas, monospace" font-size="8" fill="#86efac">c</text>
+      <!-- Segment d -->
+      <rect x="756" y="200" width="44" height="7" rx="3" fill="#22c55e"/>
+      <text x="778" y="218" text-anchor="middle" font-family="Consolas, monospace" font-size="8" fill="#86efac">d</text>
+      <!-- Point décimal DP (DIO 15 = /1Q = Défaut AU !) -->
+      <circle cx="822" cy="204" r="5" fill="#ef4444"/>
+      <text x="833" y="208" font-family="Consolas, monospace" font-size="8" font-weight="bold" fill="#fca5a5">DP (AU!)</text>
+
+      <text x="783" y="242" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.2" font-weight="bold" fill="#fde047">Supplies → Digital IO → Pull : Down !</text>
+    </svg>
+    <div class="svg-caption">Figure 4.1 — Interfaçage complet du décodeur <code>CD4511BE</code> vers l'afficheur 7-segments virtuel de WaveForms (<code>DIO 8..15</code>).</div>
+  </div>
+
+  <h3>4.2 Protocole de Test du Décodeur <code>CD4511BE</code> (Proteus 8 puis WaveForms <em>Static I/O</em>)</h3>
+  <div class="dual-grid">
+    <div class="protocol-box protocol-proteus">
+      <h4>🟣 Simulation Proteus 8</h4>
+      <ol style="margin:6px 0 0 0; padding-left:18px;">
+        <li>Placez le composant <code>4511</code>, un afficheur 7-segments à cathode commune <code>7SEG-COM-CAT-GRN</code> (cathode reliée à <code>GROUND</code>) et 7 résistances de limitation de <code>330 &Omega;</code> sur <code>QA..QG</code>.</li>
+        <li>Reliez <code>/LT (3)</code> et <code>/BL (4)</code> à <code>+5V</code>, <code>LE (5)</code> à <code>GROUND</code>, et 4 entrées <code>LOGICSTATE</code> sur <code>D(6), C(2), B(1), A(7)</code>.</li>
+        <li>Vérifiez l'affichage des chiffres <code>0</code> à <code>9</code>, puis observez ce qu'affiche le <code>CD4511</code> pour un code invalide <code>1010</code> (10) à <code>1111</code> (15) !</li>
+      </ol>
+    </div>
+
+    <div class="protocol-box protocol-ad3">
+      <h4>🟢 Breadboard + Afficheur Virtuel AD3</h4>
+      <ol style="margin:6px 0 0 0; padding-left:18px;">
+        <li>Câblez le <code>CD4511BE</code> selon la Figure 4.1 (attention à l'ordre non croissant des broches d'entrée <code>A=7, B=1, C=2, D=6</code> et des segments !).</li>
+        <li><strong>Réglage crucial (Sorties NPN émetteur-suiveur) :</strong> Dans WaveForms &rarr; <strong><code>Supplies</code></strong> (ou <em>Settings &rarr; Device Manager / Digital IO</em>), réglez <strong>DIO Pull</strong> sur <strong><code>Down</code></strong> (<em>Pull-down</em> interne actif) afin de ramener franchement à <code>0 V</code> les segments éteints !</li>
+        <li>Ouvrez <strong><code>Static I/O</code></strong> : sur le groupe <strong><code>DIO 15..8</code></strong>, choisissez le mode <strong><code>7-Segment</code></strong>. Pilotez <code>D, C, B, A</code> avec <code>DIO 3..0</code> (en mode <em>Switch</em> ou <em>Slider</em>) et admirez le chiffre s'afficher en direct à l'écran !</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="student-answer">
+    <strong>💡 Question d'analyse Option B n°2 (Symétrie technologique TP 6 vs TP 7 — Google Docs) :</strong><br>
+    Au <a href="TP6_Acquisition_Conditionnement_AD3_BTS_CIEL.html">TP 6</a>, la sortie du comparateur <code>LM311P</code> était à <strong>collecteur ouvert</strong> et exigeait une résistance de <strong><em>pull-up</em></strong>. Aujourd'hui, les sorties <code>SEG a..g</code> du <code>CD4511BE</code> sont à <strong>émetteur-suiveur NPN</strong> et exigent un <strong><em>pull-down</em></strong> lorsqu'elles attaquent une entrée haute impédance (comme l'AD3 sans LED physique). Comparez en 3 lignes le comportement électrique de ces deux architectures de sortie à l'état HAUT et à l'état BAS.
+  </div>
+
+  <label class="step-check no-print">
+    <input type="checkbox" class="tp-step-cb" data-step="4" onchange="updateProgress()">
+    <span>Partie 4 validée : Décodeur CD4511BE opérationnel sous Proteus et sur l'afficheur 7-segments virtuel Static I/O de l'AD3 (codes 0 à 9 + extinction 10..15 + test /LT).</span>
+  </label>
+</div>
+
+<!-- ===================================================================== -->
+<!-- PARTIE 5 : INTÉGRATION CYBER-PHYSIQUE « PICO-SAFELOCK » & CRASH-TEST  -->
+<!-- ===================================================================== -->
+<h2 id="sec-p5">PARTIE 5 : Intégration Finale « PICO-SAFELOCK » — Verrouillage Matériel du PWM, Pico &amp; Crash-Test CPU <span class="badge badge-time">55 min</span></h2>
+
+<div class="card-block">
+  <h3>5.1 Architecture Industrielle de Coupure Matérielle du Hacheur PWM &amp; Adaptation 5 V &rarr; 3,3 V</h3>
+  <p>
+    Nous assemblons maintenant l'ensemble du banc de sûreté machine : le <strong>Raspberry Pi Pico</strong> ne pilote <strong>plus directement</strong> la base du transistor de puissance <code>TIP31C</code> ! Son signal <code>PWM_Pico</code> (<code>GP18</code>, 0 / 3,3 V) traverse obligatoirement une <strong>porte ET matérielle <code>SN74LS08N</code></strong> validée par la mémoire d'arrêt d'urgence <strong><code>1Q</code> de la bascule <code>SN74LS74N</code></strong> :
+  </p>
+
+  <div class="formula-box">
+    Équation matérielle de commande puissance :
+    &nbsp;&nbsp;
+    <strong><code>PWM_Autorisé</code> = <code>1Q</code><sub>(74LS74)</sub> &middot; <code>PWM_Pico</code><sub>(GP18)</sub></strong>
+    &nbsp;&nbsp;|&nbsp;&nbsp;
+    Adaptation vers <code>GP19</code> :
+    <i>V<sub>GP19</sub></i> = <i>V<sub>1Q</sub></i> &times;
+    <span class="frac"><span class="num">2,2 k&Omega;</span><span class="den">1 k&Omega; + 2,2 k&Omega;</span></span>
+    &approx; <strong>2,82 V &le; 3,30 V</strong>
+  </div>
+
+  <!-- SVG 5 : ARCHITECTURE GLOBALE PICO-SAFELOCK (VERROU 74LS + PICO + PUISSANCE VARTA) -->
+  <div class="svg-card">
+    <svg viewBox="0 0 920 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Architecture globale cyber-physique PICO-SAFELOCK">
+      <rect x="0" y="0" width="920" height="330" fill="#f8fafc" rx="8"/>
+
+      <!-- BLOC 1 : SUPERVISION MICROPYTHON PICO (3,3 V) -->
+      <rect x="16" y="18" width="268" height="294" rx="8" fill="#0f172a" stroke="#334155" stroke-width="2"/>
+      <text x="150" y="42" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11.5" font-weight="bold" fill="#38bdf8">1. Supervision Pico (3,3 V)</text>
+      <text x="150" y="58" text-anchor="middle" font-family="Consolas, monospace" font-size="8.5" fill="#94a3b8">MicroPython — RP2040</text>
+
+      <rect x="32" y="74" width="236" height="36" rx="5" fill="#1e293b" stroke="#475569" stroke-width="1"/>
+      <text x="150" y="96" text-anchor="middle" font-family="Consolas, monospace" font-size="9" fill="#fde047">GP26 (ADC0) ◄── Pot. 10 kΩ (0–3,3V)</text>
+
+      <rect x="32" y="120" width="236" height="36" rx="5" fill="#1e293b" stroke="#0d9488" stroke-width="1.4"/>
+      <text x="150" y="142" text-anchor="middle" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#5eead4">GP19 (IRQ) ◄── État Verrou (≤3,0V)</text>
+
+      <rect x="32" y="166" width="236" height="36" rx="5" fill="#1e293b" stroke="#3b82f6" stroke-width="1.4"/>
+      <text x="150" y="188" text-anchor="middle" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#93c5fd">GP18 (PWM 1kHz) ──► 74LS08 [2]</text>
+
+      <rect x="32" y="212" width="236" height="40" rx="5" fill="#1e293b" stroke="#a855f7" stroke-width="1.2"/>
+      <text x="150" y="230" text-anchor="middle" font-family="Consolas, monospace" font-size="8.6" fill="#e9d5ff">GP20,21,22 (BCD A,B,C) ──► CD4511</text>
+      <text x="150" y="244" text-anchor="middle" font-family="Consolas, monospace" font-size="8.2" fill="#cbd5e1">GP16 ──► Relais Grove (+5V Varta)</text>
+
+      <rect x="32" y="262" width="236" height="36" rx="5" fill="#450a0a" stroke="#ef4444" stroke-width="1.4"/>
+      <text x="150" y="284" text-anchor="middle" font-family="Consolas, monospace" font-size="8.6" font-weight="bold" fill="#fca5a5">GP15 → GND : Crash CPU 8 s !</text>
+
+      <!-- BLOC 2 : SÉCURITÉ MATÉRIELLE CÂBLÉE TTL 5 V (INDÉPENDANTE DU CODE !) -->
+      <rect x="304" y="18" width="320" height="294" rx="8" fill="#ffffff" stroke="#0d9488" stroke-width="2"/>
+      <text x="464" y="40" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11.5" font-weight="bold" fill="#0f766e">2. Verrou Matériel Câblé (+5 V AD3)</text>
+      <text x="464" y="55" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.5" font-weight="bold" fill="#dc2626">Actif en ~20 ns même si le Pico est planté !</text>
+
+      <!-- Bascule 74LS74 -->
+      <rect x="324" y="70" width="134" height="72" rx="5" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.8"/>
+      <text x="391" y="90" text-anchor="middle" font-family="Consolas, monospace" font-size="9.5" font-weight="bold" fill="#166534">SN74LS74N (P3)</text>
+      <text x="391" y="107" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.3" fill="#1e293b">1CLK [3] : BP Réarm.</text>
+      <text x="391" y="122" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.3" font-weight="bold" fill="#dc2626">/1CLR [1] : 🛑 BP AU</text>
+
+      <!-- Pont diviseur 1 kΩ / 2,2 kΩ vers GP19 -->
+      <rect x="324" y="154" width="150" height="44" rx="5" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="399" y="172" text-anchor="middle" font-family="Consolas, monospace" font-size="8.5" font-weight="bold" fill="#92400e">Pont 1 kΩ / 2,2 kΩ</text>
+      <text x="399" y="188" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8" fill="#78350f">Abaisse 1Q (~4,1V) à ~2,8V</text>
+      <line x1="324" y1="175" x2="268" y2="138" stroke="#0d9488" stroke-width="2"/>
+
+      <!-- Porte ET série SN74LS08N -->
+      <rect x="494" y="114" width="112" height="74" rx="5" fill="#f5f3ff" stroke="#6d28d9" stroke-width="2"/>
+      <text x="550" y="135" text-anchor="middle" font-family="Consolas, monospace" font-size="10" font-weight="bold" fill="#5b21b6">SN74LS08N</text>
+      <text x="550" y="152" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="12" font-weight="bold" fill="#5b21b6">&amp;</text>
+      <text x="550" y="176" text-anchor="middle" font-family="Consolas, monospace" font-size="8.2" fill="#475569">[1]=1Q  [2]=GP18</text>
+
+      <!-- Liaisons 1Q -> [1] et GP18 -> [2] -->
+      <line x1="458" y1="106" x2="480" y2="106" stroke="#16a34a" stroke-width="2.2"/>
+      <line x1="480" y1="106" x2="480" y2="134" stroke="#16a34a" stroke-width="2.2"/>
+      <line x1="480" y1="134" x2="494" y2="134" stroke="#16a34a" stroke-width="2.2"/>
+      <line x1="399" y1="142" x2="399" y2="154" stroke="#16a34a" stroke-width="1.8"/>
+
+      <line x1="268" y1="184" x2="480" y2="184" stroke="#3b82f6" stroke-width="2.2"/>
+      <line x1="480" y1="184" x2="480" y2="164" stroke="#3b82f6" stroke-width="2.2"/>
+      <line x1="480" y1="164" x2="494" y2="164" stroke="#3b82f6" stroke-width="2.2"/>
+
+      <!-- CD4511BE + AD3 Static I/O -->
+      <rect x="324" y="214" width="282" height="78" rx="5" fill="#eff6ff" stroke="#0284c7" stroke-width="1.5"/>
+      <text x="465" y="236" text-anchor="middle" font-family="Consolas, monospace" font-size="9.5" font-weight="bold" fill="#0369a1">CD4511BE (P4) → AD3 DIO 8..15 (7-Seg)</text>
+      <text x="465" y="255" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.5" fill="#334155">Codes : 0=AU | 1=Veille | 2..4=Marche | 7=Crash !</text>
+      <text x="465" y="274" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.2" font-weight="bold" fill="#b91c1c">Point décimal DP (DIO 15 = /1Q) allumé si AU !</text>
+      <line x1="268" y1="230" x2="324" y2="230" stroke="#a855f7" stroke-width="2"/>
+
+      <!-- BLOC 3 : ÉTAGE PUISSANCE 5 V VARTA (BANC TP 5) -->
+      <rect x="644" y="18" width="260" height="294" rx="8" fill="#fef2f2" stroke="#dc2626" stroke-width="2"/>
+      <text x="774" y="40" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11.5" font-weight="bold" fill="#b91c1c">3. Puissance Varta 5 V</text>
+      <text x="774" y="56" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.5" fill="#7f1d1d">Rail énergie séparé — Masse GND commune</text>
+
+      <!-- Aide au courant haut 1kΩ vers +5V sur sortie 1Y [3] du 74LS08 + R_B 330Ω vers TIP31C -->
+      <rect x="662" y="76" width="224" height="60" rx="5" fill="#ffffff" stroke="#b91c1c" stroke-width="1.5"/>
+      <text x="774" y="96" text-anchor="middle" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#991b1b">Pull-up 1 kΩ (+5V) + R_B = 330 Ω</text>
+      <text x="774" y="113" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.2" fill="#334155">Fournit ~5 mA à la base du TIP31C quand 1Y=1</text>
+      <text x="774" y="127" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.2" font-weight="bold" fill="#15803d">74LS08 absorbe 4,7 mA (&lt;8 mA) quand 1Y=0 !</text>
+
+      <line x1="606" y1="150" x2="662" y2="108" stroke="#dc2626" stroke-width="2.5"/>
+
+      <!-- TIP31C + Moteur CC jaune + 1N4001 + Relais Grove -->
+      <rect x="662" y="152" width="224" height="140" rx="5" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.8"/>
+      <text x="774" y="176" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#854d0e">Hacheur TIP31C (1:B, 2:C, 3:E)</text>
+      <text x="774" y="196" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9" fill="#713f12">+ Diode roue libre 1N4001 (bague au +)</text>
+      <text x="774" y="216" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9" font-weight="bold" fill="#0f172a">+ Relais Grove + Moteur CC jaune 3–6 V</text>
+      <text x="774" y="238" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.5" font-weight="bold" fill="#b91c1c">+ Powerbank Varta 5 V dédiée !</text>
+      <text x="774" y="268" text-anchor="middle" font-family="Consolas, monospace" font-size="8.5" font-weight="bold" fill="#0f766e">Sondes Logic AD3 : GP18, /1CLR, 1Q, 1Y</text>
+    </svg>
+    <div class="svg-caption">Figure 5.1 — Architecture complète « PICO-SAFELOCK » : coupure matérielle en série sur le hacheur <code>TIP31C</code>, adaptation de niveau 5 V &rarr; 3,3 V et supervision BCD.</div>
+  </div>
+
+  <div class="callout callout-danger">
+    <strong>⚠️ Deux vérifications impératives avant de brancher le Raspberry Pi Pico :</strong>
+    <ol style="margin:6px 0 0 0;">
+      <li><strong>Protection de <code>GP19</code> (Jamais de 5 V direct sur le RP2040 !) :</strong> Reliez la sortie <code>1Q</code> (broche 5 du <code>SN74LS74N</code>) à une résistance série <strong><code>1 k&Omega;</code></strong>, puis reliez le point milieu vers <strong><code>GP19</code></strong> et vers une résistance de <strong><code>2,2 k&Omega;</code> à <code>GND</code></strong>. Vérifiez au voltmètre que la tension sur ce point milieu ne dépasse <strong>jamais 3,1 V</strong> lorsque <code>1Q = 1</code> !</li>
+      <li><strong>Aide au courant de base du <code>TIP31C</code> en sortie de <code>SN74LS08N</code> :</strong> Comme vu à la Partie 3, une sortie <code>74LS08</code> ne fournit que 0,4 mA garantis à l'état HAUT mais absorbe 8 mA à l'état BAS. Ajoutez une résistance de <strong><em>pull-up</em> de <code>1 k&Omega;</code> entre la broche <code>3 (1Y)</code> du <code>SN74LS08N</code> et le rail <code>+5 V</code></strong>, suivie de <strong><code>R<sub>B</sub> = 330 &Omega;</code></strong> vers la base (broche 1 gauche) du <code>TIP31C</code> !</li>
+    </ol>
+  </div>
+
+  <h3>5.2 Programme MicroPython de Supervision &amp; d'Injection de Panne (« PICO-SAFELOCK »)</h3>
+  <p>
+    Copiez le script ci-dessous dans <strong>Thonny</strong> et complétez les <strong>3 lignes <code># TODO</code></strong> (décodage binaire des 3 bits <code>A, B, C</code> vers le <code>CD4511BE</code>, configuration de l'interruption matérielle sur <code>GP19</code>, et calcul de la commande <code>duty_u16</code>) :
+  </p>
+
+  <div class="code-wrapper">
+    <button type="button" class="copy-code-btn no-print" onclick="copierCode(this)">Copier</button>
+    <pre><code><span class="co"># ==============================================================================</span>
+<span class="co"># TP 7 : PICO-SAFELOCK — Supervision du Verrou Matériel 74LS74, Bus BCD CD4511</span>
+<span class="co">#        &amp; Protocole d'Injection de Panne Logicielle (Fault Injection)</span>
+<span class="co"># ==============================================================================</span>
+<span class="im">from</span> machine <span class="im">import</span> Pin, ADC, PWM
+<span class="im">import</span> time
+
+<span class="co"># --- ENTRÉES : POTENTIOMÈTRE, IMAGE 3,3V DU VERROU 1Q &amp; BOUTON CRASH-TEST ---</span>
+pot_consigne  = ADC(Pin(<span class="dv">26</span>))                 <span class="co"># Potentiomètre 10 kΩ (0 à 3,30 V)</span>
+pin_verrou_q  = Pin(<span class="dv">19</span>, Pin.IN)              <span class="co"># Sortie pont 1k / 2,2k issu de 1Q (74LS74)</span>
+pin_sim_crash = Pin(<span class="dv">15</span>, Pin.IN, Pin.PULL_UP) <span class="co"># Mise à GND fugitif = gel CPU de 8 s !</span>
+
+<span class="co"># --- SORTIES : RELAIS GROVE, PWM VERS 74LS08 [2] &amp; BUS BCD VERS CD4511BE ---</span>
+relais_varta = Pin(<span class="dv">16</span>, Pin.OUT)
+pwm_moteur   = PWM(Pin(<span class="dv">18</span>))
+pwm_moteur.freq(<span class="dv">1000</span>)
+pwm_moteur.duty_u16(<span class="dv">0</span>)
+
+bcd_a = Pin(<span class="dv">20</span>, Pin.OUT)   <span class="co"># Poids 1 (2^0) -&gt; broche 7 du CD4511BE</span>
+bcd_b = Pin(<span class="dv">21</span>, Pin.OUT)   <span class="co"># Poids 2 (2^1) -&gt; broche 1 du CD4511BE</span>
+bcd_c = Pin(<span class="dv">22</span>, Pin.OUT)   <span class="co"># Poids 4 (2^2) -&gt; broche 2 du CD4511BE (D [6] à GND)</span>
+
+t_boot_ms = time.ticks_ms()
+nb_arrets_urgence = <span class="dv">0</span>
+dernier_evenement = <span class="st">"Démarrage supervision PICO-SAFELOCK"</span>
+etat_verrou_precedent = pin_verrou_q.value()
+crash_cpu_en_cours = <span class="kw">False</span>
+
+<span class="kw">def</span> <span class="fu">afficher_code_bcd</span>(chiffre):
+    chiffre = <span class="fu">max</span>(<span class="dv">0</span>, <span class="fu">min</span>(<span class="dv">7</span>, <span class="fu">int</span>(chiffre)))
+    bcd_a.value((chiffre &gt;&gt; <span class="dv">0</span>) &amp; <span class="dv">1</span>)
+    <span class="co"># TODO 1 : Extraire les bits de poids 2 (décalage &gt;&gt; 1) et 4 (décalage &gt;&gt; 2)</span>
+    bcd_b.value(<span class="todo-hl">0</span>)  <span class="co"># &lt;--- Remplacer par (chiffre &gt;&gt; 1) &amp; 1</span>
+    bcd_c.value(<span class="todo-hl">0</span>)  <span class="co"># &lt;--- Remplacer par (chiffre &gt;&gt; 2) &amp; 1</span>
+
+<span class="kw">def</span> <span class="fu">isr_changement_verrou</span>(pin):
+    <span class="kw">global</span> nb_arrets_urgence, dernier_evenement, etat_verrou_precedent
+    <span class="kw">if</span> crash_cpu_en_cours:
+        <span class="kw">return</span>   <span class="co"># CPU gelé : seul le câblage 74LS74 + 74LS08 coupe le moteur !</span>
+    etat_actuel = pin.value()
+    <span class="kw">if</span> etat_actuel == etat_verrou_precedent:
+        <span class="kw">return</span>
+    etat_verrou_precedent = etat_actuel
+    t_s = time.ticks_diff(time.ticks_ms(), t_boot_ms) / <span class="dv">1000.0</span>
+    <span class="kw">if</span> etat_actuel == <span class="dv">0</span>:
+        nb_arrets_urgence += <span class="dv">1</span>
+        pwm_moteur.duty_u16(<span class="dv">0</span>)
+        relais_varta.value(<span class="dv">0</span>)
+        afficher_code_bcd(<span class="dv">0</span>)
+        dernier_evenement = <span class="st">f"[{t_s:6.2f}s] 🛑 ARRÊT D'URGENCE #{nb_arrets_urgence} (1Q=0)"</span>
+    <span class="kw">else</span>:
+        dernier_evenement = <span class="st">f"[{t_s:6.2f}s] 🟢 RÉARMEMENT MATÉRIEL (1Q=1)"</span>
+
+<span class="co"># TODO 2 : Déclencher l'interruption sur les fronts DESCENDANT et MONTANT de GP19</span>
+pin_verrou_q.irq(trigger=<span class="todo-hl">Pin.IRQ_FALLING</span>, handler=isr_changement_verrou)
+
+<span class="kw">def</span> <span class="fu">simuler_plantage_logiciel</span>(duree_ms=<span class="dv">8000</span>):
+    <span class="kw">global</span> crash_cpu_en_cours, etat_verrou_precedent
+    <span class="fu">print</span>(<span class="st">"\n💥 [CRASH-TEST] PWM GP18 COLLÉ À 100 % &amp; CPU GELÉ 8 s ! Frappez l'AU !"</span>)
+    crash_cpu_en_cours = <span class="kw">True</span>
+    relais_varta.value(<span class="dv">1</span>)
+    pwm_moteur.duty_u16(<span class="dv">65535</span>)
+    afficher_code_bcd(<span class="dv">7</span>)
+    t0 = time.ticks_ms()
+    <span class="kw">while</span> time.ticks_diff(time.ticks_ms(), t0) &lt; duree_ms:
+        <span class="kw">pass</span>
+    crash_cpu_en_cours = <span class="kw">False</span>
+    etat_verrou_precedent = pin_verrou_q.value()
+    <span class="fu">print</span>(<span class="st">"✅ Fin du gel CPU — reprise de la supervision.\n"</span>)
+
+<span class="kw">while</span> <span class="kw">True</span>:
+    <span class="kw">if</span> pin_sim_crash.value() == <span class="dv">0</span>:
+        simuler_plantage_logiciel(<span class="dv">8000</span>)
+
+    u16 = pot_consigne.read_u16()
+    pct = (u16 / <span class="dv">65535.0</span>) * <span class="dv">100.0</span>
+    verrou_ok = (pin_verrou_q.value() == <span class="dv">1</span>)
+
+    <span class="kw">if</span> <span class="kw">not</span> verrou_ok:
+        pwm_moteur.duty_u16(<span class="dv">0</span>); relais_varta.value(<span class="dv">0</span>); code = <span class="dv">0</span>; rap = <span class="dv">0.0</span>
+    <span class="kw">elif</span> pct &lt; <span class="dv">10.0</span>:
+        pwm_moteur.duty_u16(<span class="dv">0</span>); relais_varta.value(<span class="dv">0</span>); code = <span class="dv">1</span>; rap = <span class="dv">0.0</span>
+    <span class="kw">else</span>:
+        relais_varta.value(<span class="dv">1</span>)
+        rap = <span class="fu">min</span>(<span class="dv">100.0</span>, <span class="fu">max</span>(<span class="dv">25.0</span>, pct))
+        <span class="co"># TODO 3 : Convertir rap (en %) en valeur entière 16 bits sur [0 .. 65535]</span>
+        pwm_moteur.duty_u16(<span class="todo-hl">0</span>)
+        code = <span class="dv">2</span> <span class="kw">if</span> rap &lt; <span class="dv">50.0</span> <span class="kw">else</span> (<span class="dv">3</span> <span class="kw">if</span> rap &lt; <span class="dv">85.0</span> <span class="kw">else</span> <span class="dv">4</span>)
+
+    afficher_code_bcd(code)
+    <span class="fu">print</span>(<span class="st">f"1Q={int(verrou_ok)} | Pot={pct:5.1f}% | PWM={rap:5.1f}% | 7Seg=[{code}] | {dernier_evenement}"</span>)
+    time.sleep_ms(<span class="dv">250</span>)</code></pre>
+  </div>
+
+  <h3>5.3 L'Expérience Reine : Injection de Panne Logicielle (<em>Fault Injection</em>) &amp; Mesure du Temps de Coupure</h3>
+  <ol>
+    <li><strong>Marche nominale :</strong> Réarmez la bascule <code>SN74LS74N</code> (LED Verte allumée, code <code>1</code> sur l'afficheur 7-segments virtuel AD3). Tournez le potentiomètre : vérifiez la rotation progressive du moteur CC jaune et le passage des codes <code>2</code>, <code>3</code> puis <code>4</code> !</li>
+    <li><strong>Instrumentation de l'essai de crash sur le <em>Logic Analyzer</em> AD3 :</strong> Connectez <code>DIO 0</code> sur <code>/1CLR [1]</code>, <code>DIO 1</code> sur <code>1Q [5]</code>, <code>DIO 2</code> sur <code>GP18 (PWM_Pico)</code> et <code>DIO 3</code> sur <code>1Y [3] (PWM_Autorisé)</code>. Réglez un déclenchement (<em>Trigger</em>) sur <strong>front descendant de <code>DIO 0 (/1CLR)</code></strong> avec une base de temps rapide (<code>100 ns/div</code> ou <code>1 &mu;s/div</code>).</li>
+    <li><strong>Déclenchement du plantage CPU :</strong> Mettez brièvement <code>GP15</code> à <code>GND</code> : l'afficheur indique <strong><code>7</code></strong>, le moteur hurle à <strong>100 %</strong> et la console Thonny ne répond plus ! Frappez alors le bouton <strong><code>ARRÊT D'URGENCE</code></strong> :
+      <br>&rarr; Le moteur s'arrête <strong>net</strong> alors que <code>GP18</code> du Pico est toujours physiquement collé à <code>3,3 V</code> ! Relevez aux curseurs de WaveForms le <strong>temps de propagation matériel total</strong> entre <code>/1CLR &darr;</code> et <code>1Y &darr;</code> !</li>
+  </ol>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Scénario d'essai cyber-physique</th>
+        <th class="center">État <code>GP18</code> (Pico)</th>
+        <th class="center">État <code>1Q</code> (74LS74)</th>
+        <th class="center">Sortie <code>1Y</code> (74LS08)</th>
+        <th class="center">Code <code>CD4511</code> &amp; Moteur CC</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>1. Système armé — Consigne à 60 %</strong></td>
+        <td class="center">PWM 60 %</td>
+        <td class="center"><code>1</code> (~3,9 V)</td>
+        <td class="center">PWM ____ %</td>
+        <td class="center">Chiffre : [ ___ ] | Moteur : ________</td>
+      </tr>
+      <tr>
+        <td><strong>2. Crash CPU lancé (avant appui AU)</strong></td>
+        <td class="center"><strong>Collé à 1 (3,3 V)</strong></td>
+        <td class="center"><code>1</code> (~3,9 V)</td>
+        <td class="center">________</td>
+        <td class="center">Chiffre : [ <strong>7</strong> ] | Moteur : 100 %</td>
+      </tr>
+      <tr>
+        <td><strong>3. Appui AU pendant le Crash CPU !</strong></td>
+        <td class="center"><strong>Toujours à 1 !</strong></td>
+        <td class="center"><strong><code>0</code> (~0,25 V)</strong></td>
+        <td class="center"><strong><code>0</code> (~0,30 V)</strong></td>
+        <td class="center">DP allumé | <strong>Moteur COUPÉ en ____ ns !</strong></td>
+      </tr>
+      <tr>
+        <td><strong>4. Relâchement AU (sans réarmer)</strong></td>
+        <td class="center">Reprend 0 %</td>
+        <td class="center">Reste à <code>0</code> !</td>
+        <td class="center"><code>0</code></td>
+        <td class="center">Chiffre : [ <strong>0.</strong> ] | Moteur verrouillé</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="student-answer">
+    <strong>💡 Question d'analyse Option B n°3 (Synthèse Sûreté de Fonctionnement — Google Docs) :</strong><br>
+    À la lumière de votre essai d'injection de panne (ligne 3 du tableau ci-dessus), expliquez pourquoi la norme sécurité machines impose une <strong>chaîne d'arrêt d'urgence matérielle câblée</strong> indépendante du microcontrôleur, tout en conservant néanmoins le retour d'état vers <code>GP19</code> du Pico. Comparez le temps de réaction mesuré de votre verrou TTL (<code>74LS74 + 74LS08</code>, en nanosecondes) à la période de scrutation d'une boucle logicielle Python typique (<code>250 ms</code>).
+  </div>
+
+  <label class="step-check no-print">
+    <input type="checkbox" class="tp-step-cb" data-step="5" onchange="updateProgress()">
+    <span>Partie 5 validée : Banc PICO-SAFELOCK complet opérationnel et coupure matérielle mesurée pendant un plantage CPU simulé !</span>
+  </label>
+</div>
+
+<!-- ===================================================================== -->
+<!-- GRILLE D'ÉVALUATION BTS CIEL OPTION B (/20) & RANGEMENT               -->
+<!-- ===================================================================== -->
+<h2 id="sec-eval">📝 Grille d'Évaluation Officielle BTS CIEL — Option B (sur 20 points — 5h00)</h2>
+
+<div class="card-block">
+  <table>
+    <thead>
+      <tr>
+        <th style="width:12%;">Compétence BO</th>
+        <th style="width:28%;">Critère d'évaluation Option B (ER)</th>
+        <th style="width:44%;">Indicateurs de performance attendus</th>
+        <th class="center" style="width:8%;">Barème</th>
+        <th class="center" style="width:8%;">Note</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C05</span></td>
+        <td><strong>Synthèse Logique &amp; Proteus 8</strong></td>
+        <td>Table de Karnaugh exacte, logigramme CEI, simulations fonctionnelles sous Proteus (portes, synthèse 4 variables, bascule D <code>74LS74</code>, décodeur <code>4511</code>).</td>
+        <td class="center"><strong>4 pts</strong></td>
+        <td class="center"></td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C06</span></td>
+        <td><strong>Instrumentation Numérique AD3</strong></td>
+        <td>Usage autonome de <em>WaveForms</em> (Supplies +5 V, compteur binaire <em>Patterns</em>, chronogrammes multi-voies <em>Logic</em>, rebonds au <em>Scope</em>, afficheur <em>Static I/O 7-Segment</em> avec <em>Pull-down</em>).</td>
+        <td class="center"><strong>5 pts</strong></td>
+        <td class="center"></td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C07</span></td>
+        <td><strong>Prototypage Mixte TTL / CMOS / Puissance</strong></td>
+        <td>Câblage propre des DIP-14/16 avec découplage <code>100 nF</code>, LEDs en mode <em>Sinking</em>, pont <code>1 k&Omega; / 2,2 k&Omega;</code> protégeant <code>GP19</code>, verrouillage série du <code>TIP31C</code> sans court-circuit.</td>
+        <td class="center"><strong>4 pts</strong></td>
+        <td class="center"></td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C04</span></td>
+        <td><strong>Analyse Technologique &amp; Sûreté</strong></td>
+        <td>Pertinence des réponses aux 3 questions d'analyse (marges de bruit TTL, collecteur ouvert vs émetteur-suiveur, défense en profondeur face au crash logiciel).</td>
+        <td class="center"><strong>3 pts</strong></td>
+        <td class="center"></td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C08</span></td>
+        <td><strong>Supervision MicroPython (Pico)</strong></td>
+        <td>Décodage binaire BCD 3 bits exact, interruption double front horodatée et réussite démonstrative du test d'injection de panne CPU.</td>
+        <td class="center"><strong>2 pts</strong></td>
+        <td class="center"></td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C01</span></td>
+        <td><strong>Dossier Google Docs (Classroom)</strong></td>
+        <td>Chronogrammes WaveForms / Proteus soigneusement légendés, tableaux complets, tri et rangement impeccable des circuits intégrés dans le <em>TI myParts Kit</em>.</td>
+        <td class="center"><strong>2 pts</strong></td>
+        <td class="center"></td>
+      </tr>
+      <tr>
+        <td colspan="3" style="text-align:right; font-weight:bold;">TOTAL GÉNÉRAL (Durée : 5h00 — Semestre 2 Option B) :</td>
+        <td class="center"><strong>/ 20</strong></td>
+        <td class="center"></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <label class="step-check no-print">
+    <input type="checkbox" class="tp-step-cb" data-step="6" onchange="updateProgress()">
+    <span>Dossier finalisé : Compte rendu Google Docs remis sur Classroom, rail +5 V AD3 coupé et boîtiers DIP rangés sans pattes tordues ! 🎉</span>
+  </label>
+</div>
+
+<!-- ===================================================================== -->
+<!-- SCRIPTS INTERACTIFS : SIMULATEUR SAFELOCK + CALCULATEUR + CLASSROOM   -->
+<!-- ===================================================================== -->
+<script>
+  // 1. Simulateur interactif du verrou PICO-SAFELOCK (Parties 2, 3 & 4)
+  let latch1Q = 0; // Au démarrage, verrouillé à 0 jusqu'au premier front montant RÉARMEMENT !
+
+  function simSafeLock() {
+    const c = document.getElementById('swC').checked ? 1 : 0;
+    const s = document.getElementById('swS').checked ? 1 : 0;
+    const p = document.getElementById('swP').checked ? 1 : 0;
+    const f = document.getElementById('swF').checked ? 1 : 0;
+
+    // Si ouverture capot (C=0) ou surchauffe (S=1), coupure de sécurité !
+    if (c === 0 || s === 1) {
+      latch1Q = 0;
+    }
+
+    const aComb = (c === 1 && s === 0 && (p === 1 || f === 1)) ? 1 : 0;
+    const motorOn = (latch1Q === 1 && aComb === 1) ? 1 : 0;
+
+    let code7 = 0;
+    if (latch1Q === 0) code7 = 0;
+    else if (motorOn === 0) code7 = 1;
+    else if (f === 1 && p === 1) code7 = 4;
+    else code7 = 3;
+
+    const segEl = document.getElementById('sim7Seg');
+    segEl.textContent = latch1Q === 0 ? `${code7}.` : `${code7}`;
+    segEl.style.color = latch1Q === 0 ? '#f87171' : '#22c55e';
+
+    const out = document.getElementById('safeLockResult');
+    const codeDec = (c << 3) | (s << 2) | (p << 1) | f;
+    out.textContent =
+      `Bus {C,S,P,F} = ${c}${s}${p}${f} (#${codeDec}) → A_comb = ${aComb} | ` +
+      `74LS74 : 1Q = ${latch1Q}, /1Q = ${1 - latch1Q} | ` +
+      (motorOn ? '🚀 MOTEUR AUTORISÉ (EN ROTATION)' : '🛑 MOTEUR COUPÉ MATÉRIELLEMENT');
+  }
+
+  function pulseRearm() {
+    const c = document.getElementById('swC').checked ? 1 : 0;
+    const s = document.getElementById('swS').checked ? 1 : 0;
+    if (c === 1 && s === 0) {
+      latch1Q = 1;
+    }
+    simSafeLock();
+  }
+
+  function pulseEstop() {
+    latch1Q = 0;
+    simSafeLock();
+  }
+
+  // 2. Calculateur Pont Diviseur 5V -> 3,3V & Anti-Rebond RC
+  function calcInterf() {
+    const voh = parseFloat(document.getElementById('inpVoh').value);
+    const [r1, r2] = document.getElementById('selDiv').value.split(',').map(Number);
+    const rdb = parseFloat(document.getElementById('inpRdb').value);
+    const cdb = parseFloat(document.getElementById('inpCdb').value);
+    const out = document.getElementById('interfResult');
+
+    if ([voh, rdb, cdb].some(v => isNaN(v) || v <= 0)) {
+      out.textContent = 'Veuillez saisir des valeurs strictement positives.';
+      return;
+    }
+    const vgp = r1 === 0 ? voh : (voh * r2) / (r1 + r2);
+    const tauMs = (rdb * 1000) * (cdb * 1e-9) * 1000;
+
+    let verdict = '✅ Sûr pour Pico (2,0 V ≤ V ≤ 3,3 V)';
+    if (vgp > 3.6) verdict = '🔥 DANGER DESTRUCTION RP2040 (> 3,6 V) !';
+    else if (vgp > 3.3) verdict = '⚠️ Limite haute dépassée (> 3,3 V)';
+    else if (vgp < 2.0) verdict = '⚠️ Trop faible pour un niveau 1 franc (< 2,0 V)';
+
+    out.textContent = `V_GP19 = ${vgp.toFixed(2).replace('.', ',')} V (${verdict}) | τ_RC = ${tauMs.toFixed(2).replace('.', ',')} ms`;
+  }
+
+  // 3. Barre de progression sauvegardée
+  const STORAGE_KEY = 'bts_ciel1_tp7_progress_v1';
+  function updateProgress() {
+    const boxes = document.querySelectorAll('.tp-step-cb');
+    let done = 0;
+    const state = {};
+    boxes.forEach(cb => {
+      state[cb.dataset.step] = cb.checked;
+      if (cb.checked) done++;
+    });
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+    const pct = Math.round((done / boxes.length) * 100);
+    document.getElementById('tpProgressFill').style.width = pct + '%';
+    document.getElementById('tpProgressText').textContent = `${done} / ${boxes.length}`;
+  }
+
+  (function initPage() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+      document.querySelectorAll('.tp-step-cb').forEach(cb => {
+        if (saved[cb.dataset.step]) cb.checked = true;
+      });
+    } catch (e) {}
+    updateProgress();
+    simSafeLock();
+    calcInterf();
+  })();
+
+  // 4. Copie d'un bloc de code
+  function copierCode(btn) {
+    const codeText = btn.parentElement.querySelector('code').innerText;
+    navigator.clipboard.writeText(codeText).then(() => {
+      const old = btn.textContent;
+      btn.textContent = '✅ Copié !';
+      setTimeout(() => { btn.textContent = old; }, 1800);
+    });
+  }
+
+  // 5. Copie HTML riche de la trame complète TP 7 pour Google Docs (Classroom)
+  async function copierTrameClassroom() {
+    const htmlTemplate = `
+      <div style="font-family: Arial, sans-serif; color: #1e293b; line-height: 1.45;">
+        <h1 style="color:#0b3c5d; border-bottom:2px solid #0f766e;">DOSSIER DE QUALIFICATION TP 7 (5H) — BTS CIEL Option B (Semestre 2)</h1>
+        <h2 style="color:#0f766e;">TP 7 : PICO-SAFELOCK — Logique Câblée (SN74LSxx), Verrou d'Arrêt d'Urgence, CD4511 &amp; Analyseur Logique AD3</h2>
+        <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; width:100%; margin-bottom:14px;">
+          <tr style="background:#f0fdfa;">
+            <td><b>Binôme (NOM Prénom 1 &amp; 2) :</b></td><td>....................................................</td>
+            <td><b>Date :</b></td><td>.... / .... / 202..</td>
+          </tr>
+          <tr>
+            <td><b>Tension rail V+ AD3 mesurée :</b></td><td><b>+........ V</b></td>
+            <td><b>Tension milieu pont GP19 (1Q=1) :</b></td><td><b>+........ V (≤ 3,3 V)</b></td>
+          </tr>
+        </table>
+
+        <h2 style="color:#0b3c5d;">PARTIE 1 — Portes Combinatoires (74LS04/08/32/00) &amp; Universalité NAND</h2>
+        <p><i>[📷 Insérer chronogramme WaveForms Logic des 4 portes + synthèse OU en 100 % NAND (DIO 6 vs DIO 4)]</i></p>
+        <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; width:100%;">
+          <tr style="background:#ccfbf1; font-weight:bold;">
+            <th>Déc.</th><th>B</th><th>A</th><th>NON A</th><th>A·B</th><th>A+B</th><th>NAND (Proteus)</th><th>NAND (Logic AD3 + Tension V)</th>
+          </tr>
+          <tr><td>0</td><td>0</td><td>0</td><td></td><td></td><td></td><td></td><td>V_OH = ........ V</td></tr>
+          <tr><td>1</td><td>0</td><td>1</td><td></td><td></td><td></td><td></td><td>V = ........ V</td></tr>
+          <tr><td>2</td><td>1</td><td>0</td><td></td><td></td><td></td><td></td><td>V = ........ V</td></tr>
+          <tr><td>3</td><td>1</td><td>1</td><td></td><td></td><td></td><td></td><td>V_OL = ........ V</td></tr>
+        </table>
+        <p><b>Réponse Question d'analyse Option B n°1 (Origine de V_OH TTL &lt; 5 V et calcul des marges de bruit NM_H et NM_L) :</b><br>........................................................................................................</p>
+
+        <h2 style="color:#0b3c5d;">PARTIE 2 — Synthèse Combinatoire d'Autorisation Machine (Karnaugh &amp; 16 États AD3)</h2>
+        <p><i>[📷 Insérer capture Proteus + capture WaveForms Logic montrant le compteur 0..15 et le créneau de 3 ms sur les codes 9, 10 et 11]</i></p>
+        <p><b>Table de Karnaugh complétée &amp; équation simplifiée :</b> A_comb = .................................................</p>
+
+        <h2 style="color:#0b3c5d;">PARTIE 3 — Verrouillage Séquentiel d'Arrêt d'Urgence (SN74LS74N) &amp; Anti-Rebond RC</h2>
+        <p><i>[📷 Insérer oscillogramme Scope AD3 (avec vs sans condensateur 100 nF) + chronogramme Logic AD3 (/1CLR, 1CLK, 1Q, /1Q)]</i></p>
+        <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; width:100%;">
+          <tr style="background:#e0f2fe; font-weight:bold;">
+            <th>Étape séquentielle</th><th>/1CLR</th><th>1CLK</th><th>Proteus (1Q / /1Q)</th><th>Breadboard : V_1Q (V) &amp; LED allumée</th>
+          </tr>
+          <tr><td>1. Appui maintenu sur BP AU</td><td>0</td><td>1</td><td></td><td></td></tr>
+          <tr><td>2. Relâchement BP AU (Mémoire !)</td><td>1</td><td>1</td><td></td><td></td></tr>
+          <tr><td>3. Front montant BP RÉARMEMENT</td><td>1</td><td>0 → 1 (↑)</td><td></td><td></td></tr>
+          <tr><td>4. Conflit Réarmement pendant AU=0</td><td>0</td><td>0 → 1 (↑)</td><td></td><td></td></tr>
+        </table>
+
+        <h2 style="color:#0b3c5d;">PARTIE 4 — Décodeur BCD 7-Segments CD4511BE &amp; Afficheur Virtuel Static I/O AD3</h2>
+        <p><i>[📷 Insérer capture Proteus 7SEG + capture de l'afficheur 7-Segments virtuel WaveForms Static I/O (DIO 15..8)]</i></p>
+        <p><b>Réponse Question d'analyse Option B n°2 (Collecteur ouvert LM311P + Pull-up vs Émetteur-suiveur CD4511BE + Pull-down) :</b><br>........................................................................................................</p>
+
+        <h2 style="color:#0b3c5d;">PARTIE 5 — Intégration « PICO-SAFELOCK » &amp; Essai d'Injection de Panne CPU</h2>
+        <p><i>[📷 Insérer photo générale du banc + capture Logic AD3 zoomée en ns montrant la coupure matérielle de 1Y alors que GP18 est collé à 1 !]</i></p>
+        <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; width:100%;">
+          <tr style="background:#dcfce7; font-weight:bold;">
+            <th>Scénario testé</th><th>GP18 (Pico)</th><th>1Q (74LS74)</th><th>1Y (74LS08)</th><th>Code CD4511 &amp; État Moteur CC</th>
+          </tr>
+          <tr><td>1. Armé — Consigne 60 %</td><td></td><td></td><td></td><td></td></tr>
+          <tr><td>2. Crash CPU lancé (avant AU)</td><td>Collé à 1</td><td></td><td></td><td></td></tr>
+          <tr><td>3. Appui AU pendant Crash CPU !</td><td>Collé à 1</td><td></td><td></td><td>Temps de coupure = ........ ns</td></tr>
+          <tr><td>4. Relâchement AU sans réarmer</td><td></td><td></td><td></td><td></td></tr>
+        </table>
+        <p><b>Réponse Question d'analyse Option B n°3 (Justification de la redondance matérielle face au temps de cycle logiciel) :</b><br>........................................................................................................</p>
+        <h3>Annexe : Code MicroPython final complété</h3>
+        <pre style="background:#f8fafc; padding:10px; border:1px solid #cbd5e1;">[Coller ici votre code MicroPython fonctionnel]</pre>
+      </div>`;
+
+    const plainFallback = "DOSSIER DE QUALIFICATION TP 7 BTS CIEL OPTION B — PICO-SAFELOCK (5h)\nCollez dans Google Docs (Classroom) pour obtenir les tableaux formatés.";
+
+    try {
+      if (window.ClipboardItem) {
+        const blobHtml = new Blob([htmlTemplate], { type: 'text/html' });
+        const blobText = new Blob([plainFallback], { type: 'text/plain' });
+        await navigator.clipboard.write([new ClipboardItem({ 'text/html': blobHtml, 'text/plain': blobText })]);
+      } else {
+        await navigator.clipboard.writeText(plainFallback);
+      }
+      const toast = document.getElementById('copyToast');
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 7000);
+    } catch (err) {
+      alert("Copie automatique bloquée par le navigateur : ouvrez ce fichier dans Chrome/Edge et réessayez.");
+    }
+  }
+</script>
+
+</body>
+</html>

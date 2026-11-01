@@ -1,0 +1,1873 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>TP 6 : PICO-THERMODRIVE — Chaîne d'Acquisition Analogique, AD3, Proteus &amp; Asservissement — BTS CIEL Option B (5h)</title>
+  <style>
+    :root {
+      --primary: #0b3c5d;
+      --primary-light: #e0f2fe;
+      --secondary: #1d4ed8;
+      --accent: #d97706;
+      --ad3-teal: #0d9488;
+      --ad3-bg: #f0fdfa;
+      --sim-purple: #7c3aed;
+      --sim-bg: #f5f3ff;
+      --cmd-blue: #0284c7;
+      --cmd-bg: #f0f9ff;
+      --pwr-red: #dc2626;
+      --pwr-bg: #fef2f2;
+      --real-green: #15803d;
+      --real-bg: #f0fdf4;
+      --bg-page: #f8fafc;
+      --bg-card: #ffffff;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --border: #cbd5e1;
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      color: var(--text-main);
+      background-color: var(--bg-page);
+      scroll-behavior: smooth;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.58;
+      color: var(--text-main);
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 18px 20px 70px 20px;
+    }
+
+    @page {
+      margin: 1.3cm;
+      size: A4;
+    }
+
+    @media print {
+      body {
+        max-width: 100%;
+        padding: 0;
+        font-size: 9.5pt;
+        color: #000;
+        background: #fff;
+      }
+      .no-print { display: none !important; }
+      .card-block {
+        box-shadow: none !important;
+        border: 1px solid #cbd5e1 !important;
+      }
+      pre, blockquote, table, .svg-card, .callout { page-break-inside: avoid; }
+      h1, h2, h3, h4 { page-break-after: avoid; }
+      a { color: #000; text-decoration: underline; }
+    }
+
+    /* Barre supérieure collante */
+    .top-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 16px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+    }
+    .top-bar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .back-link {
+      font-weight: 700;
+      color: var(--primary);
+      text-decoration: none;
+      font-size: 9.5pt;
+      padding: 5px 10px;
+      border-radius: 6px;
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+    }
+    .back-link:hover { background: #e2e8f0; text-decoration: none; }
+
+    .progress-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 9pt;
+      font-weight: 600;
+      color: #334155;
+    }
+    .progress-track {
+      width: 150px;
+      height: 10px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #0d9488, #1d4ed8);
+      transition: width 0.25s ease;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+      padding: 7px 13px;
+      font-size: 9pt;
+      font-weight: 700;
+      font-family: inherit;
+      transition: transform 0.1s ease, opacity 0.15s ease;
+      text-decoration: none;
+    }
+    .btn:hover { opacity: 0.93; text-decoration: none; }
+    .btn:active { transform: translateY(1px); }
+    .btn-docs {
+      background: linear-gradient(135deg, #0f766e, #15803d);
+      color: #ffffff;
+      box-shadow: 0 2px 6px rgba(15, 118, 110, 0.25);
+    }
+    .btn-outline {
+      background: #ffffff;
+      color: #1e293b;
+      border: 1px solid #cbd5e1;
+    }
+
+    /* En-tête principal */
+    .header-box {
+      background: linear-gradient(135deg, #0b3c5d 0%, #0f766e 100%);
+      color: #ffffff;
+      border-radius: 12px;
+      padding: 24px 26px;
+      margin-bottom: 22px;
+      box-shadow: 0 6px 18px rgba(11, 60, 93, 0.2);
+    }
+    .header-kicker {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.18);
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 8.5pt;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .header-box h1 {
+      color: #ffffff;
+      font-size: 18.5pt;
+      margin: 0 0 10px 0;
+      border: none;
+      padding: 0;
+      line-height: 1.25;
+    }
+    .header-subtitle {
+      color: #ccfbf1;
+      font-size: 10.3pt;
+      margin: 0 0 14px 0;
+    }
+    .header-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 9pt;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.22);
+    }
+    .meta-pill {
+      background: rgba(15, 23, 42, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 4px 10px;
+      border-radius: 6px;
+      color: #f8fafc;
+    }
+
+    /* Titres */
+    h1, h2, h3, h4 {
+      color: var(--primary);
+      font-weight: 700;
+      line-height: 1.28;
+    }
+    h2 {
+      font-size: 14.5pt;
+      margin-top: 30px;
+      margin-bottom: 12px;
+      color: #0b3c5d;
+      border-left: 5px solid var(--ad3-teal);
+      padding: 6px 0 6px 12px;
+      background: linear-gradient(90deg, #f0fdfa 0%, transparent 100%);
+      border-radius: 0 6px 6px 0;
+    }
+    h3 {
+      font-size: 11.8pt;
+      margin-top: 20px;
+      margin-bottom: 8px;
+      border-left: 4px solid #328cc1;
+      padding-left: 9px;
+      color: #0f3a5d;
+    }
+    h4 {
+      font-size: 10.5pt;
+      margin-top: 14px;
+      margin-bottom: 6px;
+      color: #1e293b;
+    }
+    p { margin: 0.75em 0; }
+
+    /* Sections cartes */
+    .card-block {
+      background: var(--bg-card);
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 20px 22px;
+      margin-bottom: 22px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      font-size: 8.2pt;
+      font-weight: 700;
+      border-radius: 4px;
+      background-color: #e0f2fe;
+      color: #0369a1;
+      margin-right: 4px;
+      vertical-align: middle;
+    }
+    .badge-bo { background: #0b3c5d; color: #ffffff; }
+    .badge-optb { background: #0f766e; color: #ffffff; }
+    .badge-sim { background: #ede9fe; color: #6d28d9; border: 1px solid #ddd6fe; }
+    .badge-ad3 { background: #ccfbf1; color: #0f766e; border: 1px solid #99f6e4; }
+    .badge-cmd { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+    .badge-pwr { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+    .badge-time { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+
+    /* Encadrés */
+    .callout {
+      margin: 14px 0;
+      padding: 13px 16px;
+      border-radius: 8px;
+      border-left: 5px solid #0284c7;
+      background-color: #f0f9ff;
+      font-size: 9.5pt;
+    }
+    .callout-warn { border-left-color: #f59e0b; background-color: #fffbeb; }
+    .callout-danger { border-left-color: #dc2626; background-color: #fef2f2; }
+    .callout-tip { border-left-color: #16a34a; background-color: #f0fdf4; }
+    .callout-proteus { border-left-color: #7c3aed; background-color: #f5f3ff; }
+    .callout-ad3 { border-left-color: #0d9488; background-color: #f0fdfa; }
+    .callout-docs {
+      border-left-color: #0f766e;
+      background-color: #f0fdfa;
+      border: 1px solid #99f6e4;
+      border-left-width: 5px;
+    }
+
+    /* Grille double protocole Proteus vs AD3 WaveForms */
+    .dual-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 14px 0;
+    }
+    @media (max-width: 760px) {
+      .dual-grid { grid-template-columns: 1fr; }
+    }
+    .protocol-box {
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-size: 9.4pt;
+    }
+    .protocol-proteus {
+      background: var(--sim-bg);
+      border: 1px solid #ddd6fe;
+      border-top: 4px solid var(--sim-purple);
+    }
+    .protocol-proteus h4 { color: #5b21b6; margin-top: 0; }
+    .protocol-ad3 {
+      background: var(--ad3-bg);
+      border: 1px solid #99f6e4;
+      border-top: 4px solid var(--ad3-teal);
+    }
+    .protocol-ad3 h4 { color: #0f766e; margin-top: 0; }
+
+    /* Tableaux */
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 14px 0;
+      font-size: 9.2pt;
+      background: #ffffff;
+    }
+    th, td {
+      border: 1px solid #cbd5e1;
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: middle;
+    }
+    th {
+      background-color: #f1f5f9;
+      color: var(--primary);
+      font-weight: 700;
+    }
+    tr:nth-child(even) { background-color: #f8fafc; }
+    td.center, th.center { text-align: center; }
+    th.col-calc { background: #eff6ff; color: #1e40af; }
+    th.col-sim { background: #f5f3ff; color: #5b21b6; }
+    th.col-ad3 { background: #f0fdfa; color: #0f766e; }
+    th.col-err { background: #fffbeb; color: #92400e; }
+
+    /* Zones réponses & jalons */
+    .student-answer {
+      background-color: #ffffff;
+      border: 1.5px dashed #94a3b8;
+      border-radius: 6px;
+      padding: 10px 14px;
+      margin: 10px 0;
+      color: #334155;
+      font-size: 9.3pt;
+    }
+    .step-check {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-top: 14px;
+      font-weight: 600;
+      font-size: 9.5pt;
+      color: #0f172a;
+      cursor: pointer;
+    }
+    .step-check input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: #0d9488;
+      cursor: pointer;
+    }
+
+    /* SVG Cards */
+    .svg-card {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 14px;
+      margin: 16px 0;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+      overflow-x: auto;
+    }
+    .svg-card svg {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
+    .svg-caption {
+      font-size: 8.8pt;
+      color: var(--text-muted);
+      margin-top: 8px;
+      font-style: italic;
+    }
+
+    /* Code */
+    code {
+      background-color: #f1f5f9;
+      color: #0f172a;
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-size: 8.8pt;
+      font-family: Consolas, 'Courier New', monospace;
+    }
+    .code-wrapper {
+      position: relative;
+      margin: 12px 0;
+    }
+    .copy-code-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: #334155;
+      color: #f8fafc;
+      border: 1px solid #475569;
+      border-radius: 5px;
+      padding: 4px 9px;
+      font-size: 8pt;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .copy-code-btn:hover { background: #475569; }
+    pre {
+      background-color: #0f172a;
+      color: #e2e8f0;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-size: 8.9pt;
+      line-height: 1.48;
+      overflow-x: auto;
+      font-family: Consolas, 'Courier New', monospace;
+      margin: 0;
+    }
+    pre code { background: transparent; color: inherit; padding: 0; }
+    .kw { color: #f472b6; font-weight: bold; }
+    .im { color: #c084fc; font-weight: bold; }
+    .fu { color: #38bdf8; font-weight: 600; }
+    .st { color: #86efac; }
+    .dv { color: #fbbf24; }
+    .co { color: #94a3b8; font-style: italic; }
+    .todo-hl { color: #fde047; font-weight: bold; }
+
+    /* Formules hors-ligne */
+    .formula-box {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-left: 4px solid var(--ad3-teal);
+      border-radius: 6px;
+      padding: 10px 16px;
+      margin: 10px 0;
+      font-family: 'Cambria Math', Georgia, serif;
+      font-size: 10.5pt;
+      text-align: center;
+      color: #0f172a;
+    }
+    .frac {
+      display: inline-block;
+      vertical-align: middle;
+      text-align: center;
+      margin: 0 3px;
+    }
+    .frac > span { display: block; padding: 0 4px; }
+    .frac span.num { border-bottom: 1.2px solid #0f172a; }
+    .frac span.den { padding-top: 1px; }
+
+    /* Outils interactifs d'atelier */
+    .tools-strip {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 14px;
+      margin: 14px 0;
+    }
+    @media (max-width: 760px) {
+      .tools-strip { grid-template-columns: 1fr; }
+    }
+    .mini-tool {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 9pt;
+    }
+    .mini-tool h4 { margin: 0 0 8px 0; color: var(--primary); }
+    .mini-tool select, .mini-tool input {
+      padding: 5px 7px;
+      border: 1px solid #94a3b8;
+      border-radius: 5px;
+      font-size: 8.8pt;
+      font-family: inherit;
+    }
+    .tool-result {
+      margin-top: 8px;
+      padding: 7px 10px;
+      background: #ffffff;
+      border-radius: 5px;
+      border: 1px solid #cbd5e1;
+      font-weight: 700;
+      color: #0b3c5d;
+    }
+
+    /* Timeline 5h */
+    .timeline-bar {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 6px;
+      margin: 12px 0;
+    }
+    @media (max-width: 760px) {
+      .timeline-bar { grid-template-columns: repeat(2, 1fr); }
+    }
+    .tl-item {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-top: 3px solid var(--ad3-teal);
+      border-radius: 6px;
+      padding: 8px;
+      font-size: 8.3pt;
+      text-decoration: none;
+      color: var(--text-main);
+    }
+    .tl-item:hover { background: #ccfbf1; text-decoration: none; }
+    .tl-time { font-weight: 800; color: #0f766e; display: block; }
+
+    .toast-copy {
+      display: none;
+      margin-top: 8px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      background: #dcfce7;
+      color: #166534;
+      border: 1px solid #86efac;
+      font-weight: 600;
+      font-size: 9pt;
+    }
+  </style>
+</head>
+<body>
+
+<!-- BARRE DE NAVIGATION ET DE SUIVI -->
+<div class="top-bar no-print">
+  <div class="top-bar-left">
+    <a href="index.html" class="back-link">← Portail BTS CIEL 1</a>
+    <div class="progress-wrap" title="Cochez chaque étape validée au fil des 5 heures">
+      <span>Avancement TP 6 (5h) :</span>
+      <div class="progress-track"><div class="progress-fill" id="tpProgressFill"></div></div>
+      <span id="tpProgressText">0 / 7</span>
+    </div>
+  </div>
+  <div class="top-actions">
+    <button type="button" class="btn btn-docs" onclick="copierTrameClassroom()">📋 Copier la trame Google Docs (Classroom)</button>
+    <button type="button" class="btn btn-outline" onclick="window.print()">🖨️ Imprimer / PDF</button>
+  </div>
+</div>
+
+<!-- EN-TÊTE PRINCIPAL -->
+<div class="header-box">
+  <div class="header-kicker">BTS CIEL — Option B : Électronique et Réseaux (1<sup>re</sup> Année) | Chaîne d'Acquisition, CAO &amp; Instrumentation</div>
+  <h1>TP 6 : PICO-THERMODRIVE — Conditionnement par AOP, Filtrage (Bode AD3), Comparateur &amp; Asservissement Moteur CC</h1>
+  <p class="header-subtitle">
+    Suite directe du TP 5 : conception, simulation <strong>Proteus 8</strong> et caractérisation au <strong>Digilent Analog Discovery 3 (WaveForms)</strong> d'une chaîne complète de mesure analogique (Capteur &rarr; AOP <code>TL072CP</code> &rarr; Filtre RC Passe-Bas &rarr; Comparateur <code>LM311P</code> &rarr; CAN Pico) pilotant automatiquement le groupe moto-ventilateur 5 V.
+  </p>
+  <div class="header-meta">
+    <span class="meta-pill">⏱️ <strong>Durée :</strong> 5h00</span>
+    <span class="meta-pill">🔬 <strong>Instrumentation :</strong> Digilent Analog Discovery 3 (Supplies &plusmn;5V, Scope, Wavegen, Bode)</span>
+    <span class="meta-pill">🧰 <strong>CI Kit TI :</strong> <code>TL072CP</code>, <code>LM311P</code>, <code>1N5819</code>, <code>TIP31C</code>, <code>1N4001</code></span>
+    <span class="meta-pill">🖥️ <strong>CAO :</strong> Proteus 8 (DC, Transient, AC Sweep)</span>
+    <span class="meta-pill">📝 <strong>Livrable :</strong> Google Docs (Classroom)</span>
+  </div>
+</div>
+
+<!-- PLANIFICATION HORAIRE & RÉFÉRENTIEL OPTION B -->
+<div class="card-block">
+  <h3 style="margin-top:0;">⏱️ Découpage Temporel des 5 Heures (Continuité TP 5 &rarr; TP 6)</h3>
+  <div class="timeline-bar">
+    <a class="tl-item" href="#sec-prep"><span class="tl-time">0h00 → 0h20 (20 min)</span><strong>Étape 0</strong><br>WaveForms AD3 (&plusmn;5 V), brochage DIP-8 &amp; Docs Classroom</a>
+    <a class="tl-item" href="#sec-p1"><span class="tl-time">0h20 → 1h15 (55 min)</span><strong>Partie 1</strong><br>Capteur analogique &amp; AOP Suiveur (<code>TL072</code> 1/2) — Fin de l'effet de charge</a>
+    <a class="tl-item" href="#sec-p2"><span class="tl-time">1h15 → 2h15 (1h00)</span><strong>Partie 2</strong><br>Amplificateur Non-Inverseur (<code>TL072</code> 2/2) &amp; limites &plusmn;V<sub>sat</sub> au Scope AD3</a>
+    <a class="tl-item" href="#sec-p3"><span class="tl-time">2h15 → 3h15 (1h00)</span><strong>Partie 3</strong><br>Filtre Passe-Bas RC : Diagramme de Bode Proteus vs <em>Network Analyzer</em> AD3</a>
+    <a class="tl-item" href="#sec-p4"><span class="tl-time">3h15 → 4h00 (45 min)</span><strong>Partie 4</strong><br>Comparateur à collecteur ouvert <code>LM311P</code> — Sécurité surchauffe câblée</a>
+    <a class="tl-item" href="#sec-p5"><span class="tl-time">4h00 → 5h00 (1h00)</span><strong>Partie 5</strong><br>Clamp <code>1N5819</code>, CAN 12 bits Pico, IRQ &amp; Asservissement du Moteur CC</a>
+  </div>
+
+  <h3>🎯 Ancrage au Référentiel Officiel BTS CIEL — Option B : Électronique et Réseaux (BO du 25/01/2023)</h3>
+  <p style="font-size:9.3pt;">
+    Après l'étude de la <strong>Chaîne d'Énergie</strong> au <a href="TP5_Composants_Commande_Puissance_BTS_CIEL.html">TP 5</a>, ce TP couvre le bloc fondamental de 1<sup>re</sup> année <strong>Option B (ER)</strong> consacré à la <strong>Chaîne d'Acquisition et de Conditionnement Analogique du Signal</strong> (Physique Appliquée &amp; STI — Épreuves <strong>E4</strong> et <strong>E5 / E6</strong>) :
+  </p>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:13%;">Code BO</th>
+        <th style="width:29%;">Compétence BTS CIEL Option B</th>
+        <th style="width:58%;">Savoirs Associés (Physique Appliquée / STI) &amp; Activités du TP</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C04</span> <span class="badge badge-optb">ER</span></td>
+        <td><strong>Analyser une structure matérielle et logicielle</strong></td>
+        <td>Chaîne d'acquisition (capteur CTN/LDR, sensibilité), régimes linéaire et de saturation d'un ALI/AOP (<code>TL072CP</code>), comparateur à collecteur ouvert (<code>LM311P</code>), pas de quantification <i>q</i> d'un CAN 12 bits.</td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C05</span> <span class="badge badge-optb">ER</span></td>
+        <td><strong>Concevoir et simuler un circuit de conditionnement</strong></td>
+        <td>Dimensionner un suiveur, un amplificateur non-inverseur (<i>A<sub>v</sub> = 1 + R<sub>2</sub>/R<sub>1</sub></i>), un filtre passe-bas RC anti-bruit (<i>f<sub>c</sub> = 1/(2&pi;RC)</i>) et un étage d'écrêtage Schottky 3,3 V sous <strong>Proteus 8</strong> (transitoire + <code>AC Sweep</code>).</td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C06</span> <span class="badge badge-optb">ER</span></td>
+        <td><strong>Valider par le mesurage temporel et fréquentiel</strong></td>
+        <td>Exploiter le <strong>Digilent Analog Discovery 3</strong> (<em>Wavegen</em>, <em>Scope</em> différentiel 14 bits, traceur automatique de <strong>Diagramme de Bode <em>Network Analyzer</em></strong>), relever <i>f<sub>c</sub></i> à &minus;3 dB, la pente (&minus;20 dB/déc) et la phase (&minus;45&deg;).</td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C07</span> <span class="badge badge-optb">ER</span></td>
+        <td><strong>Réaliser et prototyper des sous-ensembles électroniques</strong></td>
+        <td>Implanter sur breadboard des circuits intégrés analogiques DIP-8 alimentés en symétrique (&plusmn;5 V), câbler le découplage d'alimentation (100 nF) et protéger une entrée CMOS 3,3 V par diodes Schottky <code>1N5819</code>.</td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C08</span></td>
+        <td><strong>Coder le traitement numérique et l'asservissement</strong></td>
+        <td>Filtrage numérique par moyenne glissante en <strong>MicroPython</strong>, gestion d'interruption matérielle prioritaire (<code>Pin.IRQ_FALLING</code>) et loi d'asservissement PWM du groupe moto-ventilateur CC 5 V.</td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C01</span></td>
+        <td><strong>Communiquer en situation professionnelle</strong></td>
+        <td>Produire un dossier de validation sous <strong>Google Docs (Classroom)</strong> confrontant calculs théoriques, courbes SPICE Proteus et relevés expérimentaux WaveForms AD3.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- BANNIÈRE COMPTE RENDU GOOGLE DOCS CLASSROOM -->
+<div class="callout callout-docs" id="trame-classroom">
+  <strong style="font-size:10.5pt; color:#0f766e;">📄 COMPTE RENDU NUMÉRIQUE : Google Docs dans Google Classroom</strong>
+  <p style="margin:6px 0;">
+    Ouvrez le devoir <em>« TP 6 — Chaîne d'Acquisition Analogique, Bode AD3 &amp; Asservissement »</em> dans <strong>Google Classroom</strong>, créez votre <strong>Google Docs</strong>, puis cliquez sur le bouton ci-dessous pour coller (`Ctrl + V`) toute la trame pré-formatée (tableaux, emplacements d'oscillogrammes WaveForms et de courbes de Bode Proteus/AD3).
+  </p>
+  <div class="no-print">
+    <button type="button" class="btn btn-docs" onclick="copierTrameClassroom()">📋 Copier la trame complète TP 6 pour Google Docs (Classroom)</button>
+    <div id="copyToast" class="toast-copy">✅ Trame du TP 6 copiée avec ses tableaux ! Allez dans votre Google Docs Classroom et appuyez sur <strong>Ctrl + V</strong>.</div>
+  </div>
+</div>
+
+<!-- ===================================================================== -->
+<!-- ÉTAPE 0 : PRISE EN MAIN ANALOG DISCOVERY 3 & CIRCUITS INTÉGRÉS DIP-8  -->
+<!-- ===================================================================== -->
+<h2 id="sec-prep">ÉTAPE 0 : Prise en Main du Digilent Analog Discovery 3 (WaveForms) &amp; Brochages DIP-8 <span class="badge badge-time">20 min</span></h2>
+
+<div class="card-block">
+  <h3>0.1 Correspondance du Faisceau de Fils de l'Analog Discovery 3 (AD3) &amp; Composants TI Kit</h3>
+  <p>
+    Votre boîtier USB <strong>Digilent Analog Discovery 3</strong> regroupe dans le logiciel <strong>WaveForms</strong> quatre appareils de laboratoire indispensables en BTS CIEL Option B : une <strong>alimentation symétrique programmable (<em>Supplies</em>)</strong>, un <strong>oscilloscope 2 voies différentielles (<em>Scope</em>)</strong>, un <strong>générateur de fonctions (<em>Wavegen</em>)</strong> et un <strong>analyseur de réseau / traceur de Bode (<em>Network Analyzer</em>)</strong>.
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Broche AD3</th>
+        <th>Couleur officielle du fil AD3</th>
+        <th>Instrument WaveForms &amp; Rôle sur la Breadboard</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong><code>V+</code></strong></td>
+        <td>🟥 <strong>Rouge uni</strong></td>
+        <td><strong>Supplies (+5,00 V)</strong> &rarr; Alimentation positive <code>VCC+</code> (broche 8) du <code>TL072CP</code> et du <code>LM311P</code></td>
+      </tr>
+      <tr>
+        <td><strong><code>V&minus;</code></strong></td>
+        <td>⬜ <strong>Blanc uni</strong></td>
+        <td><strong>Supplies (&minus;5,00 V)</strong> &rarr; Alimentation négative <code>VCC&minus;</code> (broche 4) du <code>TL072CP</code> et du <code>LM311P</code></td>
+      </tr>
+      <tr>
+        <td><strong><code>&darr; (GND)</code></strong></td>
+        <td>⬛ <strong>Noir uni</strong> (4 fils disponibles)</td>
+        <td><strong>Masse de référence 0 V</strong> &rarr; À relier au rail <code>GND</code> commun de la breadboard (et au <code>GND</code> du Pico en Partie 5)</td>
+      </tr>
+      <tr>
+        <td><strong><code>W1</code></strong></td>
+        <td>🟨 <strong>Jaune uni</strong></td>
+        <td><strong>Wavegen Channel 1</strong> &rarr; Sortie GBF (injection sinusoïde / test de Bode en Parties 2 et 3)</td>
+      </tr>
+      <tr>
+        <td><strong><code>1+</code> et <code>1&minus;</code></strong></td>
+        <td>🟧 <strong>Orange</strong> (<code>1+</code>) / <strong>Orange-Blanc</strong> (<code>1&minus;</code>)</td>
+        <td><strong>Scope Voie 1</strong> (Signal d'entrée <i>V<sub>e</sub></i>) — <strong>⚠️ Relier impérativement <code>1&minus;</code> à <code>GND</code> !</strong></td>
+      </tr>
+      <tr>
+        <td><strong><code>2+</code> et <code>2&minus;</code></strong></td>
+        <td>🟦 <strong>Bleu</strong> (<code>2+</code>) / <strong>Bleu-Blanc</strong> (<code>2&minus;</code>)</td>
+        <td><strong>Scope Voie 2</strong> (Signal de sortie <i>V<sub>s</sub></i>) — <strong>⚠️ Relier impérativement <code>2&minus;</code> à <code>GND</code> !</strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- SVG 0.1 : MÉMO BROCHAGE AD3 + DIP-8 TL072CP + DIP-8 LM311P -->
+  <div class="svg-card">
+    <svg viewBox="0 0 920 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Brochage Analog Discovery 3, TL072CP DIP-8 et LM311P DIP-8 sur breadboard">
+      <rect width="920" height="320" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+
+      <!-- BLOC 1 : ANALOG DISCOVERY 3 -->
+      <rect x="14" y="14" width="290" height="292" rx="8" fill="#ffffff" stroke="#94a3b8"/>
+      <text x="159" y="36" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="12.5" font-weight="bold" fill="#0f766e">1. Règle d'Or Entrées Scope AD3</text>
+      <rect x="28" y="48" width="262" height="108" rx="6" fill="#f0fdfa" stroke="#5eead4"/>
+      <text x="159" y="68" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10.5" font-weight="bold" fill="#0f766e">Entrées Différentielles (1+/1- et 2+/2-)</text>
+      <text x="159" y="86" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#1e293b">Sur l'AD3, 1- et 2- NE SONT PAS reliés</text>
+      <text x="159" y="101" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#1e293b">en interne à la masse GND !</text>
+      <text x="159" y="122" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#b91c1c">&rarr; Piquez toujours 1- (Orange/Blanc) et</text>
+      <text x="159" y="138" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#b91c1c">2- (Bleu/Blanc) sur le rail GND (0 V) !</text>
+
+      <rect x="28" y="168" width="262" height="124" rx="6" fill="#fffbeb" stroke="#fcd34d"/>
+      <text x="159" y="188" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10.5" font-weight="bold" fill="#92400e">Réglage initial outil « Supplies »</text>
+      <text x="42" y="210" font-family="Consolas, monospace" font-size="10" fill="#dc2626" font-weight="bold">Positive Supply (V+ Rouge) : +5.00 V</text>
+      <text x="42" y="230" font-family="Consolas, monospace" font-size="10" fill="#334155" font-weight="bold">Negative Supply (V- Blanc) : -5.00 V</text>
+      <text x="42" y="252" font-family="Segoe UI, sans-serif" font-size="9.3" fill="#475569">Découplage conseillé sur la breadboard :</text>
+      <text x="42" y="268" font-family="Segoe UI, sans-serif" font-size="9.3" fill="#475569">1 condensateur 100 nF entre V+ et GND,</text>
+      <text x="42" y="283" font-family="Segoe UI, sans-serif" font-size="9.3" fill="#475569">et 1 condensateur 100 nF entre V- et GND.</text>
+
+      <!-- BLOC 2 : TL072CP DIP-8 -->
+      <rect x="316" y="14" width="290" height="292" rx="8" fill="#ffffff" stroke="#94a3b8"/>
+      <text x="461" y="36" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="12.5" font-weight="bold" fill="#0b3c5d">2. Double AOP TL072CP (DIP-8)</text>
+      <text x="461" y="53" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#64748b">Vue de dessus — Encoche demi-lune en HAUT</text>
+
+      <!-- Corps DIP-8 TL072 -->
+      <rect x="406" y="72" width="110" height="168" rx="4" fill="#1e293b" stroke="#0f172a" stroke-width="2"/>
+      <path d="M446,72 A15,15 0 0,0 476,72" fill="#f8fafc" stroke="#0f172a" stroke-width="1.5"/>
+      <circle cx="422" cy="88" r="4" fill="#fde047"/>
+      <text x="461" y="156" text-anchor="middle" font-family="Consolas, monospace" font-size="12" font-weight="bold" fill="#ffffff">TL072CP</text>
+      <text x="461" y="173" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#93c5fd">(2 AOP JFET)</text>
+
+      <!-- Pattes gauche 1..4 -->
+      <rect x="392" y="88" width="14" height="10" fill="#94a3b8"/><text x="386" y="97" text-anchor="end" font-family="Consolas, monospace" font-size="10" font-weight="bold" fill="#0284c7">1OUT [1]</text>
+      <rect x="392" y="128" width="14" height="10" fill="#94a3b8"/><text x="386" y="137" text-anchor="end" font-family="Consolas, monospace" font-size="10" font-weight="bold" fill="#1e293b">1IN- [2]</text>
+      <rect x="392" y="168" width="14" height="10" fill="#94a3b8"/><text x="386" y="177" text-anchor="end" font-family="Consolas, monospace" font-size="10" font-weight="bold" fill="#16a34a">1IN+ [3]</text>
+      <rect x="392" y="208" width="14" height="10" fill="#94a3b8"/><text x="386" y="217" text-anchor="end" font-family="Consolas, monospace" font-size="10" font-weight="bold" fill="#475569">-5V VCC- [4]</text>
+
+      <!-- Pattes droite 8..5 -->
+      <rect x="516" y="88" width="14" height="10" fill="#94a3b8"/><text x="536" y="97" font-family="Consolas, monospace" font-size="10" font-weight="bold" fill="#dc2626">[8] VCC+ +5V</text>
+      <rect x="516" y="128" width="14" height="10" fill="#94a3b8"/><text x="536" y="137" font-family="Consolas, monospace" font-size="10" font-weight="bold" fill="#0284c7">[7] 2OUT</text>
+      <rect x="516" y="168" width="14" height="10" fill="#94a3b8"/><text x="536" y="177" font-family="Consolas, monospace" font-size="10" font-weight="bold" fill="#1e293b">[6] 2IN-</text>
+      <rect x="516" y="208" width="14" height="10" fill="#94a3b8"/><text x="536" y="217" font-family="Consolas, monospace" font-size="10" font-weight="bold" fill="#16a34a">[5] 2IN+</text>
+
+      <text x="461" y="266" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#334155">AOP 1 (broches 1,2,3) &rarr; Partie 1 (Suiveur)</text>
+      <text x="461" y="284" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#334155">AOP 2 (broches 5,6,7) &rarr; Partie 2 (Ampli)</text>
+
+      <!-- BLOC 3 : LM311P DIP-8 -->
+      <rect x="618" y="14" width="288" height="292" rx="8" fill="#ffffff" stroke="#94a3b8"/>
+      <text x="762" y="36" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="12.5" font-weight="bold" fill="#b91c1c">3. Comparateur LM311P (DIP-8)</text>
+      <text x="762" y="53" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#b91c1c">⚠️ Brochage DIFFÉRENT du TL072 !</text>
+
+      <rect x="707" y="72" width="110" height="168" rx="4" fill="#334155" stroke="#0f172a" stroke-width="2"/>
+      <path d="M747,72 A15,15 0 0,0 777,72" fill="#f8fafc" stroke="#0f172a" stroke-width="1.5"/>
+      <circle cx="723" cy="88" r="4" fill="#fde047"/>
+      <text x="762" y="156" text-anchor="middle" font-family="Consolas, monospace" font-size="12" font-weight="bold" fill="#ffffff">LM311P</text>
+      <text x="762" y="173" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.2" fill="#fca5a5">(Collecteur Ouvert)</text>
+
+      <!-- Pattes gauche 1..4 -->
+      <rect x="693" y="88" width="14" height="10" fill="#94a3b8"/><text x="688" y="97" text-anchor="end" font-family="Consolas, monospace" font-size="9.5" font-weight="bold" fill="#1e293b">GND EMIT [1]</text>
+      <rect x="693" y="128" width="14" height="10" fill="#94a3b8"/><text x="688" y="137" text-anchor="end" font-family="Consolas, monospace" font-size="9.5" font-weight="bold" fill="#16a34a">IN+ [2]</text>
+      <rect x="693" y="168" width="14" height="10" fill="#94a3b8"/><text x="688" y="177" text-anchor="end" font-family="Consolas, monospace" font-size="9.5" font-weight="bold" fill="#0284c7">IN- [3]</text>
+      <rect x="693" y="208" width="14" height="10" fill="#94a3b8"/><text x="688" y="217" text-anchor="end" font-family="Consolas, monospace" font-size="9.5" font-weight="bold" fill="#475569">-5V VCC- [4]</text>
+
+      <!-- Pattes droite 8..5 -->
+      <rect x="817" y="88" width="14" height="10" fill="#94a3b8"/><text x="835" y="97" font-family="Consolas, monospace" font-size="9.5" font-weight="bold" fill="#dc2626">[8] VCC+ +5V</text>
+      <rect x="817" y="128" width="14" height="10" fill="#94a3b8"/><text x="835" y="137" font-family="Consolas, monospace" font-size="9.5" font-weight="bold" fill="#b91c1c">[7] COL OUT</text>
+      <rect x="817" y="168" width="14" height="10" fill="#94a3b8"/><text x="835" y="177" font-family="Consolas, monospace" font-size="9.5" fill="#94a3b8">[6] NC (libre)</text>
+      <rect x="817" y="208" width="14" height="10" fill="#94a3b8"/><text x="835" y="217" font-family="Consolas, monospace" font-size="9.5" fill="#94a3b8">[5] NC (libre)</text>
+
+      <text x="762" y="266" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.3" font-weight="bold" fill="#b91c1c">Broche 1 (EMIT) reliée à GND (0 V) !</text>
+      <text x="762" y="284" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.3" fill="#334155">Broche 7 : Pull-up 4,7 k&Omega; vers +3,3 V Pico</text>
+    </svg>
+    <div class="svg-caption">Figure 0.1 — Faisceau de mesure de l'Analog Discovery 3 et brochage vue de dessus des circuits intégrés DIP-8 <code>TL072CP</code> et <code>LM311P</code> (à enficher à cheval sur le sillon central de la breadboard).</div>
+  </div>
+
+  <!-- MINI-OUTILS INTERACTIFS D'ATELIER OPTION B -->
+  <div class="tools-strip no-print">
+    <div class="mini-tool">
+      <h4>🧮 Calculateur AOP Non-Inverseur &amp; Filtre Passe-Bas RC</h4>
+      <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-bottom:6px;">
+        <label>R<sub>1</sub> (k&Omega;): <input type="number" id="inpR1" value="10" step="0.1" style="width:62px;" oninput="calcChain()"></label>
+        <label>R<sub>2</sub> (k&Omega;): <input type="number" id="inpR2" value="4.7" step="0.1" style="width:62px;" oninput="calcChain()"></label>
+        <label>R<sub>f</sub> (k&Omega;): <input type="number" id="inpRf" value="1" step="0.1" style="width:58px;" oninput="calcChain()"></label>
+        <label>C<sub>f</sub> (nF): <input type="number" id="inpCf" value="100" step="1" style="width:64px;" oninput="calcChain()"></label>
+      </div>
+      <div class="tool-result" id="chainResult">Gain A_v = 1,47 (+3,35 dB) | Coupure f_c (-3 dB) = 1 591,5 Hz</div>
+    </div>
+
+    <div class="mini-tool">
+      <h4>🔢 Simulateur CAN 12 bits RP2040 (<code>ADC</code> 0–3,3 V)</h4>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+        <label>Tension V<sub>ADC</sub> (V) :
+          <input type="number" id="inpVadc" value="2.26" min="0" max="3.3" step="0.01" style="width:80px;" oninput="calcADC()">
+        </label>
+      </div>
+      <div class="tool-result" id="adcResult">Code 12 bits = 2804 / 4095 | read_u16() ≈ 44 875 | q = 0,806 mV</div>
+    </div>
+  </div>
+
+  <label class="step-check no-print">
+    <input type="checkbox" class="tp-step-cb" data-step="0" onchange="updateProgress()">
+    <span>Étape 0 validée : Trame Google Docs collée dans Classroom, WaveForms ouvert, rails +5,00 V / &minus;5,00 V de l'AD3 vérifiés au multimètre sur la breadboard.</span>
+  </label>
+</div>
+
+<!-- ===================================================================== -->
+<!-- PARTIE 1 : CAPTEUR ANALOGIQUE & ADAPTATION D'IMPÉDANCE (AOP SUIVEUR)  -->
+<!-- ===================================================================== -->
+<h2 id="sec-p1">PARTIE 1 : Capteur Analogique &amp; Adaptation d'Impédance par AOP Suiveur (<code>TL072CP</code> 1/2) <span class="badge badge-time">55 min</span></h2>
+
+<div class="card-block">
+  <h3>1.1 Résolution du Problème d'Effet de Charge découvert au TP 5 !</h3>
+  <p>
+    Souvenez-vous de la Partie 1.2 du <strong>TP 5</strong> : un pont diviseur de 10 k&Omega; à mi-course donnait <strong>2,50 V à vide</strong>, mais s'effondrait à <strong>0,71 V</strong> dès qu'on lui connectait une charge <i>R<sub>L</sub></i> = 1 k&Omega; ! Or un capteur résistif (comme le <em>Grove Temperature Sensor v1.2</em> constitué d'une thermistance CTN de 100 k&Omega; en pont avec 100 k&Omega;) possède une résistance interne encore plus élevée (~50 k&Omega;).
+  </p>
+  <p>
+    En insérant un <strong>Amplificateur Opérationnel (AOP) bouclé sur son entrée inverseuse (<code>IN&minus;</code>)</strong>, on réalise un <strong>montage Suiveur</strong> :
+    son impédance d'entrée JFET est quasi infinie (<i>Z<sub>e</sub> &approx; 10<sup>12</sup> &Omega; &rArr; I<sub>+</sub> = 0 A</i>, il ne prélève aucun courant au capteur !) tandis que son impédance de sortie est quasi nulle (<i>Z<sub>s</sub> &approx; 0 &Omega;</i>, il fournit le courant demandé par la charge sans chute de tension !).
+  </p>
+
+  <div class="formula-box">
+    Régime linéaire (bouclage sur <code>IN&minus;</code>) : &epsilon; = <i>V<sub>+</sub> &minus; V<sub>&minus;</sub></i> = 0 V
+    &nbsp;&nbsp;et&nbsp;&nbsp;
+    <i>V<sub>&minus;</sub> = V<sub>s</sub></i>
+    &nbsp;&nbsp;&rArr;&nbsp;&nbsp;
+    <strong><i>V<sub>s</sub></i> = <i>V<sub>+</sub></i> = <i>V<sub>e</sub></i></strong> &nbsp;(Gain <i>A<sub>v</sub></i> = 1)
+  </div>
+
+  <!-- SVG 1.1 : PONTS CHARGÉ VS AOP SUIVEUR TL072 -->
+  <div class="svg-card">
+    <svg viewBox="0 0 900 245" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Comparaison pont diviseur chargé sans AOP et avec AOP Suiveur TL072CP">
+      <rect width="900" height="245" rx="8" fill="#f8fafc" stroke="#cbd5e1"/>
+
+      <!-- Gauche : Rappel TP5 sans suiveur -->
+      <rect x="14" y="14" width="350" height="217" rx="6" fill="#fef2f2" stroke="#fca5a5"/>
+      <text x="189" y="34" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11.5" font-weight="bold" fill="#b91c1c">A. Sans AOP (Constat TP 5 : Effondrement !)</text>
+      <text x="55" y="60" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#dc2626">+5 V</text>
+      <line x1="90" y1="56" x2="135" y2="56" stroke="#dc2626" stroke-width="2"/>
+      <line x1="135" y1="56" x2="135" y2="74" stroke="#1e293b" stroke-width="2"/>
+      <rect x="123" y="74" width="24" height="42" fill="#ffffff" stroke="#1e293b" stroke-width="1.8"/>
+      <text x="116" y="99" text-anchor="end" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#334155">10 k&Omega;</text>
+      <line x1="135" y1="116" x2="135" y2="150" stroke="#1e293b" stroke-width="2"/>
+      <rect x="123" y="150" width="24" height="42" fill="#ffffff" stroke="#1e293b" stroke-width="1.8"/>
+      <text x="116" y="175" text-anchor="end" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#334155">10 k&Omega;</text>
+      <line x1="135" y1="192" x2="135" y2="210" stroke="#1e293b" stroke-width="2"/>
+      <!-- Charge 1k directe -->
+      <line x1="135" y1="133" x2="255" y2="133" stroke="#b91c1c" stroke-width="2"/>
+      <line x1="255" y1="133" x2="255" y2="150" stroke="#b91c1c" stroke-width="2"/>
+      <rect x="243" y="150" width="24" height="42" fill="#fee2e2" stroke="#b91c1c" stroke-width="1.8"/>
+      <text x="275" y="175" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#b91c1c">R_L = 1 k&Omega;</text>
+      <line x1="255" y1="192" x2="255" y2="210" stroke="#1e293b" stroke-width="2"/>
+      <line x1="90" y1="210" x2="310" y2="210" stroke="#1e293b" stroke-width="2"/>
+      <text x="225" y="118" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10.5" font-weight="bold" fill="#b91c1c">V_s chute de 2,50 V à 0,42 V !</text>
+
+      <!-- Droite : Avec AOP Suiveur TL072 -->
+      <rect x="378" y="14" width="508" height="217" rx="6" fill="#f0fdf4" stroke="#86efac"/>
+      <text x="632" y="34" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11.5" font-weight="bold" fill="#15803d">B. Avec AOP Suiveur TL072CP (Adaptation d'Impédance Parfaite)</text>
+
+      <!-- Capteur / Pont d'entrée -->
+      <text x="405" y="60" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#dc2626">+5V (ou 3,3V)</text>
+      <line x1="485" y1="56" x2="505" y2="56" stroke="#dc2626" stroke-width="2"/>
+      <line x1="505" y1="56" x2="505" y2="74" stroke="#1e293b" stroke-width="2"/>
+      <rect x="493" y="74" width="24" height="42" fill="#ffffff" stroke="#1e293b" stroke-width="1.8"/>
+      <text x="486" y="98" text-anchor="end" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#334155">10k / CTN</text>
+      <line x1="505" y1="116" x2="505" y2="152" stroke="#1e293b" stroke-width="2"/>
+      <rect x="493" y="152" width="24" height="42" fill="#ffffff" stroke="#1e293b" stroke-width="1.8"/>
+      <text x="486" y="176" text-anchor="end" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#334155">10k</text>
+      <line x1="505" y1="194" x2="505" y2="212" stroke="#1e293b" stroke-width="2"/>
+
+      <!-- Entrée IN+ (broche 3) -->
+      <line x1="505" y1="134" x2="598" y2="134" stroke="#0284c7" stroke-width="2.2"/>
+      <text x="550" y="126" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#0369a1">I+ = 0 mA !</text>
+
+      <!-- Triangle AOP TL072 (1/2) -->
+      <polygon points="598,84 598,156 682,120" fill="#ffffff" stroke="#0b3c5d" stroke-width="2.5"/>
+      <text x="608" y="108" font-family="Consolas, monospace" font-size="13" font-weight="bold" fill="#1e293b">&minus;</text>
+      <text x="608" y="140" font-family="Consolas, monospace" font-size="13" font-weight="bold" fill="#16a34a">+</text>
+      <text x="590" y="99" text-anchor="end" font-family="Consolas, monospace" font-size="9" fill="#475569">[2]</text>
+      <text x="590" y="147" text-anchor="end" font-family="Consolas, monospace" font-size="9" fill="#475569">[3]</text>
+      <text x="692" y="114" font-family="Consolas, monospace" font-size="9" fill="#475569">[1]</text>
+      <!-- Rails +5V / -5V sur AOP -->
+      <line x1="636" y1="66" x2="636" y2="100" stroke="#dc2626" stroke-width="1.8"/>
+      <text x="636" y="61" text-anchor="middle" font-family="Consolas, monospace" font-size="9.5" font-weight="bold" fill="#dc2626">+5V [8]</text>
+      <line x1="636" y1="140" x2="636" y2="174" stroke="#475569" stroke-width="1.8"/>
+      <text x="636" y="187" text-anchor="middle" font-family="Consolas, monospace" font-size="9.5" font-weight="bold" fill="#475569">-5V [4]</text>
+
+      <!-- Boucle de contre-réaction suiveur (broche 1 -> broche 2) -->
+      <line x1="682" y1="120" x2="835" y2="120" stroke="#15803d" stroke-width="2.5"/>
+      <line x1="712" y1="120" x2="712" y2="68" stroke="#15803d" stroke-width="2"/>
+      <line x1="712" y1="68" x2="574" y2="68" stroke="#15803d" stroke-width="2"/>
+      <line x1="574" y1="68" x2="574" y2="103" stroke="#15803d" stroke-width="2"/>
+      <line x1="574" y1="103" x2="598" y2="103" stroke="#15803d" stroke-width="2"/>
+
+      <!-- Charge R_L = 1 kOhm en sortie du suiveur -->
+      <line x1="785" y1="120" x2="785" y2="152" stroke="#15803d" stroke-width="2"/>
+      <rect x="773" y="152" width="24" height="42" fill="#dcfce7" stroke="#15803d" stroke-width="1.8"/>
+      <text x="805" y="176" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#15803d">R_L = 1 k&Omega;</text>
+      <line x1="785" y1="194" x2="785" y2="212" stroke="#1e293b" stroke-width="2"/>
+      <line x1="460" y1="212" x2="845" y2="212" stroke="#1e293b" stroke-width="2"/>
+      <text x="792" y="108" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10.5" font-weight="bold" fill="#15803d">V_s = 2,50 V intacts !</text>
+    </svg>
+    <div class="svg-caption">Figure 1.1 — Démonstration de l'adaptation d'impédance : sans AOP (A, effondrement sous charge 1 k&Omega;) vs avec le 1<sup>er</sup> AOP du <code>TL072CP</code> câblé en suiveur (B).</div>
+  </div>
+
+  <h3>1.2 Manipulations Croisées (Proteus &amp; Breadboard + AD3) : Pont Chargé puis Capteur Thermique</h3>
+  <ol>
+    <li><strong>Étape 1A — Preuve sur pont diviseur 10 k&Omega; / 10 k&Omega; sous +5 V :</strong>
+      <ul>
+        <li>Sous <strong>Proteus ISIS</strong> : Placez un <code>TL072</code> alimenté en <code>+5V</code> (broche 8) et <code>-5V</code> (broche 4), câblez le pont <code>10k / 10k</code> en entrée <code>IN+ (3)</code>, rebouclez la sortie <code>(1)</code> sur <code>IN- (2)</code>, et connectez <code>R<sub>L</sub> = 1k</code> en sortie. Vérifiez au <code>DC VOLTMETER</code> que <i>V<sub>s</sub></i> reste exactement à <strong>2,50 V</strong> malgré la charge de 1 k&Omega; !</li>
+        <li>Sur <strong>Breadboard + AD3</strong> : Alimentez le <code>TL072CP</code> avec <code>V+ = +5V</code> (fil Rouge) et <code>V&minus; = &minus;5V</code> (fil Blanc) dans l'outil <em>Supplies</em> de WaveForms (cliquez sur <em>Master Enable ON</em>). Mesurez <i>V<sub>s</sub></i> à vide puis avec <code>R<sub>L</sub> = 1 k&Omega;</code>.</li>
+      </ul>
+    </li>
+    <li><strong>Étape 1B — Raccordement du Capteur Analogique à l'entrée du Suiveur (broche 3) :</strong>
+      <ul>
+        <li>Remplacez le pont 10k/10k par votre <strong>capteur analogique de température</strong> alimenté en <strong>3,3 V</strong> (module <em>Grove Temperature Sensor v1.2</em> via cordon Grove-Dupont : Noir=<code>GND</code>, Rouge=<code>3V3</code> du Pico, Jaune=<code>SIG</code> vers la broche <code>3</code> du <code>TL072CP</code> — <em>ou pont CTN / LDR sur breadboard</em>).</li>
+        <li>Relevez la tension en sortie du suiveur (broche 1) au repos à <strong>température ambiante (~22 &deg;C)</strong> puis en <strong>pinçant la thermistance entre deux doigts pendant 15 secondes (~34–36 &deg;C)</strong>.</li>
+      </ul>
+    </li>
+  </ol>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Essai expérimental</th>
+        <th class="col-calc">Théorie attendue</th>
+        <th class="col-sim">Simulation Proteus</th>
+        <th class="col-ad3">Mesure Réelle (Multimètre / Scope AD3)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Pont 10k/10k sous 5 V chargé par 1 k&Omega; <strong>SANS suiveur</strong></td>
+        <td><i>5 &times; (10//1) / (10 + 10//1)</i> = <strong>0,42 V</strong></td>
+        <td>________ V</td>
+        <td>________ V</td>
+      </tr>
+      <tr>
+        <td>Pont 10k/10k sous 5 V chargé par 1 k&Omega; <strong>AVEC suiveur <code>TL072</code></strong></td>
+        <td><strong>2,50 V</strong> (0 % de chute !)</td>
+        <td>________ V</td>
+        <td>________ V</td>
+      </tr>
+      <tr>
+        <td>Capteur température en sortie Suiveur — <strong>Ambiante (~22 &deg;C)</strong></td>
+        <td>~1,50 V à 1,60 V</td>
+        <td>________ V</td>
+        <td><i>V<sub>amb</sub></i> = ________ V</td>
+      </tr>
+      <tr>
+        <td>Capteur température en sortie Suiveur — <strong>Chauffé aux doigts (~35 &deg;C)</strong></td>
+        <td>~1,95 V à 2,10 V</td>
+        <td>________ V</td>
+        <td><i>V<sub>chaud</sub></i> = ________ V (&Delta;<i>V</i> = ____ V)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="student-answer">
+    <strong>💡 Question d'analyse Option B n°1 (pour le Google Docs) :</strong><br>
+    Dans le montage suiveur chargé par <i>R<sub>L</sub></i> = 1 k&Omega; (<i>V<sub>s</sub></i> = 2,50 V), un courant <i>I<sub>L</sub></i> = 2,50 mA circule pourtant bien dans <i>R<sub>L</sub></i> ! Si ce courant ne vient pas du pont diviseur (puisque <i>I<sub>+</sub></i> &approx; 0 mA), <strong>d'où provient physiquement ce courant de 2,50 mA</strong> ? Que se passerait-il si vous oubliiez d'allumer le bouton <em>Master Enable</em> des alimentations <code>&plusmn;5V</code> dans WaveForms ?
+  </div>
+
+  <label class="step-check no-print">
+    <input type="checkbox" class="tp-step-cb" data-step="1" onchange="updateProgress()">
+    <span>Partie 1 validée : Montage Suiveur TL072 (1/2) testé sous Proteus et sur Breadboard, plage de tension du capteur relevée.</span>
+  </label>
+</div>
+
+<!-- ===================================================================== -->
+<!-- PARTIE 2 : AMPLIFICATEUR NON-INVERSEUR (TL072 2/2) & SATURATION       -->
+<!-- ===================================================================== -->
+<h2 id="sec-p2">PARTIE 2 : Amplification Linéaire par AOP Non-Inverseur (<code>TL072CP</code> 2/2) &amp; Saturation <span class="badge badge-time">1h00</span></h2>
+
+<div class="card-block">
+  <h3>2.1 Étude Théorique et Dynamique au <em>Wavegen</em> + <em>Scope</em> de l'Analog Discovery 3</h3>
+  <p>
+    La variation brute de notre capteur entre 22 &deg;C et 35 &deg;C n'est que d'environ <strong>0,45 V</strong> : c'est trop faible pour exploiter efficacement toute la plage 0–3,3 V du convertisseur analogique-numérique (CAN) du Pico. Nous utilisons donc le <strong>second AOP intégré dans le même boîtier <code>TL072CP</code> (broches <code>5</code>, <code>6</code> et <code>7</code>)</strong> câblé en <strong>Amplificateur Non-Inverseur</strong> :
+  </p>
+
+  <div class="formula-box">
+    Amplificateur Non-Inverseur :
+    <i>A<sub>v</sub></i> =
+    <span class="frac"><span class="num"><i>V<sub>s</sub></i></span><span class="den"><i>V<sub>e</sub></i></span></span>
+    = 1 +
+    <span class="frac"><span class="num"><i>R</i><sub>2</sub></span><span class="den"><i>R</i><sub>1</sub></span></span>
+    &nbsp;&nbsp;|&nbsp;&nbsp;
+    Gain en décibels : <i>G<sub>dB</sub></i> = 20 &middot; log<sub>10</sub>(<i>A<sub>v</sub></i>)
+    &nbsp;&nbsp;|&nbsp;&nbsp;
+    Limite linéaire : &minus;<i>V<sub>sat</sub></i> &lt; <i>V<sub>s</sub></i> &lt; +<i>V<sub>sat</sub></i>
+  </div>
+
+  <!-- SVG 2.1 : AMPLIFICATEUR NON-INVERSEUR + INSTRUMENTATION AD3 -->
+  <div class="svg-card">
+    <svg viewBox="0 0 920 270" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Schéma Amplificateur Non-Inverseur TL072 broches 5-6-7 avec Wavegen W1 et Scope AD3">
+      <rect width="920" height="270" rx="8" fill="#ffffff" stroke="#cbd5e1"/>
+
+      <!-- Partie schéma gauche -->
+      <rect x="14" y="14" width="555" height="242" rx="6" fill="#f8fafc" stroke="#cbd5e1"/>
+      <text x="291" y="34" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="12" font-weight="bold" fill="#0b3c5d">Schéma Étage 2 du TL072CP (Broches 5, 6, 7) + Sondes AD3</text>
+
+      <!-- Source W1 (ou sortie Suiveur broche 1) -->
+      <circle cx="72" cy="128" r="22" fill="#fef9c3" stroke="#ca8a04" stroke-width="2"/>
+      <text x="72" y="125" text-anchor="middle" font-family="Consolas, monospace" font-size="11" font-weight="bold" fill="#854d0e">W1</text>
+      <text x="72" y="139" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.5" fill="#854d0e">(Jaune)</text>
+      <line x1="72" y1="150" x2="72" y2="232" stroke="#1e293b" stroke-width="2"/>
+      <line x1="94" y1="128" x2="232" y2="128" stroke="#0284c7" stroke-width="2.2"/>
+
+      <!-- Sonde Scope 1+ (Orange) -->
+      <line x1="145" y1="128" x2="145" y2="74" stroke="#ea580c" stroke-width="2"/>
+      <rect x="108" y="48" width="74" height="26" rx="4" fill="#ffedd5" stroke="#ea580c" stroke-width="1.8"/>
+      <text x="145" y="65" text-anchor="middle" font-family="Consolas, monospace" font-size="10" font-weight="bold" fill="#c2410c">Scope 1+</text>
+
+      <!-- AOP 2 (broches 5, 6, 7) -->
+      <polygon points="232,76 232,148 320,112" fill="#ffffff" stroke="#0b3c5d" stroke-width="2.5"/>
+      <text x="242" y="100" font-family="Consolas, monospace" font-size="13" font-weight="bold" fill="#1e293b">&minus;</text>
+      <text x="242" y="132" font-family="Consolas, monospace" font-size="13" font-weight="bold" fill="#16a34a">+</text>
+      <text x="224" y="96" text-anchor="end" font-family="Consolas, monospace" font-size="9.5" font-weight="bold" fill="#475569">[6]</text>
+      <text x="224" y="142" text-anchor="end" font-family="Consolas, monospace" font-size="9.5" font-weight="bold" fill="#16a34a">[5]</text>
+      <text x="330" y="106" font-family="Consolas, monospace" font-size="9.5" font-weight="bold" fill="#0284c7">[7]</text>
+
+      <!-- Sortie 2OUT (broche 7) -->
+      <line x1="320" y1="112" x2="495" y2="112" stroke="#2563eb" stroke-width="2.5"/>
+
+      <!-- Sonde Scope 2+ (Bleu) -->
+      <line x1="465" y1="112" x2="465" y2="74" stroke="#2563eb" stroke-width="2"/>
+      <rect x="428" y="48" width="74" height="26" rx="4" fill="#dbeafe" stroke="#2563eb" stroke-width="1.8"/>
+      <text x="465" y="65" text-anchor="middle" font-family="Consolas, monospace" font-size="10" font-weight="bold" fill="#1d4ed8">Scope 2+</text>
+
+      <!-- Pont de contre-réaction R2 (entre 7 et 6) et R1 (entre 6 et GND) -->
+      <line x1="395" y1="112" x2="395" y2="176" stroke="#1e293b" stroke-width="2"/>
+      <line x1="395" y1="176" x2="335" y2="176" stroke="#1e293b" stroke-width="2"/>
+      <rect x="265" y="164" width="70" height="24" fill="#ffffff" stroke="#1e293b" stroke-width="2"/>
+      <text x="300" y="180" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#1e293b">R_2</text>
+      <line x1="265" y1="176" x2="198" y2="176" stroke="#1e293b" stroke-width="2"/>
+      <line x1="198" y1="176" x2="198" y2="96" stroke="#1e293b" stroke-width="2"/>
+      <line x1="198" y1="96" x2="232" y2="96" stroke="#1e293b" stroke-width="2"/>
+
+      <!-- R1 vers GND -->
+      <line x1="198" y1="176" x2="198" y2="190" stroke="#1e293b" stroke-width="2"/>
+      <rect x="185" y="190" width="26" height="32" fill="#ffffff" stroke="#1e293b" stroke-width="2"/>
+      <text x="177" y="210" text-anchor="end" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#1e293b">R_1=10k</text>
+      <line x1="198" y1="222" x2="198" y2="232" stroke="#1e293b" stroke-width="2"/>
+      <line x1="50" y1="232" x2="520" y2="232" stroke="#1e293b" stroke-width="2.5"/>
+      <text x="530" y="236" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#334155">GND</text>
+
+      <!-- Partie droite : Allure Oscilloscope Lineaire vs Saturation -->
+      <rect x="582" y="14" width="324" height="242" rx="6" fill="#0f172a" stroke="#334155"/>
+      <text x="744" y="35" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11.5" font-weight="bold" fill="#5eead4">Allure Scope WaveForms (Ch1 vs Ch2)</text>
+      <!-- Axes oscillo -->
+      <line x1="604" y1="140" x2="886" y2="140" stroke="#475569" stroke-width="1"/>
+      <line x1="620" y1="55" x2="620" y2="225" stroke="#475569" stroke-width="1"/>
+      <!-- Lignes +Vsat / -Vsat -->
+      <line x1="604" y1="72" x2="886" y2="72" stroke="#ef4444" stroke-dasharray="4,4" stroke-width="1.3"/>
+      <text x="884" y="67" text-anchor="end" font-family="Consolas, monospace" font-size="9" fill="#fca5a5">+V_sat (~ +3,7 V)</text>
+      <line x1="604" y1="208" x2="886" y2="208" stroke="#ef4444" stroke-dasharray="4,4" stroke-width="1.3"/>
+      <text x="884" y="220" text-anchor="end" font-family="Consolas, monospace" font-size="9" fill="#fca5a5">-V_sat (~ -3,7 V)</text>
+
+      <!-- Sinusoïde entrée Ve (Orange) -->
+      <path d="M 620,140 Q 652,102 684,140 T 748,140 Q 780,85 812,140 T 876,140" fill="none" stroke="#fb923c" stroke-width="2.2"/>
+      <!-- Sortie Vs amplifiée puis écrêtée (Bleu) -->
+      <path d="M 620,140 Q 652,64 684,140 T 748,140 L 764,72 L 796,72 L 812,140 L 828,208 L 860,208 L 876,140" fill="none" stroke="#38bdf8" stroke-width="2.5"/>
+      <text x="684" y="244" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.2" fill="#86efac">Zone Linéaire</text>
+      <text x="820" y="244" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.2" fill="#fca5a5">Écrêtage (Saturation)</text>
+    </svg>
+    <div class="svg-caption">Figure 2.1 — Montage amplificateur non-inverseur sur le 2<sup>nd</sup> AOP du <code>TL072CP</code> et observation de la limite de linéarité &plusmn;<i>V<sub>sat</sub></i> au Scope de l'Analog Discovery 3.</div>
+  </div>
+
+  <div class="dual-grid">
+    <div class="protocol-box protocol-proteus">
+      <h4>🖥️ Étape 2A — Simulation Proteus (Gain &times;2)</h4>
+      <ol style="margin:6px 0 0 0; padding-left:18px;">
+        <li>Câblez le 2<sup>nd</sup> AOP du <code>TL072</code> avec <code>R<sub>1</sub> = 10k</code> et <strong><code>R<sub>2</sub> = 10k</code></strong> (gain théorique <i>A<sub>v</sub></i> = 2,00).</li>
+        <li>Injectez en entrée <code>(5)</code> un générateur <code>VSINE</code> à <strong><code>1 kHz</code></strong> d'amplitude crête <code>0.8V</code>, puis <code>2.5V</code>.</li>
+        <li>Reliez l'<code>OSCILLOSCOPE</code> virtuel (Voie A sur l'entrée, Voie B sur la sortie) et capturez les deux régimes !</li>
+      </ol>
+    </div>
+    <div class="protocol-box protocol-ad3">
+      <h4>🔬 Étape 2A — Mesure Réelle WaveForms (AD3)</h4>
+      <ol style="margin:6px 0 0 0; padding-left:18px;">
+        <li>Câblez <code>R<sub>1</sub> = 10 k&Omega;</code> et <code>R<sub>2</sub> = 10 k&Omega;</code> sur les broches <code>5, 6, 7</code> du <code>TL072CP</code>.</li>
+        <li>Dans <strong>Wavegen (<code>W1</code> fil Jaune)</strong> : choisissez <code>Sine</code>, <code>Frequency = 1 kHz</code>, <code>Amplitude = 800 mV</code>, <code>Offset = 0 V</code> &rarr; cliquez <em>Run</em>.</li>
+        <li>Dans <strong>Scope</strong> (<code>1+</code> sur entrée, <code>2+</code> sur sortie, <code>1&minus;</code> et <code>2&minus;</code> à <code>GND</code>) : relevez les amplitudes crête, puis passez <code>W1</code> à <strong><code>2.5 V</code></strong> pour mesurer <strong>+<i>V<sub>sat</sub></i> et &minus;<i>V<sub>sat</sub></i></strong> !</li>
+      </ol>
+    </div>
+  </div>
+
+  <h3>2.2 Étape 2B — Chaînage avec le Capteur de Température (Gain adapté <i>A<sub>v</sub></i> = 1,47)</h3>
+  <p>
+    Si l'on conservait un gain de 2,00 avec notre capteur qui délivre jusqu'à 2,00 V à chaud, la sortie atteindrait 4,00 V et saturerait le <code>TL072CP</code> (limité à ~3,7 V sous +5 V) tout en dépassant le maximum de 3,3 V du Pico !
+    <strong>Remplacez donc <code>R<sub>2</sub> = 10 k&Omega;</code> par une résistance du kit TI de <code>R<sub>2</sub> = 4,7 k&Omega;</code></strong> (soit <i>A<sub>v</sub></i> = 1 + 4,7/10 = <strong>1,47</strong>), débranchez <code>W1</code>, et <strong>reliez la sortie du Suiveur (broche <code>1</code>) à l'entrée de l'Amplificateur (broche <code>5</code>)</strong> !
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Configuration testée</th>
+        <th class="col-calc">Calcul Théorique</th>
+        <th class="col-sim">Simulation Proteus</th>
+        <th class="col-ad3">Mesure AD3 (Scope / Multimètre)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Sinus 1 kHz (<i>R<sub>2</sub></i> = 10 k&Omega;)</strong> — <i>V<sub>e,crête</sub></i> = 0,80 V : <i>V<sub>s,crête</sub></i> et Gain <i>A<sub>v</sub></i></td>
+        <td><strong>1,60 V</strong> (<i>A<sub>v</sub></i> = 2,00)</td>
+        <td>____ V (<i>A<sub>v</sub></i>=____)</td>
+        <td>____ V (<i>A<sub>v</sub></i>=____ | &Delta;&phi;=____&deg;)</td>
+      </tr>
+      <tr>
+        <td><strong>Sinus 1 kHz (<i>R<sub>2</sub></i> = 10 k&Omega;)</strong> — <i>V<sub>e,crête</sub></i> = 2,50 V : Seuils d'écrêtage</td>
+        <td>Écrêté (&lt; 5,0 V !)</td>
+        <td>+<i>V<sub>sat</sub></i> = ____ V</td>
+        <td>+<i>V<sub>sat</sub></i> = ____ V | &minus;<i>V<sub>sat</sub></i> = ____ V</td>
+      </tr>
+      <tr>
+        <td><strong>Capteur chaîné (<i>R<sub>2</sub></i> = 4,7 k&Omega;, <i>A<sub>v</sub></i> = 1,47)</strong> — Ambiante (~22 &deg;C)</td>
+        <td>~2,25 V</td>
+        <td>________ V</td>
+        <td><i>V<sub>s,amb</sub></i> = ________ V</td>
+      </tr>
+      <tr>
+        <td><strong>Capteur chaîné (<i>R<sub>2</sub></i> = 4,7 k&Omega;, <i>A<sub>v</sub></i> = 1,47)</strong> — Chauffé (~35 &deg;C)</td>
+        <td>~2,94 V (&lt; 3,3 V !)</td>
+        <td>________ V</td>
+        <td><i>V<sub>s,chaud</sub></i> = ________ V</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <label class="step-check no-print">
+    <input type="checkbox" class="tp-step-cb" data-step="2" onchange="updateProgress()">
+    <span>Partie 2 validée : Oscillogrammes linéaire et saturé capturés sur WaveForms AD3 + Proteus, et gain 1,47 validé sur le capteur.</span>
+  </label>
+</div>
+
+<!-- ===================================================================== -->
+<!-- PARTIE 3 : FILTRAGE PASSE-BAS RC & DIAGRAMME DE BODE (AD3 VS PROTEUS) -->
+<!-- ===================================================================== -->
+<h2 id="sec-p3">PARTIE 3 : Filtrage Analogique Passe-Bas RC &amp; Diagramme de Bode Automatique <span class="badge badge-time">1h00</span></h2>
+
+<div class="card-block">
+  <h3>3.1 Pourquoi filtrer avant un CAN ? (Immunité au Bruit PWM &amp; Anti-Repliement)</h3>
+  <p>
+    À proximité du moteur CC jaune à balais et de son hacheur PWM à 1 kHz, des parasites haute fréquence se couplent par rayonnement sur les fils du capteur. De plus, d'après le <strong>théorème d'échantillonnage de Shannon</strong>, toute composante de fréquence supérieure à la moitié de la fréquence d'échantillonnage du microcontrôleur provoque un <em>repliement spectral</em>. Nous plaçons donc en sortie de l'amplificateur (broche <code>7</code>) une cellule <strong>Passe-Bas RC du 1<sup>er</sup> ordre</strong> issue du <em>TI myParts Kit</em> : <strong><code>R<sub>f</sub> = 1 k&Omega;</code></strong> et <strong><code>C<sub>f</sub> = 100 nF</code></strong> (marquage <code>104</code> sur le condensateur céramique !).
+  </p>
+
+  <div class="formula-box">
+    Fréquence de coupure à &minus;3 dB :
+    <i>f<sub>c</sub></i> =
+    <span class="frac"><span class="num">1</span><span class="den">2 &pi; &middot; <i>R<sub>f</sub></i> &middot; <i>C<sub>f</sub></i></span></span>
+    =
+    <span class="frac"><span class="num">1</span><span class="den">2 &pi; &times; 1000 &times; 100&middot;10<sup>&minus;9</sup></span></span>
+    &approx; <strong>1 592 Hz</strong>
+    &nbsp;&nbsp;|&nbsp;&nbsp;
+    À <i>f = f<sub>c</sub></i> : <i>G<sub>dB</sub></i> = <strong>&minus;3,0 dB</strong> &nbsp;et&nbsp; &phi; = <strong>&minus;45&deg;</strong>
+  </div>
+
+  <!-- SVG 3.1 : FILTRE RC + TRACEUR DE BODE AD3 + CLAMP SCHOTTKY 1N5819 -->
+  <div class="svg-card">
+    <svg viewBox="0 0 920 265" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Filtre Passe-Bas RC avec Network Analyzer AD3 et protection Schottky 1N5819 vers Pico ADC">
+      <rect width="920" height="265" rx="8" fill="#ffffff" stroke="#cbd5e1"/>
+
+      <!-- Gauche : Schéma Filtre RC + Bode AD3 + Clamp 1N5819 -->
+      <rect x="14" y="14" width="545" height="237" rx="6" fill="#f8fafc" stroke="#cbd5e1"/>
+      <text x="286" y="34" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11.5" font-weight="bold" fill="#0b3c5d">Cellule Passe-Bas RC (1 k&Omega; / 100 nF) + Bride de Protection 3,3 V</text>
+
+      <!-- Entrée filtre (W1 pour Bode, puis broche 7 du TL072) -->
+      <rect x="26" y="96" width="88" height="36" rx="5" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.8"/>
+      <text x="70" y="112" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#854d0e">W1 (pour Bode)</text>
+      <text x="70" y="125" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.8" fill="#854d0e">puis 2OUT [7]</text>
+
+      <line x1="114" y1="114" x2="184" y2="114" stroke="#1e293b" stroke-width="2.2"/>
+      <!-- Sonde 1+ -->
+      <line x1="148" y1="114" x2="148" y2="70" stroke="#ea580c" stroke-width="2"/>
+      <rect x="116" y="46" width="64" height="24" rx="4" fill="#ffedd5" stroke="#ea580c"/>
+      <text x="148" y="62" text-anchor="middle" font-family="Consolas, monospace" font-size="9.5" font-weight="bold" fill="#c2410c">AD3 1+</text>
+
+      <!-- Rf = 1 kOhm -->
+      <rect x="184" y="102" width="72" height="24" fill="#ffffff" stroke="#1e293b" stroke-width="2"/>
+      <text x="220" y="118" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#1e293b">R_f = 1k&Omega;</text>
+      <line x1="256" y1="114" x2="465" y2="114" stroke="#0d9488" stroke-width="2.5"/>
+
+      <!-- Condensateur Cf = 100 nF -->
+      <line x1="302" y1="114" x2="302" y2="162" stroke="#1e293b" stroke-width="2"/>
+      <line x1="286" y1="162" x2="318" y2="162" stroke="#0b3c5d" stroke-width="3.2"/>
+      <line x1="286" y1="172" x2="318" y2="172" stroke="#0b3c5d" stroke-width="3.2"/>
+      <line x1="302" y1="172" x2="302" y2="220" stroke="#1e293b" stroke-width="2"/>
+      <text x="280" y="170" text-anchor="end" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#0b3c5d">C_f=100nF</text>
+      <text x="280" y="183" text-anchor="end" font-family="Segoe UI, sans-serif" font-size="8.5" fill="#64748b">(code 104)</text>
+
+      <!-- Sonde 2+ -->
+      <line x1="340" y1="114" x2="340" y2="70" stroke="#2563eb" stroke-width="2"/>
+      <rect x="308" y="46" width="64" height="24" rx="4" fill="#dbeafe" stroke="#2563eb"/>
+      <text x="340" y="62" text-anchor="middle" font-family="Consolas, monospace" font-size="9.5" font-weight="bold" fill="#1d4ed8">AD3 2+</text>
+
+      <!-- Bride Schottky 1N5819 (en Partie 5) -->
+      <rect x="382" y="46" width="165" height="190" rx="6" fill="#f0fdf4" stroke="#86efac" stroke-dasharray="5,3"/>
+      <text x="464" y="62" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9" font-weight="bold" fill="#15803d">Protection Pico (Partie 5)</text>
+      <!-- D2 vers +3.3V -->
+      <text x="415" y="77" text-anchor="middle" font-family="Consolas, monospace" font-size="9.5" font-weight="bold" fill="#dc2626">+3V3 Pico</text>
+      <line x1="415" y1="81" x2="415" y2="90" stroke="#dc2626" stroke-width="2"/>
+      <line x1="406" y1="90" x2="424" y2="90" stroke="#15803d" stroke-width="2.5"/>
+      <polygon points="415,90 406,104 424,104" fill="#15803d"/>
+      <line x1="415" y1="104" x2="415" y2="114" stroke="#1e293b" stroke-width="1.8"/>
+      <!-- D1 depuis GND -->
+      <line x1="415" y1="114" x2="415" y2="160" stroke="#1e293b" stroke-width="1.8"/>
+      <line x1="406" y1="160" x2="424" y2="160" stroke="#15803d" stroke-width="2.5"/>
+      <polygon points="415,160 406,174 424,174" fill="#15803d"/>
+      <line x1="415" y1="174" x2="415" y2="220" stroke="#1e293b" stroke-width="1.8"/>
+      <text x="430" y="150" font-family="Segoe UI, sans-serif" font-size="8.8" font-weight="bold" fill="#166534">2x 1N5819</text>
+      <text x="498" y="118" text-anchor="middle" font-family="Consolas, monospace" font-size="10" font-weight="bold" fill="#0f766e">&rarr; GP26</text>
+
+      <line x1="80" y1="220" x2="530" y2="220" stroke="#1e293b" stroke-width="2.2"/>
+      <text x="58" y="224" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#334155">GND</text>
+
+      <!-- Droite : Allure Diagramme de Bode -->
+      <rect x="572" y="14" width="334" height="237" rx="6" fill="#0f172a" stroke="#334155"/>
+      <text x="739" y="34" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11.5" font-weight="bold" fill="#5eead4">Diagramme de Bode Attendu (Gain dB)</text>
+      <line x1="612" y1="54" x2="612" y2="215" stroke="#64748b" stroke-width="1.5"/>
+      <line x1="612" y1="215" x2="888" y2="215" stroke="#64748b" stroke-width="1.5"/>
+      <!-- 0 dB et -3 dB -->
+      <line x1="612" y1="80" x2="740" y2="80" stroke="#94a3b8" stroke-dasharray="3,3"/>
+      <text x="606" y="84" text-anchor="end" font-family="Consolas, monospace" font-size="9" fill="#e2e8f0">0 dB</text>
+      <line x1="612" y1="100" x2="740" y2="100" stroke="#fde047" stroke-dasharray="3,3"/>
+      <text x="606" y="104" text-anchor="end" font-family="Consolas, monospace" font-size="9" fill="#fde047">-3 dB</text>
+      <line x1="740" y1="80" x2="740" y2="215" stroke="#fde047" stroke-dasharray="4,3"/>
+      <text x="740" y="232" text-anchor="middle" font-family="Consolas, monospace" font-size="9.5" font-weight="bold" fill="#fde047">f_c &approx; 1,59 kHz</text>
+
+      <!-- Courbe réelle Bode -->
+      <path d="M 612,80 L 690,82 Q 726,86 740,100 L 872,196" fill="none" stroke="#38bdf8" stroke-width="3"/>
+      <text x="822" y="142" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#f472b6">Pente -20 dB/déc</text>
+      <text x="625" y="232" font-family="Consolas, monospace" font-size="8.5" fill="#94a3b8">10 Hz</text>
+      <text x="868" y="232" font-family="Consolas, monospace" font-size="8.5" fill="#94a3b8">100 kHz</text>
+    </svg>
+    <div class="svg-caption">Figure 3.1 — Filtre passe-bas RC du 1<sup>er</sup> ordre (<code>1 k&Omega;</code> / <code>100 nF</code>), branchement du <em>Network Analyzer</em> AD3 et cellule d'écrêtage Schottky <code>1N5819</code>.</div>
+  </div>
+
+  <div class="dual-grid">
+    <div class="protocol-box protocol-proteus">
+      <h4>🖥️ Tracé du Diagramme de Bode sous Proteus 8</h4>
+      <ol style="margin:6px 0 0 0; padding-left:18px;">
+        <li>Câblez <code>R<sub>f</sub> = 1k</code> et <code>C<sub>f</sub> = 100n</code> seuls. En entrée, placez un générateur <strong><code>SINE</code></strong> (<em>Generator Mode</em>) réglé à <code>Amplitude = 1V</code>.</li>
+        <li>Placez une sonde <strong><code>VOLTAGE PROBE</code></strong> à la jonction entre <code>R<sub>f</sub></code> et <code>C<sub>f</sub></code> (nommez-la <code>V_sortie</code>).</li>
+        <li>Cliquez sur l'icône <strong>Graph Mode</strong> &rarr; choisissez <strong><code>FREQUENCY</code></strong> &rarr; tracez un cadre sur la feuille.</li>
+        <li>Double-cliquez sur le cadre : <code>Start = 10</code>, <code>Stop = 100k</code>, cochez <em>dB Scale</em>. Glissez la sonde <code>V_sortie</code> dans le graphe puis appuyez sur la <strong>Barre Espace</strong> !</li>
+      </ol>
+    </div>
+    <div class="protocol-box protocol-ad3">
+      <h4>🔬 Tracé du Bode Réel au <em>Network Analyzer</em> AD3</h4>
+      <ol style="margin:6px 0 0 0; padding-left:18px;">
+        <li>Sur la breadboard, reliez <strong><code>W1</code> (Jaune)</strong> et <strong><code>1+</code> (Orange)</strong> ensemble à l'entrée de <code>R<sub>f</sub> = 1 k&Omega;</code>, et <strong><code>2+</code> (Bleu)</strong> aux bornes de <code>C<sub>f</sub> = 100 nF</code> (<code>1&minus;</code> et <code>2&minus;</code> à <code>GND</code>).</li>
+        <li>Dans WaveForms, ouvrez l'instrument <strong>Network</strong> : réglez <code>Start = 10 Hz</code>, <code>Stop = 100 kHz</code>, <code>Amplitude = 1 V</code>, <code>Steps = 100</code>.</li>
+        <li>Cliquez sur <strong>Single</strong> : l'AD3 balaye les 100 fréquences et trace en direct le <strong>Gain (dB) et la Phase (&deg;) réels</strong> ! Placez un curseur <em>X</em> à <strong>&minus;3,0 dB</strong> et capturez l'écran.</li>
+      </ol>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Paramètre Fréquentiel du Filtre RC (1 k&Omega; / 100 nF)</th>
+        <th class="col-calc">Modèle Théorique</th>
+        <th class="col-sim">Graphe FREQUENCY Proteus</th>
+        <th class="col-ad3">Network Analyzer AD3 (Réel)</th>
+        <th class="col-err">Écart &epsilon; (%)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Gain statique basse fréquence à <strong><i>f</i> = 50 Hz</strong> (dB)</td>
+        <td><strong>0,0 dB</strong> (<i>A<sub>v</sub></i> = 1)</td>
+        <td>________ dB</td>
+        <td>________ dB</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td><strong>Fréquence de coupure <i>f<sub>c</sub></i> relevée à &minus;3,0 dB (Hz)</strong></td>
+        <td><strong>1 592 Hz</strong></td>
+        <td>________ Hz</td>
+        <td>________ Hz</td>
+        <td>____ %</td>
+      </tr>
+      <tr>
+        <td><strong>Déphasage &phi;(<i>f<sub>c</sub></i>)</strong> à la fréquence de coupure (&deg;)</td>
+        <td><strong>&minus;45,0 &deg;</strong></td>
+        <td>________ &deg;</td>
+        <td>________ &deg;</td>
+        <td>____ %</td>
+      </tr>
+      <tr>
+        <td>Gain à <strong>10 &times; <i>f<sub>c</sub></i> (&approx; 16 kHz)</strong> — Vérification de la pente (dB)</td>
+        <td><strong>&minus;20,0 dB</strong> (&divide;10 en V)</td>
+        <td>________ dB</td>
+        <td>________ dB</td>
+        <td>____ %</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="student-answer">
+    <strong>💡 Question d'analyse Option B n°2 (pour le Google Docs) :</strong><br>
+    Les condensateurs céramiques standard (comme le <code>100 nF</code> du kit TI) ont souvent une tolérance constructeur de <strong>&plusmn;10 % voire &plusmn;20 %</strong>. Montrez comment cette tolérance explique l'écart entre la fréquence de coupure <i>f<sub>c</sub></i> mesurée par le <em>Network Analyzer</em> de l'AD3 et la valeur théorique de 1 592 Hz, et déduisez par le calcul la capacité réelle <i>C<sub>réelle</sub></i> de votre condensateur !
+  </div>
+
+  <label class="step-check no-print">
+    <input type="checkbox" class="tp-step-cb" data-step="3" onchange="updateProgress()">
+    <span>Partie 3 validée : Diagrammes de Bode Proteus et WaveForms AD3 superposés dans le Google Docs, fréquence de coupure et capacité réelle analysées.</span>
+  </label>
+</div>
+
+<!-- ===================================================================== -->
+<!-- PARTIE 4 : COMPARATEUR COLLECTEUR OUVERT LM311P (SÉCURITÉ CÂBLÉE)     -->
+<!-- ===================================================================== -->
+<h2 id="sec-p4">PARTIE 4 : Comparateur à Collecteur Ouvert (<code>LM311P</code>) — Thermostat de Sécurité Matérielle <span class="badge badge-time">45 min</span></h2>
+
+<div class="card-block">
+  <h3>4.1 Pourquoi un Comparateur Dédié (<code>LM311P</code>) plutôt qu'un AOP en Boucle Ouverte ?</h3>
+  <p>
+    En sûreté de fonctionnement industrielle (Option B), une <strong>sécurité critique de surchauffe</strong> ne doit jamais dépendre uniquement d'un logiciel susceptible de se figer : on implante un <strong>comparateur analogique matériel</strong>.
+    Contrairement au <code>TL072CP</code> (dont la sortie évolue vers &plusmn;3,7 V, incompatible avec une entrée logique 3,3 V), le <strong><code>LM311P</code></strong> du <em>TI myParts Kit</em> possède un étage de sortie à <strong>transistor NPN à Collecteur Ouvert</strong> (broche <code>7 = COL OUT</code>, broche <code>1 = EMIT OUT</code>) :
+  </p>
+  <ul>
+    <li>En reliant la <strong>broche <code>1</code> à <code>GND (0 V)</code></strong> et en tirant la <strong>broche <code>7</code> au rail <code>+3,3 V</code> du Pico</strong> via une résistance de <em>pull-up</em> de <strong><code>4,7 k&Omega;</code></strong>, la sortie délivre directement un niveau logique pur <strong><code>0 V / +3,3 V</code></strong> en parfaite sécurité pour le Raspberry Pi Pico !</li>
+    <li>En ajoutant en parallèle entre <code>+3,3 V</code> et la broche <code>7</code> une <strong>LED Rouge + <code>330 &Omega;</code></strong>, la LED s'allume <strong>automatiquement par matériel</strong> dès que le transistor interne sature à la masse (état actif bas <code>/SURCHAUFFE = 0</code>) !</li>
+  </ul>
+
+  <!-- SVG 4.1 : COMPARATEUR LM311P + SYSTÈME BOUCLÉ COMPLET PICO-THERMODRIVE -->
+  <div class="svg-card">
+    <svg viewBox="0 0 920 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Schéma du comparateur LM311P à collecteur ouvert et architecture bouclée PICO-THERMODRIVE">
+      <rect width="920" height="320" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+
+      <!-- Gauche : Détail câblage LM311P -->
+      <rect x="14" y="14" width="465" height="292" rx="8" fill="#fef2f2" stroke="#fca5a5" stroke-width="1.6"/>
+      <text x="246" y="35" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="12" font-weight="bold" fill="#b91c1c">Étage Comparateur LM311P (Sortie Active Basse /SURCHAUFFE)</text>
+
+      <!-- Potentiomètre seuil V_seuil sur IN+ [2] -->
+      <text x="58" y="64" text-anchor="middle" font-family="Consolas, monospace" font-size="9.5" font-weight="bold" fill="#dc2626">+3V3 Pico</text>
+      <line x1="58" y1="68" x2="58" y2="86" stroke="#dc2626" stroke-width="2"/>
+      <rect x="45" y="86" width="26" height="58" fill="#ffffff" stroke="#1e293b" stroke-width="1.8"/>
+      <text x="40" y="118" text-anchor="end" font-family="Segoe UI, sans-serif" font-size="9" fill="#334155">Pot 10k</text>
+      <line x1="58" y1="144" x2="58" y2="275" stroke="#1e293b" stroke-width="2"/>
+      <!-- Curseur vers IN+ [2] -->
+      <line x1="71" y1="115" x2="188" y2="115" stroke="#16a34a" stroke-width="2.2"/>
+      <text x="128" y="108" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.2" font-weight="bold" fill="#15803d">V_seuil = 2,75 V</text>
+
+      <!-- Entrée V_ampli sur IN- [3] -->
+      <rect x="24" y="160" width="96" height="28" rx="4" fill="#dbeafe" stroke="#2563eb"/>
+      <text x="72" y="178" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.2" font-weight="bold" fill="#1d4ed8">V_ampli (7 TL072)</text>
+      <line x1="120" y1="174" x2="188" y2="174" stroke="#2563eb" stroke-width="2.2"/>
+
+      <!-- Symbole LM311P -->
+      <polygon points="188,88 188,202 292,145" fill="#ffffff" stroke="#991b1b" stroke-width="2.5"/>
+      <text x="198" y="120" font-family="Consolas, monospace" font-size="13" font-weight="bold" fill="#16a34a">+</text>
+      <text x="198" y="178" font-family="Consolas, monospace" font-size="13" font-weight="bold" fill="#0284c7">&minus;</text>
+      <text x="182" y="110" text-anchor="end" font-family="Consolas, monospace" font-size="9" fill="#475569">[2]</text>
+      <text x="182" y="188" text-anchor="end" font-family="Consolas, monospace" font-size="9" fill="#475569">[3]</text>
+      <text x="234" y="92" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#dc2626">+5V [8]</text>
+      <text x="234" y="208" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#475569">-5V [4]</text>
+      <!-- EMIT OUT [1] à GND -->
+      <line x1="256" y1="165" x2="256" y2="275" stroke="#1e293b" stroke-width="2"/>
+      <text x="262" y="238" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#1e293b">[1] EMIT &rarr; GND</text>
+
+      <!-- Sortie Collecteur Ouvert [7] + Pull-up 4,7k + LED Rouge vers +3V3 -->
+      <line x1="292" y1="145" x2="438" y2="145" stroke="#dc2626" stroke-width="2.5"/>
+      <text x="302" y="138" font-family="Consolas, monospace" font-size="9.5" font-weight="bold" fill="#b91c1c">[7] COL</text>
+
+      <!-- Rail +3.3V haut pour pull-up et LED -->
+      <line x1="335" y1="56" x2="430" y2="56" stroke="#dc2626" stroke-width="2.5"/>
+      <text x="382" y="49" text-anchor="middle" font-family="Consolas, monospace" font-size="9.5" font-weight="bold" fill="#dc2626">+3V3 Pico</text>
+
+      <!-- Branche Pull-up 4.7k -->
+      <line x1="350" y1="56" x2="350" y2="76" stroke="#1e293b" stroke-width="1.8"/>
+      <rect x="339" y="76" width="22" height="44" fill="#ffffff" stroke="#1e293b" stroke-width="1.8"/>
+      <text x="334" y="102" text-anchor="end" font-family="Segoe UI, sans-serif" font-size="8.8" font-weight="bold" fill="#1e293b">4,7k</text>
+      <line x1="350" y1="120" x2="350" y2="145" stroke="#1e293b" stroke-width="1.8"/>
+
+      <!-- Branche LED Rouge + 330 Ohm -->
+      <line x1="408" y1="56" x2="408" y2="72" stroke="#1e293b" stroke-width="1.8"/>
+      <rect x="397" y="72" width="22" height="32" fill="#ffffff" stroke="#1e293b" stroke-width="1.8"/>
+      <text x="424" y="92" font-family="Segoe UI, sans-serif" font-size="8.5" fill="#1e293b">330&Omega;</text>
+      <circle cx="408" cy="118" r="9" fill="#ef4444"/>
+      <line x1="408" y1="104" x2="408" y2="145" stroke="#1e293b" stroke-width="1.8"/>
+
+      <text x="408" y="166" text-anchor="middle" font-family="Consolas, monospace" font-size="9.5" font-weight="bold" fill="#991b1b">&rarr; GP17 (IRQ)</text>
+      <line x1="38" y1="275" x2="450" y2="275" stroke="#1e293b" stroke-width="2.2"/>
+      <text x="246" y="295" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.3" font-weight="bold" fill="#7f1d1d">Si V_ampli &gt; 2,75 V &rArr; Broche 7 tombe à 0 V &amp; LED Rouge s'allume !</text>
+
+      <!-- Droite : Architecture Bouclée Complète Partie 5 -->
+      <rect x="492" y="14" width="414" height="292" rx="8" fill="#f0fdfa" stroke="#5eead4" stroke-width="1.6"/>
+      <text x="699" y="35" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="12" font-weight="bold" fill="#0f766e">Bouclage Système Complet « PICO-THERMODRIVE »</text>
+
+      <rect x="512" y="54" width="168" height="72" rx="6" fill="#ffffff" stroke="#0284c7" stroke-width="1.8"/>
+      <text x="596" y="74" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#0369a1">Chaîne Analogique (P1–P3)</text>
+      <text x="596" y="92" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9" fill="#334155">Capteur &rarr; TL072 &rarr; Filtre RC</text>
+      <text x="596" y="108" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9" font-weight="bold" fill="#15803d">+ Clamp 1N5819 &rarr; GP26</text>
+
+      <rect x="720" y="54" width="168" height="72" rx="6" fill="#ffffff" stroke="#dc2626" stroke-width="1.8"/>
+      <text x="804" y="74" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#b91c1c">Sécurité Matérielle (P4)</text>
+      <text x="804" y="92" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9" fill="#334155">LM311P (Seuil 2,75 V)</text>
+      <text x="804" y="108" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9" font-weight="bold" fill="#b91c1c">/SURCHAUFFE &rarr; GP17 (IRQ)</text>
+
+      <!-- Flèches vers Pico -->
+      <line x1="596" y1="126" x2="650" y2="152" stroke="#0284c7" stroke-width="2.2"/>
+      <line x1="804" y1="126" x2="750" y2="152" stroke="#dc2626" stroke-width="2.2"/>
+
+      <rect x="575" y="152" width="250" height="58" rx="6" fill="#0f172a"/>
+      <text x="700" y="175" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#38bdf8">Raspberry Pi Pico (MicroPython)</text>
+      <text x="700" y="195" text-anchor="middle" font-family="Consolas, monospace" font-size="9.2" fill="#fde047">Moyenne CAN 8 pts + IRQ + Loi PWM</text>
+
+      <line x1="700" y1="210" x2="700" y2="232" stroke="#16a34a" stroke-width="2.5"/>
+
+      <!-- Banc Puissance TP 5 -->
+      <rect x="520" y="232" width="360" height="58" rx="6" fill="#fef9c3" stroke="#ca8a04" stroke-width="2"/>
+      <text x="700" y="253" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10.5" font-weight="bold" fill="#854d0e">Banc Puissance TP 5 : Relais Grove (GP16) + TIP31C (GP18)</text>
+      <text x="700" y="272" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#713f12">Powerbank Varta 5 V + Moteur CC jaune 3–6 V soufflant sur la CTN !</text>
+    </svg>
+    <div class="svg-caption">Figure 4.1 — Câblage du comparateur <code>LM311P</code> à collecteur ouvert (broche 1 à <code>GND</code>, tirage à <code>+3,3 V</code> sur broche 7) et synoptique global de la Partie 5.</div>
+  </div>
+
+  <h3>4.2 Protocole de Validation du Thermostat Matériel (Proteus puis Breadboard)</h3>
+  <ol>
+    <li><strong>Sous Proteus :</strong> Placez un <code>LM311</code> (alimenté en <code>+5V</code> broche 8, <code>-5V</code> broche 4, et <strong>broche 1 reliée à <code>GROUND</code></strong> !). Réglez un <code>POT-HG</code> de <code>10k</code> sous <code>3.3V</code> pour envoyer <strong><code>2,75 V</code></strong> sur <code>IN+ (2)</code>. Connectez la sortie de votre amplificateur sur <code>IN- (3)</code>, et câblez la résistance de <em>pull-up</em> <code>4.7k</code> + <code>LED-RED</code> + <code>330</code> vers <code>+3.3V</code> sur la broche <code>7</code>.</li>
+    <li><strong>Sur Breadboard :</strong> Réalisez le montage (laissez les broches <code>5</code> et <code>6</code> du <code>LM311P</code> non connectées). Ajustez le potentiomètre de seuil à <strong>2,75 V</strong> au multimètre. Chauffez le capteur entre vos doigts : vérifiez que la LED Rouge d'alarme s'allume instantanément dès que <i>V<sub>ampli</sub></i> dépasse 2,75 V, <strong>sans aucun microcontrôleur branché</strong> !</li>
+  </ol>
+
+  <table>
+    <thead>
+      <tr>
+        <th>État thermique du capteur</th>
+        <th>Comparaison des entrées (<i>V<sub>IN+</sub></i> vs <i>V<sub>IN&minus;</sub></i>)</th>
+        <th class="col-sim">Proteus : <i>V<sub>broche 7</sub></i> (V)</th>
+        <th class="col-ad3">Réel : <i>V<sub>broche 7</sub></i> (V) &amp; LED Alarme</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Température normale</strong> (<i>V<sub>ampli</sub></i> &lt; 2,75 V)</td>
+        <td><i>V<sub>IN+</sub> &gt; V<sub>IN&minus;</sub></i> (Transistor sortie bloqué)</td>
+        <td>________ V</td>
+        <td>________ V &nbsp;|&nbsp; LED : ________</td>
+      </tr>
+      <tr>
+        <td><strong>Surchauffe !</strong> (<i>V<sub>ampli</sub></i> &gt; 2,75 V)</td>
+        <td><i>V<sub>IN+</sub> &lt; V<sub>IN&minus;</sub></i> (Transistor saturé à GND)</td>
+        <td>________ V</td>
+        <td>________ V &nbsp;|&nbsp; LED : ________</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <label class="step-check no-print">
+    <input type="checkbox" class="tp-step-cb" data-step="4" onchange="updateProgress()">
+    <span>Partie 4 validée : Comparateur LM311P fonctionnel sous Proteus et sur Breadboard (basculement franc 3,3 V &rarr; ~0,15 V).</span>
+  </label>
+</div>
+
+<!-- ===================================================================== -->
+<!-- PARTIE 5 : INTÉGRATION BOUCLÉE MICROPYTHON — PICO-THERMODRIVE         -->
+<!-- ===================================================================== -->
+<h2 id="sec-p5">PARTIE 5 : Asservissement Complet « PICO-THERMODRIVE » (CAN 12 bits, IRQ &amp; Banc Moteur CC) <span class="badge badge-time">1h00</span></h2>
+
+<div class="card-block">
+  <h3>5.1 Protection Schottky <code>1N5819</code>, Quantification CAN &amp; Raccordement au Banc du TP 5</h3>
+  <ol>
+    <li><strong>Câblage de la bride de protection 3,3 V (Figure 3.1) :</strong> Avant de relier la sortie du filtre RC (<code>C<sub>f</sub></code>) à <strong><code>GP26 (ADC0 / Port A0)</code></strong> du Pico, placez les deux diodes Schottky <strong><code>1N5819</code></strong> du kit TI (D<sub>1</sub> entre <code>GND</code> et <code>GP26</code> bague vers <code>GP26</code> ; D<sub>2</sub> entre <code>GP26</code> et <code>3V3</code> bague vers <code>3V3</code>).</li>
+    <li><strong>Liaison d'interruption sécurité :</strong> Reliez la sortie broche <code>7</code> du <code>LM311P</code> à <strong><code>GP17</code></strong> du Pico.</li>
+    <li><strong>Masse commune générale :</strong> Vérifiez que le <strong><code>GND</code> de l'AD3</strong>, le <strong><code>GND</code> du Pico</strong> et le <strong><code>GND (&minus;)</code> de la Powerbank Varta 5 V</strong> sont tous reliés ensemble !</li>
+    <li><strong>Étage Puissance (identique au TP 5) :</strong> Relais Grove sur <strong><code>GP16 (D16)</code></strong>, Transistor <strong><code>TIP31C</code></strong> + <code>R<sub>B</sub> = 330 &Omega;</code> sur <strong><code>GP18 (D18)</code></strong> + diode de roue libre <strong><code>1N4001</code></strong> + <strong>Moteur CC jaune 3–6 V</strong> alimenté par la <strong>Powerbank Varta 5 V</strong>.</li>
+  </ol>
+
+  <div class="formula-box">
+    Pas de quantification (Quantum 12 bits du RP2040) :
+    <i>q</i> =
+    <span class="frac"><span class="num"><i>V<sub>réf</sub></i></span><span class="den">2<sup>12</sup></span></span>
+    =
+    <span class="frac"><span class="num">3,30 V</span><span class="den">4096</span></span>
+    &approx; <strong>0,806 mV</strong>
+    &nbsp;&nbsp;|&nbsp;&nbsp;
+    Tension mesurée : <i>V<sub>mes</sub></i> =
+    <span class="frac"><span class="num"><code>read_u16()</code></span><span class="den">65 535</span></span> &times; 3,30 V
+  </div>
+
+  <h3>5.2 Programme MicroPython d'Asservissement et d'Interruption Prioritaire</h3>
+  <p>
+    Complétez les <strong>3 zones <code># TODO</code></strong> du script ci-dessous sous Thonny :
+    <br>&bull; En dessous de <strong>2,38 V</strong> (froid), le relais Grove coupe la ligne 5 V Varta (ventilateur arrêté, 0 %).
+    <br>&bull; Entre <strong>2,42 V et 2,75 V</strong> (échauffement modéré), le relais s'enclenche et le rapport cyclique PWM augmente linéairement de <strong>30 % à 85 %</strong>.
+    <br>&bull; Dès que le <code>LM311P</code> déclenche un front descendant sur <code>GP17</code> (<strong>&gt; 2,75 V</strong>), l'<strong>interruption matérielle</strong> active le mode d'urgence qui force immédiatement le ventilateur à <strong>100 %</strong> !
+  </p>
+
+  <div class="code-wrapper">
+    <button type="button" class="copy-code-btn no-print" onclick="copierCode(this)">Copier</button>
+    <pre><code><span class="co"># ==============================================================================</span>
+<span class="co"># TP 6 : PICO-THERMODRIVE — Chaîne d'Acquisition Conditionnée &amp; Asservissement PWM</span>
+<span class="co"># Cible : Raspberry Pi Pico (MicroPython) | Option B : Électronique et Réseaux</span>
+<span class="co"># ==============================================================================</span>
+<span class="im">from</span> machine <span class="im">import</span> Pin, ADC, PWM
+<span class="im">import</span> time
+
+<span class="co"># --- ENTRÉES CHAÎNE D'ACQUISITION ANALOGIQUE &amp; COMPARATEUR ---</span>
+can_temp      = ADC(Pin(<span class="dv">26</span>))                    <span class="co"># Sortie filtre RC + bride 1N5819</span>
+pin_surchauffe = Pin(<span class="dv">17</span>, Pin.IN, Pin.PULL_UP)   <span class="co"># Sortie collecteur ouvert LM311P (active à 0)</span>
+
+<span class="co"># --- SORTIES CHAÎNE D'ÉNERGIE (BANC DU TP 5) ---</span>
+relais_varta  = Pin(<span class="dv">16</span>, Pin.OUT)                <span class="co"># Contacteur sécurité +5V Varta</span>
+pwm_ventilo   = PWM(Pin(<span class="dv">18</span>))                    <span class="co"># Base du transistor TIP31C (1 kHz)</span>
+pwm_ventilo.freq(<span class="dv">1000</span>)
+pwm_ventilo.duty_u16(<span class="dv">0</span>)
+
+<span class="co"># --- SEUILS DE RÉGULATION THERMIQUE (À ADAPTER À VOS MESURES PARTIE 2 !) ---</span>
+V_DEMARRAGE = <span class="dv">2.42</span>   <span class="co"># Tension déclenchant la ventilation douce (30 %)</span>
+V_ARRET     = <span class="dv">2.38</span>   <span class="co"># Hystérésis d'arrêt complet (0 % + ouverture relais)</span>
+V_PLEIN_GAZ = <span class="dv">2.75</span>   <span class="co"># Seuil critique aligné sur le comparateur LM311P</span>
+
+alerte_irq_materielle = <span class="kw">False</span>
+ventilation_active    = <span class="kw">False</span>
+
+<span class="co"># TODO 1 : Routine d'interruption matérielle (ISR) appelée sur front descendant de GP17</span>
+<span class="kw">def</span> <span class="fu">isr_surchauffe</span>(pin):
+    <span class="kw">global</span> alerte_irq_materielle
+    <span class="todo-hl">pass</span>  <span class="co"># &lt;--- Passer le drapeau alerte_irq_materielle à True !</span>
+
+pin_surchauffe.irq(trigger=Pin.IRQ_FALLING, handler=isr_surchauffe)
+
+<span class="co"># TODO 2 : Fonction de filtrage numérique (moyenne glissante sur 8 lectures CAN)</span>
+<span class="kw">def</span> <span class="fu">lire_tension_filtree</span>(nb_echantillons=<span class="dv">8</span>):
+    somme = <span class="dv">0</span>
+    <span class="kw">for</span> _ <span class="kw">in</span> <span class="fu">range</span>(nb_echantillons):
+        somme += can_temp.read_u16()
+        time.sleep_ms(<span class="dv">2</span>)
+    moy_u16 = somme // nb_echantillons
+    <span class="cf">return</span> <span class="todo-hl">0.0</span>  <span class="co"># &lt;--- Retourner la tension convertie en Volts (entre 0.0 et 3.30 V)</span>
+
+<span class="fu">print</span>(<span class="st">"=== PICO-THERMODRIVE : ASSERVISSEMENT EN BOUCLE FERMÉE ACTIF ==="</span>)
+
+<span class="kw">while</span> <span class="kw">True</span>:
+    v_mes = lire_tension_filtree()
+    lm311_actif = (pin_surchauffe.value() == <span class="dv">0</span>)
+
+    <span class="co"># Réarmement automatique de l'alerte quand la température est redescendue</span>
+    <span class="kw">if</span> alerte_irq_materielle <span class="kw">and</span> (<span class="kw">not</span> lm311_actif) <span class="kw">and</span> (v_mes &lt; V_PLEIN_GAZ - <span class="dv">0.05</span>):
+        alerte_irq_materielle = <span class="kw">False</span>
+
+    <span class="co"># PRIORITÉ 1 : Surchauffe critique détectée par le comparateur matériel LM311P</span>
+    <span class="kw">if</span> alerte_irq_materielle <span class="kw">or</span> lm311_actif:
+        ventilation_active = <span class="kw">True</span>
+        relais_varta.value(<span class="dv">1</span>)
+        rapport_pct = <span class="dv">100.0</span>
+        pwm_ventilo.duty_u16(<span class="dv">65535</span>)
+        mode_txt = <span class="st">"🔥 URGENCE LM311 (100%)"</span>
+
+    <span class="co"># PRIORITÉ 2 : Régulation proportionnelle linéaire entre V_DEMARRAGE et V_PLEIN_GAZ</span>
+    <span class="kw">else</span>:
+        <span class="kw">if</span> (<span class="kw">not</span> ventilation_active) <span class="kw">and</span> (v_mes &gt;= V_DEMARRAGE):
+            ventilation_active = <span class="kw">True</span>
+        <span class="kw">elif</span> ventilation_active <span class="kw">and</span> (v_mes &lt;= V_ARRET):
+            ventilation_active = <span class="kw">False</span>
+
+        <span class="kw">if</span> ventilation_active:
+            relais_varta.value(<span class="dv">1</span>)
+            <span class="co"># TODO 3 : Calculer rapport_pct linéairement entre 30.0 % (à V_DEMARRAGE) et 85.0 % (à V_PLEIN_GAZ)</span>
+            ratio = (v_mes - V_DEMARRAGE) / (V_PLEIN_GAZ - V_DEMARRAGE)
+            ratio = <span class="fu">max</span>(<span class="dv">0.0</span>, <span class="fu">min</span>(<span class="dv">1.0</span>, ratio))
+            rapport_pct = <span class="todo-hl">30.0</span>  <span class="co"># &lt;--- Compléter la loi proportionnelle : 30.0 + ratio * 55.0</span>
+            pwm_ventilo.duty_u16(<span class="fu">int</span>((rapport_pct / <span class="dv">100.0</span>) * <span class="dv">65535</span>))
+            mode_txt = <span class="st">"🌀 RÉGULATION PROP."</span>
+        <span class="kw">else</span>:
+            pwm_ventilo.duty_u16(<span class="dv">0</span>)
+            relais_varta.value(<span class="dv">0</span>)
+            rapport_pct = <span class="dv">0.0</span>
+            mode_txt = <span class="st">"❄️ VEILLE (ARRÊT)"</span>
+
+    <span class="fu">print</span>(<span class="st">f"V_ADC={v_mes:.3f} V | LM311={'/ALRM' if lm311_actif else 'OK   '} | PWM={rapport_pct:5.1f}% | {mode_txt}"</span>)
+    time.sleep_ms(<span class="dv">200</span>)</code></pre>
+  </div>
+
+  <h3>5.3 Validation Expérimentale en Boucle Fermée</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Situation thermique provoquée</th>
+        <th>Tension filtrée <i>V<sub>ADC</sub></i> lue (V)</th>
+        <th>Sortie <code>LM311P</code> (<code>GP17</code>)</th>
+        <th>Rapport PWM &amp; Tension moyenne Moteur CC</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Repos à température ambiante</strong> (~22 &deg;C)</td>
+        <td>________ V</td>
+        <td>HAUT (~3,3 V)</td>
+        <td>0 % | Relais OFF | &lang;<i>U<sub>mot</sub></i>&rang; = ____ V</td>
+      </tr>
+      <tr>
+        <td><strong>Échauffement léger</strong> (doigts posés 3 s)</td>
+        <td>________ V</td>
+        <td>HAUT (~3,3 V)</td>
+        <td>____ % | Relais ON | &lang;<i>U<sub>mot</sub></i>&rang; = ____ V</td>
+      </tr>
+      <tr>
+        <td><strong>Surchauffe franche</strong> (&gt; 2,75 V)</td>
+        <td>________ V</td>
+        <td><strong>BAS (~0,15 V) + IRQ !</strong></td>
+        <td><strong>100 %</strong> | Pleine vitesse | &lang;<i>U<sub>mot</sub></i>&rang; = ____ V</td>
+      </tr>
+      <tr>
+        <td><strong>Refroidissement</strong> (relâchement / souffle moteur)</td>
+        <td>Redescend à ____ V</td>
+        <td>Remonte à 3,3 V</td>
+        <td>Retour progressif puis arrêt sous 2,38 V !</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="student-answer">
+    <strong>💡 Question d'analyse Option B n°3 (Synthèse finale dans Google Docs) :</strong><br>
+    Expliquez les rôles complémentaires des <strong>deux filtrages</strong> présents dans votre chaîne d'acquisition : le <strong>filtre analogique RC passe-bas</strong> placé avant la broche <code>GP26</code> (Partie 3) et la <strong>moyenne glissante numérique sur 8 échantillons</strong> codée dans <code>lire_tension_filtree()</code> (Partie 5). Pourquoi la moyenne numérique seule ne peut-elle pas remplacer le filtre RC analogique face au repliement spectral ?
+  </div>
+
+  <label class="step-check no-print">
+    <input type="checkbox" class="tp-step-cb" data-step="5" onchange="updateProgress()">
+    <span>Partie 5 validée : Chaîne complète bouclée opérationnelle (Capteur &rarr; TL072 &rarr; Filtre RC &rarr; LM311P &rarr; Pico &rarr; Moteur CC Varta).</span>
+  </label>
+</div>
+
+<!-- ===================================================================== -->
+<!-- GRILLE D'ÉVALUATION BTS CIEL OPTION B (/20) & DÉPÔT CLASSROOM         -->
+<!-- ===================================================================== -->
+<h2 id="sec-eval">📝 Grille d'Évaluation Officielle BTS CIEL — Option B (sur 20 points — 5h00)</h2>
+
+<div class="card-block">
+  <table>
+    <thead>
+      <tr>
+        <th style="width:12%;">Compétence BO</th>
+        <th style="width:28%;">Critère d'évaluation Option B (ER)</th>
+        <th style="width:44%;">Indicateurs de performance attendus</th>
+        <th class="center" style="width:8%;">Barème</th>
+        <th class="center" style="width:8%;">Note</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C05</span></td>
+        <td><strong>CAO &amp; Simulations Proteus 8</strong></td>
+        <td>Exactitude des schémas (Suiveur, Ampli non-inverseur, graphe <code>FREQUENCY</code> Bode, comparateur <code>LM311</code> à collecteur ouvert).</td>
+        <td class="center"><strong>4 pts</strong></td>
+        <td class="center"></td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C06</span></td>
+        <td><strong>Instrumentation Analog Discovery 3</strong></td>
+        <td>Maîtrise autonome de <em>WaveForms</em> (Supplies &plusmn;5 V, Scope différentiel <code>1-/2-</code> à GND, Wavegen, tracé réel de Bode au <em>Network Analyzer</em> avec curseur &minus;3 dB).</td>
+        <td class="center"><strong>5 pts</strong></td>
+        <td class="center"></td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C07</span></td>
+        <td><strong>Prototypage Analogique/Mixte</strong></td>
+        <td>Implantation soignée des DIP-8 (<code>TL072CP</code>, <code>LM311P</code>), bride de protection Schottky <code>1N5819</code>, couplage sans erreur avec l'étage puissance 5 V Varta.</td>
+        <td class="center"><strong>4 pts</strong></td>
+        <td class="center"></td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C04</span></td>
+        <td><strong>Analyse Physique &amp; Métrologique</strong></td>
+        <td>Réponses rigoureuses aux 3 questions d'analyse (origine du courant du suiveur, déduction de <i>C<sub>réelle</sub></i> par Bode, complémentarité filtrage RC / numérique).</td>
+        <td class="center"><strong>3 pts</strong></td>
+        <td class="center"></td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C08</span></td>
+        <td><strong>Codage Embarqué Temps Réel (Pico)</strong></td>
+        <td>Conversion CAN 12 bits exacte, moyenne glissante, interruption matérielle <code>IRQ_FALLING</code> fonctionnelle et régulation proportionnelle fluide.</td>
+        <td class="center"><strong>2 pts</strong></td>
+        <td class="center"></td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C01</span></td>
+        <td><strong>Dossier Google Docs (Classroom)</strong></td>
+        <td>Clarté des captures WaveForms / Proteus légendées, unités respectées, rangement irréprochable de l'AD3 et du <em>TI myParts Kit</em>.</td>
+        <td class="center"><strong>2 pts</strong></td>
+        <td class="center"></td>
+      </tr>
+      <tr>
+        <td colspan="3" style="text-align:right; font-weight:bold;">TOTAL GÉNÉRAL (Durée : 5h00) :</td>
+        <td class="center"><strong>/ 20</strong></td>
+        <td class="center"></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <label class="step-check no-print">
+    <input type="checkbox" class="tp-step-cb" data-step="6" onchange="updateProgress()">
+    <span>Dossier finalisé : Compte rendu Google Docs remis sur Classroom, alimentation AD3 coupée (Master Enable OFF) et matériel rangé ! 🎉</span>
+  </label>
+</div>
+
+<!-- ===================================================================== -->
+<!-- SCRIPTS INTERACTIFS : CALCULATEURS OPTION B + COPIE GOOGLE DOCS       -->
+<!-- ===================================================================== -->
+<script>
+  // 1. Calculateur AOP Non-Inverseur + Filtre RC
+  function calcChain() {
+    const r1 = parseFloat(document.getElementById('inpR1').value);
+    const r2 = parseFloat(document.getElementById('inpR2').value);
+    const rf = parseFloat(document.getElementById('inpRf').value);
+    const cf = parseFloat(document.getElementById('inpCf').value);
+    const out = document.getElementById('chainResult');
+    if ([r1, r2, rf, cf].some(v => isNaN(v) || v <= 0)) {
+      out.textContent = 'Veuillez saisir des valeurs strictement positives.';
+      return;
+    }
+    const av = 1 + (r2 / r1);
+    const gdb = 20 * Math.log10(av);
+    const fc = 1 / (2 * Math.PI * (rf * 1000) * (cf * 1e-9));
+    out.textContent = `Gain A_v = ${av.toFixed(2).replace('.', ',')} (${gdb >= 0 ? '+' : ''}${gdb.toFixed(2).replace('.', ',')} dB) | Coupure f_c (-3 dB) = ${fc.toFixed(1).replace('.', ',')} Hz`;
+  }
+
+  // 2. Simulateur Quantification CAN 12 bits RP2040
+  function calcADC() {
+    let v = parseFloat(document.getElementById('inpVadc').value);
+    const out = document.getElementById('adcResult');
+    if (isNaN(v)) { out.textContent = 'Saisissez une tension entre 0 et 3,30 V.'; return; }
+    v = Math.max(0, Math.min(3.3, v));
+    const n12 = Math.round((v / 3.3) * 4095);
+    const u16 = Math.round((v / 3.3) * 65535);
+    out.textContent = `Code 12 bits = ${n12} / 4095 | read_u16() ≈ ${u16.toLocaleString('fr-FR')} | q = 0,806 mV`;
+  }
+
+  // 3. Barre de progression sauvegardée
+  const STORAGE_KEY = 'bts_ciel1_tp6_progress_v1';
+  function updateProgress() {
+    const boxes = document.querySelectorAll('.tp-step-cb');
+    let done = 0;
+    const state = {};
+    boxes.forEach(cb => {
+      state[cb.dataset.step] = cb.checked;
+      if (cb.checked) done++;
+    });
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+    const pct = Math.round((done / boxes.length) * 100);
+    document.getElementById('tpProgressFill').style.width = pct + '%';
+    document.getElementById('tpProgressText').textContent = `${done} / ${boxes.length}`;
+  }
+
+  (function restoreProgress() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+      document.querySelectorAll('.tp-step-cb').forEach(cb => {
+        if (saved[cb.dataset.step]) cb.checked = true;
+      });
+    } catch (e) {}
+    updateProgress();
+  })();
+
+  // 4. Copie d'un bloc de code
+  function copierCode(btn) {
+    const codeText = btn.parentElement.querySelector('code').innerText;
+    navigator.clipboard.writeText(codeText).then(() => {
+      const old = btn.textContent;
+      btn.textContent = '✅ Copié !';
+      setTimeout(() => { btn.textContent = old; }, 1800);
+    });
+  }
+
+  // 5. Copie HTML riche de la trame complète TP 6 pour Google Docs (Classroom)
+  async function copierTrameClassroom() {
+    const htmlTemplate = `
+      <div style="font-family: Arial, sans-serif; color: #1e293b; line-height: 1.45;">
+        <h1 style="color:#0b3c5d; border-bottom:2px solid #0f766e;">COMPTE RENDU DE TP (5H) — BTS CIEL Option B (1re Année)</h1>
+        <h2 style="color:#0f766e;">TP 6 : PICO-THERMODRIVE — Chaîne d'Acquisition Analogique (AOP TL072, Bode AD3, LM311P &amp; Asservissement Moteur CC)</h2>
+        <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; width:100%; margin-bottom:14px;">
+          <tr style="background:#f0fdfa;">
+            <td><b>Binôme (NOM Prénom 1 &amp; 2) :</b></td><td>....................................................</td>
+            <td><b>Date :</b></td><td>.... / .... / 202..</td>
+          </tr>
+          <tr>
+            <td><b>Rails AD3 mesurés (V+ / V-) :</b></td><td><b>+........ V / -........ V</b></td>
+            <td><b>Capteur utilisé :</b></td><td>................................</td>
+          </tr>
+        </table>
+
+        <h2 style="color:#0b3c5d;">PARTIE 1 — Capteur Analogique &amp; Adaptation d'Impédance (Suiveur TL072 1/2)</h2>
+        <p><i>[📷 Insérer capture Proteus du Suiveur chargé par 1 kΩ + photo Breadboard]</i></p>
+        <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; width:100%;">
+          <tr style="background:#ccfbf1; font-weight:bold;">
+            <th>Essai</th><th>Théorie</th><th>Proteus</th><th>Mesure Réelle (AD3 / Multimètre)</th>
+          </tr>
+          <tr><td>Pont 10k/10k sous 5V + R_L=1k SANS suiveur</td><td>0,42 V</td><td></td><td></td></tr>
+          <tr><td>Pont 10k/10k sous 5V + R_L=1k AVEC suiveur TL072</td><td>2,50 V</td><td></td><td></td></tr>
+          <tr><td>Capteur en sortie Suiveur — Ambiante (~22 °C)</td><td>~1,54 V</td><td></td><td></td></tr>
+          <tr><td>Capteur en sortie Suiveur — Chauffé aux doigts (~35 °C)</td><td>~2,00 V</td><td></td><td></td></tr>
+        </table>
+        <p><b>Réponse Question d'analyse Option B n°1 (Origine physique du courant de sortie de 2,50 mA du suiveur) :</b><br>........................................................................................................</p>
+
+        <h2 style="color:#0b3c5d;">PARTIE 2 — Amplificateur Non-Inverseur (TL072 2/2) &amp; Saturation ±V_sat</h2>
+        <p><i>[📷 Insérer les 2 oscillogrammes Scope WaveForms AD3 : régime linéaire (0,8 V) et régime saturé écrêté (2,5 V)]</i></p>
+        <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; width:100%;">
+          <tr style="background:#ccfbf1; font-weight:bold;">
+            <th>Configuration</th><th>Calcul Théorique</th><th>Proteus</th><th>Mesure Scope AD3</th>
+          </tr>
+          <tr><td>Sinus 1 kHz (R2=10k, Av=2) — Ve = 0,80 V crête</td><td>1,60 V</td><td></td><td></td></tr>
+          <tr><td>Sinus 1 kHz (R2=10k) — Ve = 2,50 V : +V_sat / -V_sat</td><td>Écrêté (~±3,7 V)</td><td></td><td></td></tr>
+          <tr><td>Capteur chaîné (R2=4,7k, Av=1,47) — Ambiante</td><td>~2,26 V</td><td></td><td></td></tr>
+          <tr><td>Capteur chaîné (R2=4,7k, Av=1,47) — Chauffé</td><td>~2,94 V</td><td></td><td></td></tr>
+        </table>
+
+        <h2 style="color:#0b3c5d;">PARTIE 3 — Filtre Passe-Bas RC (1 kΩ / 100 nF) &amp; Diagramme de Bode</h2>
+        <p><i>[📷 Insérer côte à côte le Diagramme de Bode FREQUENCY Proteus et le Diagramme de Bode réel du Network Analyzer AD3 avec curseur à -3 dB]</i></p>
+        <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; width:100%;">
+          <tr style="background:#e0f2fe; font-weight:bold;">
+            <th>Paramètre Fréquentiel</th><th>Modèle Théorique</th><th>Bode Proteus</th><th>Network Analyzer AD3</th><th>Écart ε (%)</th>
+          </tr>
+          <tr><td>Gain à 50 Hz (dB)</td><td>0,0 dB</td><td></td><td></td><td></td></tr>
+          <tr><td><b>Fréquence de coupure f_c à -3,0 dB (Hz)</b></td><td><b>1 592 Hz</b></td><td></td><td></td><td></td></tr>
+          <tr><td>Déphasage φ(f_c) (°)</td><td>-45,0 °</td><td></td><td></td><td></td></tr>
+          <tr><td>Gain à 16 kHz (vérification pente -20 dB/déc)</td><td>-20,0 dB</td><td></td><td></td><td></td></tr>
+        </table>
+        <p><b>Réponse Question d'analyse Option B n°2 (Calcul de la valeur réelle C_réelle du condensateur à partir de f_c mesurée) :</b><br>........................................................................................................</p>
+
+        <h2 style="color:#0b3c5d;">PARTIE 4 — Comparateur à Collecteur Ouvert LM311P (Sécurité Surchauffe)</h2>
+        <p><i>[📷 Insérer capture Proteus LM311P + photo Breadboard avec LED Rouge d'alarme matérielle allumée]</i></p>
+        <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; width:100%;">
+          <tr style="background:#fee2e2; font-weight:bold;">
+            <th>État thermique</th><th>Tension broche 7 Proteus</th><th>Tension broche 7 Réelle &amp; État LED</th>
+          </tr>
+          <tr><td>Normal (V_ampli &lt; 2,75 V)</td><td></td><td></td></tr>
+          <tr><td>Surchauffe (V_ampli &gt; 2,75 V)</td><td></td><td></td></tr>
+        </table>
+
+        <h2 style="color:#0b3c5d;">PARTIE 5 — Bouclage Complet « PICO-THERMODRIVE » (MicroPython)</h2>
+        <p><i>[📷 Insérer photo générale du banc complet : AD3 + Breadboard CI + Pico + Relais Grove + Moteur CC + Powerbank Varta]</i></p>
+        <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; width:100%;">
+          <tr style="background:#dcfce7; font-weight:bold;">
+            <th>Situation thermique</th><th>V_ADC lue (V)</th><th>État GP17 (LM311)</th><th>PWM (%) &amp; &lt;U_moteur&gt; (V)</th>
+          </tr>
+          <tr><td>Ambiante (~22 °C)</td><td></td><td></td><td></td></tr>
+          <tr><td>Échauffement modéré</td><td></td><td></td><td></td></tr>
+          <tr><td>Surchauffe critique (&gt; 2,75 V)</td><td></td><td></td><td></td></tr>
+          <tr><td>Retour au repos après refroidissement</td><td></td><td></td><td></td></tr>
+        </table>
+        <p><b>Réponse Question d'analyse Option B n°3 (Complémentarité filtre RC analogique vs moyenne glissante numérique) :</b><br>........................................................................................................</p>
+        <h3>Annexe : Code MicroPython final complété</h3>
+        <pre style="background:#f8fafc; padding:10px; border:1px solid #cbd5e1;">[Coller ici votre code MicroPython fonctionnel]</pre>
+      </div>`;
+
+    const plainFallback = "COMPTE RENDU TP 6 BTS CIEL OPTION B — PICO-THERMODRIVE (5h)\nCollez dans Google Docs (Classroom) pour obtenir les tableaux formatés.";
+
+    try {
+      if (window.ClipboardItem) {
+        const blobHtml = new Blob([htmlTemplate], { type: 'text/html' });
+        const blobText = new Blob([plainFallback], { type: 'text/plain' });
+        await navigator.clipboard.write([new ClipboardItem({ 'text/html': blobHtml, 'text/plain': blobText })]);
+      } else {
+        await navigator.clipboard.writeText(plainFallback);
+      }
+      const toast = document.getElementById('copyToast');
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 7000);
+    } catch (err) {
+      alert("Copie automatique bloquée par le navigateur : ouvrez ce fichier dans Chrome/Edge et réessayez.");
+    }
+  }
+</script>
+
+</body>
+</html>

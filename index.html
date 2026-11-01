@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BTS CIEL 1re Année — Travaux Pratiques Raspberry Pi Pico</title>
+    <title>BTS CIEL 1re Année — Travaux Pratiques Raspberry Pi Pico &amp; Électronique</title>
     <style>
         body {
             font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
@@ -66,6 +66,23 @@
             background: #f3e8ff;
             color: #7e22ce;
         }
+        .badge-teal {
+            background: #ccfbf1;
+            color: #0f766e;
+        }
+        .badge-red {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+        .badge-orange {
+            background: #ffedd5;
+            color: #c2410c;
+        }
+        .badge-arduino {
+            background: #e0f2fe;
+            color: #006468;
+            border: 1px solid #00979d;
+        }
         .desc {
             color: #475569;
             font-size: 0.95em;
@@ -77,7 +94,7 @@
 <body>
 
     <h1>BTS CIEL — 1<sup>re</sup> Année</h1>
-    <p class="subtitle">Activités Pratiques MicroPython &amp; Systèmes Embarqués sur Raspberry Pi Pico (RP2040)</p>
+    <p class="subtitle">Activités Pratiques Électronique, Simulation Proteus, Analog Discovery 3 &amp; MicroPython sur Raspberry Pi Pico (RP2040)</p>
 
     <div class="tp-card">
         <span class="badge">TP 3</span>
@@ -107,6 +124,49 @@
             Étude croisée <strong>Calcul ↔ Simulation Proteus ↔ Breadboard réelle</strong> avec le <em>TI myParts Kit</em> (résistances, LEDs, potentiomètre à vide et en charge).
             Mesures Partie Commande (3,3 V) / Partie Puissance (Powerbank Varta 5 V + moteur CC jaune 3–6 V) via <strong>Relais Grove</strong> (isolation galvanique) puis <strong>Transistor NPN <code>TIP31C</code></strong> + roue libre <code>1N4001</code>.
             Synthèse PWM en MicroPython sur Raspberry Pi Pico et compte rendu structuré sur Google Docs (Classroom).
+        </p>
+    </div>
+
+    <div class="tp-card">
+        <span class="badge">TP 6 — Option B (ER)</span>
+        <span class="badge badge-time">Durée : 5h00</span>
+        <span class="badge badge-teal">Analog Discovery 3 &amp; AOP</span>
+        <h2><a href="TP6_Acquisition_Conditionnement_AD3_BTS_CIEL.html">TP 6 : PICO-THERMODRIVE — Chaîne d'Acquisition Analogique, Bode (AD3), Comparateur &amp; Asservissement</a></h2>
+        <p class="desc">
+            Suite directe du TP 5 : conditionnement analogique par double AOP <code>TL072CP</code> (suiveur adaptateur d'impédance &amp; amplificateur non-inverseur),
+            filtrage passe-bas RC et tracé automatique du <strong>Diagramme de Bode</strong> (<strong>Proteus 8</strong> vs <em>Network Analyzer</em> du <strong>Digilent Analog Discovery 3</strong>),
+            sécurité matérielle par comparateur à collecteur ouvert <code>LM311P</code>, bride Schottky <code>1N5819</code> et asservissement bouclé du moteur CC sur Raspberry Pi Pico.
+        </p>
+    </div>
+
+    <div class="tp-card">
+        <span class="badge">TP 7 — Option B (ER) S2</span>
+        <span class="badge badge-time">Durée : 5h00</span>
+        <span class="badge badge-red">Logique 74LS, CD4511 &amp; Sécurité</span>
+        <h2><a href="TP7_Logique_Cablee_Securite_AD3_BTS_CIEL.html">TP 7 : PICO-SAFELOCK — Logique Câblée (<code>SN74LSxx</code>), Verrouillage d'Arrêt d'Urgence, <code>CD4511</code> &amp; Analyseur Logique AD3</a></h2>
+        <p class="desc">
+            Suite Semestre 2 Option B : portes combinatoires (<code>SN74LS04/08/32/00</code>), universalité NAND et synthèse par table de Karnaugh validée sur 16 états au <em>Pattern Generator &amp; Logic Analyzer</em> de l'<strong>Analog Discovery 3</strong>.
+            Mémoire d'arrêt d'urgence par bascule D <code>SN74LS74N</code> (anti-rebond RC), décodage BCD 7-segments <code>CD4511BE</code> sur afficheur virtuel <em>Static I/O</em>, coupure matérielle en série sur le hacheur <code>TIP31C</code> et test d'injection de panne CPU sur Raspberry Pi Pico.
+        </p>
+    </div>
+
+    <div class="tp-card">
+        <span class="badge">TP 8 — Option B (ER) S2</span>
+        <span class="badge badge-time">Durée : 5h00</span>
+        <span class="badge badge-orange">LM317, TLC555 &amp; CAN SPI 12b</span>
+        <h2><a href="TP8_Regulation_555_SPI_AD3_BTS_CIEL.html">TP 8 : PICO-POWERDAC — Régulation Linéaire (<code>LM317</code> / Zener), PWM Matérielle (<code>TLC555CP</code>) &amp; CAN SPI (<code>ADS7816P</code>)</a></h2>
+        <p class="desc">
+            Clôture du cycle Option B : référence étalon 2,50 V par régulateur ajustable <code>LM317</code> et diode Zener <code>1N4735A</code>, variateur PWM matériel autonome par timer LinCMOS <code>TLC555CP</code> (Scope AD3), et numérisation 12 bits haute précision par CAN externe SAR <code>ADS7816P</code> décodé au <em>Logic Analyzer</em> SPI et interfacé au Raspberry Pi Pico (chaîne de puissance Varta).
+        </p>
+    </div>
+
+    <div class="tp-card">
+        <span class="badge">TP 9 — Tronc Commun &amp; Option B</span>
+        <span class="badge badge-time">Durée : 5h00</span>
+        <span class="badge badge-arduino">Langage C Arduino Nano</span>
+        <h2><a href="TP9_Transition_C_Arduino_Nano_BTS_CIEL.html">TP 9 : PICO-TO-NANO — Du MicroPython au Langage C Embarqué sur Arduino Nano (ATmega328P)</a></h2>
+        <p class="desc">
+            Passerelle méthodique vers le C/C++ embarqué : formats et tailles des variables (<code>sizeof</code>, <code>&lt;stdint.h&gt;</code>, débordement sur 8 bits), allocation en mémoire SRAM (2 Ko), structures de contrôle (<code>if/else</code>, <code>switch/case</code>, <code>while</code>, <code>for</code>), prototypes et fonctions (passage par valeur vs référence <code>&amp;</code>), communication série bidirectionnelle et réécriture de la Machine à États Finis (FSM) multitâche cadencée par <code>millis()</code> sur banc réel et sous Proteus 8.
         </p>
     </div>
 

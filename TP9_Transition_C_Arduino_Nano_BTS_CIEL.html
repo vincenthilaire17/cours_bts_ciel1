@@ -1,0 +1,1767 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>TP 9 : PICO-TO-NANO — Du MicroPython au Langage C Embarqué sur Arduino Nano — BTS CIEL (5h)</title>
+  <style>
+    :root {
+      --primary: #0b3c5d;
+      --primary-light: #e0f2fe;
+      --secondary: #00979d; /* Couleur Cyan Arduino officielle */
+      --secondary-dark: #006468;
+      --accent: #d97706;
+      --sim-purple: #7c3aed;
+      --sim-bg: #f5f3ff;
+      --cmd-blue: #0284c7;
+      --cmd-bg: #f0f9ff;
+      --pwr-red: #dc2626;
+      --pwr-bg: #fef2f2;
+      --real-green: #15803d;
+      --real-bg: #f0fdf4;
+      --bg-page: #f8fafc;
+      --bg-card: #ffffff;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --border: #cbd5e1;
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      color: var(--text-main);
+      background-color: var(--bg-page);
+      scroll-behavior: smooth;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.58;
+      color: var(--text-main);
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 18px 20px 70px 20px;
+    }
+
+    @page {
+      margin: 1.3cm;
+      size: A4;
+    }
+
+    @media print {
+      body {
+        max-width: 100%;
+        padding: 0;
+        font-size: 9.5pt;
+        color: #000;
+        background: #fff;
+      }
+      .no-print { display: none !important; }
+      .card-block {
+        box-shadow: none !important;
+        border: 1px solid #cbd5e1 !important;
+      }
+      pre, blockquote, table, .svg-card, .callout { page-break-inside: avoid; }
+      h1, h2, h3, h4 { page-break-after: avoid; }
+      a { color: #000; text-decoration: underline; }
+    }
+
+    /* Barre supérieure collante */
+    .top-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 16px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+    }
+    .top-bar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .back-link {
+      font-weight: 700;
+      color: var(--primary);
+      text-decoration: none;
+      font-size: 9.5pt;
+      padding: 5px 10px;
+      border-radius: 6px;
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+    }
+    .back-link:hover { background: #e2e8f0; text-decoration: none; }
+
+    .progress-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 9pt;
+      font-weight: 600;
+      color: #334155;
+    }
+    .progress-track {
+      width: 150px;
+      height: 10px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #00979d, #1d4ed8);
+      transition: width 0.25s ease;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+      padding: 7px 13px;
+      font-size: 9pt;
+      font-weight: 700;
+      font-family: inherit;
+      transition: transform 0.1s ease, opacity 0.15s ease;
+      text-decoration: none;
+    }
+    .btn:hover { opacity: 0.93; text-decoration: none; }
+    .btn:active { transform: translateY(1px); }
+    .btn-docs {
+      background: linear-gradient(135deg, #00979d, #0b3c5d);
+      color: #ffffff;
+      box-shadow: 0 2px 6px rgba(0, 151, 157, 0.25);
+    }
+    .btn-outline {
+      background: #ffffff;
+      color: #1e293b;
+      border: 1px solid #cbd5e1;
+    }
+
+    /* En-tête principal */
+    .header-box {
+      background: linear-gradient(135deg, #0b3c5d 0%, #00979d 60%, #15803d 100%);
+      color: #ffffff;
+      border-radius: 12px;
+      padding: 24px 26px;
+      margin-bottom: 22px;
+      box-shadow: 0 6px 18px rgba(11, 60, 93, 0.2);
+    }
+    .header-kicker {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.18);
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 8.5pt;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .header-box h1 {
+      color: #ffffff;
+      font-size: 18pt;
+      margin: 0 0 10px 0;
+      border: none;
+      padding: 0;
+      line-height: 1.25;
+    }
+    .header-subtitle {
+      color: #e0f2fe;
+      font-size: 10.2pt;
+      margin: 0 0 14px 0;
+    }
+    .header-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 9pt;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.22);
+    }
+    .meta-pill {
+      background: rgba(15, 23, 42, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 4px 10px;
+      border-radius: 6px;
+      color: #f8fafc;
+    }
+
+    /* Titres */
+    h1, h2, h3, h4 {
+      color: var(--primary);
+      font-weight: 700;
+      line-height: 1.28;
+    }
+    h2 {
+      font-size: 14.5pt;
+      margin-top: 30px;
+      margin-bottom: 12px;
+      color: #0b3c5d;
+      border-left: 5px solid var(--secondary);
+      padding: 6px 0 6px 12px;
+      background: linear-gradient(90deg, #f0fdfa 0%, transparent 100%);
+      border-radius: 0 6px 6px 0;
+    }
+    h3 {
+      font-size: 11.8pt;
+      margin-top: 20px;
+      margin-bottom: 8px;
+      border-left: 4px solid var(--secondary);
+      padding-left: 9px;
+      color: #0f3a5d;
+    }
+    h4 {
+      font-size: 10.5pt;
+      margin-top: 14px;
+      margin-bottom: 6px;
+      color: #1e293b;
+    }
+    p { margin: 0.75em 0; }
+
+    /* Sections cartes */
+    .card-block {
+      background: var(--bg-card);
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 20px 22px;
+      margin-bottom: 22px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      font-size: 8.2pt;
+      font-weight: 700;
+      border-radius: 4px;
+      background-color: #e0f2fe;
+      color: #0369a1;
+      margin-right: 4px;
+      vertical-align: middle;
+    }
+    .badge-bo { background: #0b3c5d; color: #ffffff; }
+    .badge-c { background: #00979d; color: #ffffff; }
+    .badge-py { background: #fef08a; color: #854d0e; border: 1px solid #fde047; }
+    .badge-sim { background: #ede9fe; color: #6d28d9; border: 1px solid #ddd6fe; }
+    .badge-time { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+
+    /* Encadrés */
+    .callout {
+      margin: 14px 0;
+      padding: 13px 16px;
+      border-radius: 8px;
+      border-left: 5px solid #00979d;
+      background-color: #f0fdfa;
+      font-size: 9.5pt;
+    }
+    .callout-warn { border-left-color: #f59e0b; background-color: #fffbeb; }
+    .callout-danger { border-left-color: #dc2626; background-color: #fef2f2; }
+    .callout-tip { border-left-color: #16a34a; background-color: #f0fdf4; }
+    .callout-proteus { border-left-color: #7c3aed; background-color: #f5f3ff; }
+    .callout-docs {
+      border-left-color: #00979d;
+      background-color: #f0fdfa;
+      border: 1px solid #99f6e4;
+      border-left-width: 5px;
+    }
+
+    /* Grille double protocole / comparaison */
+    .dual-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 14px 0;
+    }
+    @media (max-width: 760px) {
+      .dual-grid { grid-template-columns: 1fr; }
+    }
+    .protocol-box {
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-size: 9.4pt;
+    }
+    .protocol-python {
+      background: #fefce8;
+      border: 1px solid #fef08a;
+      border-top: 4px solid #ca8a04;
+    }
+    .protocol-python h4 { color: #854d0e; margin-top: 0; }
+    .protocol-c {
+      background: #f0fdfa;
+      border: 1px solid #99f6e4;
+      border-top: 4px solid #00979d;
+    }
+    .protocol-c h4 { color: #006468; margin-top: 0; }
+
+    /* Tableaux */
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 14px 0;
+      font-size: 9.2pt;
+      background: #ffffff;
+    }
+    th, td {
+      border: 1px solid #cbd5e1;
+      padding: 7px 9px;
+      text-align: left;
+      vertical-align: middle;
+    }
+    th {
+      background-color: #f1f5f9;
+      color: var(--primary);
+      font-weight: 700;
+    }
+    tr:nth-child(even) { background-color: #f8fafc; }
+    td.center, th.center { text-align: center; }
+    th.col-py { background: #fef9c3; color: #854d0e; }
+    th.col-c { background: #ccfbf1; color: #006468; }
+
+    /* Zones réponses & jalons */
+    .student-answer {
+      background-color: #ffffff;
+      border: 1.5px dashed #94a3b8;
+      border-radius: 6px;
+      padding: 10px 14px;
+      margin: 10px 0;
+      color: #334155;
+      font-size: 9.3pt;
+    }
+    .step-check {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-top: 14px;
+      font-weight: 600;
+      font-size: 9.5pt;
+      color: #0f172a;
+      cursor: pointer;
+    }
+    .step-check input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: #00979d;
+      cursor: pointer;
+    }
+
+    /* SVG Cards */
+    .svg-card {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 14px;
+      margin: 16px 0;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+      overflow-x: auto;
+    }
+    .svg-card svg {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
+    .svg-caption {
+      font-size: 8.8pt;
+      color: var(--text-muted);
+      margin-top: 8px;
+      font-style: italic;
+    }
+
+    /* Code */
+    code {
+      background-color: #f1f5f9;
+      color: #0f172a;
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-size: 8.8pt;
+      font-family: Consolas, 'Courier New', monospace;
+    }
+    .code-wrapper {
+      position: relative;
+      margin: 12px 0;
+    }
+    .copy-code-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: #334155;
+      color: #f8fafc;
+      border: 1px solid #475569;
+      border-radius: 5px;
+      padding: 4px 9px;
+      font-size: 8pt;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .copy-code-btn:hover { background: #475569; }
+    pre {
+      background-color: #0f172a;
+      color: #e2e8f0;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-size: 8.9pt;
+      line-height: 1.48;
+      overflow-x: auto;
+      font-family: Consolas, 'Courier New', monospace;
+      margin: 0;
+    }
+    pre code { background: transparent; color: inherit; padding: 0; }
+    .kw { color: #f472b6; font-weight: bold; }
+    .im { color: #c084fc; font-weight: bold; }
+    .fu { color: #38bdf8; font-weight: 600; }
+    .st { color: #86efac; }
+    .dv { color: #fbbf24; }
+    .co { color: #94a3b8; font-style: italic; }
+    .todo-hl { color: #fde047; font-weight: bold; }
+    .typ { color: #2dd4bf; font-weight: 600; }
+
+    /* Outils interactifs */
+    .tools-strip {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin: 14px 0;
+    }
+    @media (max-width: 780px) {
+      .tools-strip { grid-template-columns: 1fr; }
+    }
+    .mini-tool {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 9pt;
+    }
+    .mini-tool h4 { margin: 0 0 8px 0; color: var(--primary); }
+    .mini-tool select, .mini-tool input[type="number"] {
+      padding: 5px 7px;
+      border: 1px solid #94a3b8;
+      border-radius: 5px;
+      font-size: 8.8pt;
+      font-family: inherit;
+    }
+    .tool-result {
+      margin-top: 8px;
+      padding: 7px 10px;
+      background: #ffffff;
+      border-radius: 5px;
+      border: 1px solid #cbd5e1;
+      font-weight: 700;
+      color: #0b3c5d;
+    }
+
+    /* Timeline 5h */
+    .timeline-bar {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 6px;
+      margin: 12px 0;
+    }
+    @media (max-width: 760px) {
+      .timeline-bar { grid-template-columns: repeat(2, 1fr); }
+    }
+    .tl-item {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-top: 3px solid var(--secondary);
+      border-radius: 6px;
+      padding: 8px;
+      font-size: 8.3pt;
+      text-decoration: none;
+      color: var(--text-main);
+    }
+    .tl-item:hover { background: #ccfbf1; text-decoration: none; }
+    .tl-time { font-weight: 800; color: var(--secondary-dark); display: block; }
+
+    .toast-copy {
+      display: none;
+      margin-top: 8px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      background: #dcfce7;
+      color: #166534;
+      border: 1px solid #86efac;
+      font-weight: 600;
+      font-size: 9pt;
+    }
+  </style>
+</head>
+<body>
+
+<!-- BARRE DE NAVIGATION ET DE SUIVI -->
+<div class="top-bar no-print">
+  <div class="top-bar-left">
+    <a href="index.html" class="back-link">← Portail BTS CIEL 1</a>
+    <div class="progress-wrap" title="Cochez chaque étape validée au fil des 5 heures">
+      <span>Avancement TP 9 (5h) :</span>
+      <div class="progress-track"><div class="progress-fill" id="tpProgressFill"></div></div>
+      <span id="tpProgressText">0 / 7</span>
+    </div>
+  </div>
+  <div class="top-actions">
+    <button type="button" class="btn btn-docs" onclick="copierTrameClassroom()">📋 Copier la trame Google Docs (Classroom)</button>
+    <button type="button" class="btn btn-outline" onclick="window.print()">🖨️ Imprimer / PDF</button>
+  </div>
+</div>
+
+<!-- EN-TÊTE PRINCIPAL -->
+<div class="header-box">
+  <div class="header-kicker">BTS CIEL — 1<sup>re</sup> Année (Tronc Commun &amp; Option B) | Informatique Embarquée &amp; Langage C</div>
+  <h1>TP 9 : PICO-TO-NANO — Du MicroPython au Langage C Embarqué sur Arduino Nano (ATmega328P)</h1>
+  <p class="header-subtitle">
+    Transition méthodique du script interprété dynamique (MicroPython sur RP2040) au <strong>langage compilé statique (C / C++ sur ATmega328P 8 bits)</strong> : formats et tailles des variables (<code>sizeof</code>, <code>&lt;stdint.h&gt;</code>), structures de contrôle (<code>if/else</code>, <code>switch</code>, <code>while</code>, <code>for</code>), fonctions &amp; types de retour (passage par valeur vs référence <code>&amp;</code>), communication série bidirectionnelle et réécriture complète d'une <strong>Machine à États Finis (FSM)</strong> multitâche cadencée par <code>millis()</code> sur banc réel et sous <strong>Proteus 8</strong>.
+  </p>
+  <div class="header-meta">
+    <span class="meta-pill">⏱️ <strong>Durée :</strong> 5h00</span>
+    <span class="meta-pill">🧰 <strong>Cible :</strong> Arduino Nano v3 (ATmega328P — 16 MHz — Logique 5 V)</span>
+    <span class="meta-pill">🖥️ <strong>Simulation :</strong> Proteus 8 (VSM AVR / Virtual Terminal)</span>
+    <span class="meta-pill">⚡ <strong>Matériel :</strong> Breadboard, Boutons, LEDs, Pot. 10k, Relais Grove, TIP31C, Moteur CC</span>
+    <span class="meta-pill">📝 <strong>Livrable :</strong> Google Docs (Classroom)</span>
+  </div>
+</div>
+
+<!-- PLANIFICATION HORAIRE & RÉFÉRENTIEL BO -->
+<div class="card-block">
+  <h3 style="margin-top:0;">⏱️ Découpage Temporel des 5 Heures (La Passerelle Python &rarr; Langage C)</h3>
+  <div class="timeline-bar">
+    <a class="tl-item" href="#sec-prep"><span class="tl-time">0h00 → 0h20 (20 min)</span><strong>Étape 0</strong><br>Environnement Nano, Proteus &amp; Docs Classroom</a>
+    <a class="tl-item" href="#sec-p1"><span class="tl-time">0h20 → 1h20 (1h00)</span><strong>Partie 1</strong><br>Typage strict, formats, <code>sizeof()</code> &amp; mémoire SRAM 2 Ko</a>
+    <a class="tl-item" href="#sec-p2"><span class="tl-time">1h20 → 2h15 (55 min)</span><strong>Partie 2</strong><br>Structures de contrôle : <code>if/else</code>, <code>switch</code>, <code>while</code>, <code>for</code></a>
+    <a class="tl-item" href="#sec-p3"><span class="tl-time">2h15 → 3h05 (50 min)</span><strong>Partie 3</strong><br>Fonctions en C : Types renvoyés &amp; Passage par référence <code>&amp;</code></a>
+    <a class="tl-item" href="#sec-p4"><span class="tl-time">3h05 → 4h00 (55 min)</span><strong>Partie 4</strong><br>Communication Série bidirectionnelle &amp; Parsing de trames</a>
+    <a class="tl-item" href="#sec-p5"><span class="tl-time">4h00 → 5h00 (1h00)</span><strong>Partie 5</strong><br>FSM complète C/Arduino cadencée par <code>millis()</code> &amp; Banc Moteur</a>
+  </div>
+
+  <h3>🎯 Ancrage au Référentiel Officiel BTS CIEL (Arrêté du 25/01/2023)</h3>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:13%;">Code BO</th>
+        <th style="width:29%;">Compétence BTS CIEL</th>
+        <th style="width:58%;">Savoirs Associés (Informatique Embarquée / STI) &amp; Activités du TP 9</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C08</span></td>
+        <td><strong>Coder et interfacer en langage embarqué</strong></td>
+        <td>Passage du typage dynamique (Python) au <strong>typage statique strict en C</strong>, respect des tailles mémoires des variables primitives, allocation sur pile vs tas, écriture de fonctions robustes et structures de contrôle.</td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C04</span></td>
+        <td><strong>Analyser une structure matérielle et logicielle</strong></td>
+        <td>Architecture <strong>Harvard 8 bits (AVR ATmega328P)</strong> vs Von Neumann / ARM 32 bits (RP2040), gestion de la mémoire très restreinte (2048 octets de SRAM), cartographie des registres et périphériques internes (Timers 8/16 bits, UART matériel, CAN 10 bits).</td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C05</span></td>
+        <td><strong>Concevoir et simuler un sous-ensemble</strong></td>
+        <td>Modélisation comportementale par <strong>Machine à États Finis (FSM) énumérée (<code>enum class</code>)</strong>, boucle multitâche non-bloquante avec <code>millis()</code> (transposition de <code>ticks_ms()</code>), simulation complète sous <strong>Proteus 8 VSM</strong>.</td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C06</span></td>
+        <td><strong>Valider un système (Mesurage et essais)</strong></td>
+        <td>Instrumentation console série (115200 bauds), vérification des formats d'affichage (HEX, BIN, DEC), détection et analyse de débordements arithmétiques (<em>Integer Overflow</em>).</td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C07</span></td>
+        <td><strong>Réaliser des maquettes et prototypes</strong></td>
+        <td>Implantation soignée de l'Arduino Nano sur breadboard, raccordement de la chaîne de puissance (Relais Grove + TIP31C + Moteur CC jaune 5 V Varta) et respect des niveaux logiques 5 V.</td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C01</span></td>
+        <td><strong>Communiquer en situation professionnelle</strong></td>
+        <td>Rédaction d'un dossier technique comparatif Python ↔ C sous <strong>Google Docs (Classroom)</strong> avec justifications argumentées.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- LIVRABLE CLASSROOM + OUTILS INTERACTIFS D'ATELIER -->
+<div class="callout callout-docs" id="trame-classroom">
+  <strong style="font-size:10.5pt; color:#006468;">📄 LIVRABLE ATTENDU : Dossier de Transition C Embarqué sous Google Docs (Classroom)</strong>
+  <p style="margin:6px 0;">
+    Ouvrez le devoir <strong>« TP 9 — Du MicroPython au Langage C sur Arduino Nano »</strong> dans Google Classroom, créez votre document <strong>Google Docs</strong> vierge, cliquez sur le bouton ci-dessous puis faites <code>Ctrl + V</code> pour insérer tous les tableaux comparatifs et encadrés d'analyse :
+  </p>
+  <div class="no-print">
+    <button type="button" class="btn btn-docs" onclick="copierTrameClassroom()">📋 Copier la trame complète TP 9 pour Google Docs</button>
+    <div id="copyToast" class="toast-copy">✅ Trame TP 9 copiée ! Ouvrez votre Google Docs Classroom et faites <strong>Ctrl + V</strong>.</div>
+  </div>
+</div>
+
+<!-- MINI-OUTILS INTERACTIFS D'ATELIER -->
+<div class="tools-strip no-print">
+  <div class="mini-tool">
+    <h4>🧠 Simulateur de Tailles Mémoire C (Architecture 8 bits ATmega328P)</h4>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
+      <label>Type de variable C :<br>
+        <select id="selTypeC" style="width:100%;" onchange="simulerTypeC()">
+          <option value="bool">bool</option>
+          <option value="char">char / int8_t</option>
+          <option value="uint8_t" selected>uint8_t / byte</option>
+          <option value="int">int (sur AVR Nano !)</option>
+          <option value="int_pico">int (sur Pico / PC)</option>
+          <option value="uint16_t">uint16_t / unsigned int</option>
+          <option value="long">long / int32_t</option>
+          <option value="uint32_t">uint32_t (millis())</option>
+          <option value="float">float (IEEE 754)</option>
+          <option value="double">double (sur AVR Nano !)</option>
+        </select>
+      </label>
+      <label>Valeur test à injecter :<br>
+        <input type="number" id="inpValTest" value="255" style="width:100%;" oninput="simulerTypeC()">
+      </label>
+    </div>
+    <div class="tool-result" id="resTypeC">Taille : 1 octet (8 bits) | Plage : 0 à 255 | val + 1 = 0 (OVERFLOW !)</div>
+  </div>
+
+  <div class="mini-tool">
+    <h4>🔄 Traducteur Express : Python &rarr; C / Arduino</h4>
+    <label>Concept d'algorithmique à transposer :<br>
+      <select id="selSyntaxe" style="width:100%;" onchange="traduireSyntaxe()">
+        <option value="for_range" selected>Boucle bornée : for i in range(10)</option>
+        <option value="while_cond">Boucle conditionnelle : while x &lt; 100</option>
+        <option value="if_elif">Conditionnelle : if / elif / else</option>
+        <option value="fsm_enum">Machine à états : enum + switch</option>
+        <option value="ticks_millis">Chronométrage : ticks_ms() vs millis()</option>
+        <option value="func_ref">Fonction modifiant un paramètre</option>
+      </select>
+    </label>
+    <div class="tool-result" id="resSyntaxe" style="font-family:Consolas, monospace; font-size:8.6pt; white-space:pre-wrap; color:#0f172a;">for (int i = 0; i &lt; 10; i++) { ... }</div>
+  </div>
+</div>
+
+<!-- ===================================================================== -->
+<!-- ÉTAPE 0 : MATÉRIEL ARDUINO NANO, ARCHITECTURE AVR & ENVIRONNEMENT     -->
+<!-- ===================================================================== -->
+<h2 id="sec-prep">ÉTAPE 0 : L'Arduino Nano (ATmega328P), Environnement &amp; Schéma d'Architecture <span class="badge badge-time">20 min</span></h2>
+
+<div class="card-block">
+  <h3>0.1 De l'Interprété au Compilé : Pourquoi Passer du Python au Langage C en BTS CIEL ?</h3>
+  <p>
+    Jusqu'à présent (TP 3 à TP 8), vous programmiez le Raspberry Pi Pico en <strong>MicroPython</strong> : vos scripts <code>.py</code> étaient interprétés à la volée par une machine virtuelle embarquée.
+    Ce fonctionnement offre une grande souplesse, mais au prix d'une <strong>consommation mémoire colossale</strong> (plusieurs centaines de kilo-octets) et d'un <strong>temps d'exécution imprévisible</strong>.
+    <br>Dans l'industrie des objets communicants et de l'électronique de puissance (épreuves E4, E5 et E6 du BTS CIEL), la majorité des microcontrôleurs cibles sont programmés en <strong>langage C / C++ natif</strong> :
+    le code est traduit directement en <strong>instructions binaires machine</strong> par le compilateur (<code>avr-gcc</code>), offrant une vitesse d'exécution maximale, un déterminisme temporel strict et la capacité de tourner sur des puces économiques ne disposant que de <strong>2048 octets de mémoire vive</strong> !
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Critère technologique</th>
+        <th class="col-py">MicroPython sur Raspberry Pi Pico (RP2040)</th>
+        <th class="col-c">Langage C sur Arduino Nano (ATmega328P)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Mode d'exécution</strong></td>
+        <td><strong>Interprété</strong> (Bytecode exécuté par la VM Python)</td>
+        <td><strong>Compilé natif</strong> (Code machine binaire direct)</td>
+      </tr>
+      <tr>
+        <td><strong>Typage des variables</strong></td>
+        <td><strong>Dynamique</strong> (le type dépend de la valeur à l'instant <i>t</i>)</td>
+        <td><strong>Statique strict</strong> (le type est figé à la compilation)</td>
+      </tr>
+      <tr>
+        <td><strong>Cœur &amp; Fréquence</strong></td>
+        <td>Dual-Core ARM Cortex-M0+ (32 bits) — 133 MHz</td>
+        <td><strong>AVR RISC 8 bits — 16 MHz</strong></td>
+      </tr>
+      <tr>
+        <td><strong>Tension logique E/S</strong></td>
+        <td><strong>3,3 V</strong> (Non tolérant 5 V !)</td>
+        <td><strong>5,0 V</strong> (Idéal pour piloter directement la puissance !)</td>
+      </tr>
+      <tr>
+        <td><strong>Mémoire SRAM (RAM)</strong></td>
+        <td>264 Ko (Très spacieux)</td>
+        <td><strong>2 Ko (2048 octets seulement !)</strong> &rarr; Rigueur absolue requise !</td>
+      </tr>
+      <tr>
+        <td><strong>Mémoire Flash (Code)</strong></td>
+        <td>2 Mo externe SPI</td>
+        <td><strong>32 Ko</strong> intégrée</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- SVG 1 : BROCHAGE ARDUINO NANO & ARCHITECTURE ATMEGA328P -->
+  <div class="svg-card">
+    <svg viewBox="0 0 920 310" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Brochage de l'Arduino Nano et architecture interne de l'ATmega328P">
+      <rect x="0" y="0" width="920" height="310" fill="#f8fafc" rx="8"/>
+
+      <!-- Bloc Gauche : Carte Arduino Nano (DIP-30) -->
+      <rect x="14" y="14" width="460" height="282" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+      <text x="244" y="36" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11.5" font-weight="bold" fill="#0b3c5d">Arduino Nano v3 (Vue de dessus — ATmega328P / 5 V)</text>
+
+      <!-- PCB Bleu Arduino Nano -->
+      <rect x="130" y="48" width="228" height="236" rx="8" fill="#00979d" stroke="#006468" stroke-width="2"/>
+      <!-- Connecteur Mini-USB haut -->
+      <rect x="210" y="42" width="68" height="24" rx="3" fill="#cbd5e1" stroke="#475569" stroke-width="1.5"/>
+      <text x="244" y="58" text-anchor="middle" font-family="Consolas, monospace" font-size="8" fill="#1e293b">USB Mini-B</text>
+
+      <!-- Puce ATmega328P TQFP-32 centrale inclinée/carrée -->
+      <rect x="214" y="132" width="60" height="60" rx="4" fill="#1e293b" stroke="#0f172a" stroke-width="1.5"/>
+      <circle cx="224" cy="142" r="3" fill="#94a3b8"/>
+      <text x="244" y="162" text-anchor="middle" font-family="Consolas, monospace" font-size="7.5" font-weight="bold" fill="#f8fafc">ATmega</text>
+      <text x="244" y="174" text-anchor="middle" font-family="Consolas, monospace" font-size="7.5" font-weight="bold" fill="#fde047">328P</text>
+
+      <!-- Bouton Reset central -->
+      <circle cx="244" cy="98" r="8" fill="#e2e8f0" stroke="#475569" stroke-width="1.5"/>
+      <circle cx="244" cy="98" r="4" fill="#ef4444"/>
+
+      <!-- Broches Gauche (1 à 15 : D1/TX à D12) -->
+      <text x="122" y="78" text-anchor="end" font-family="Consolas, monospace" font-size="8.5" fill="#475569">D1/TX [1]</text>
+      <text x="122" y="98" text-anchor="end" font-family="Consolas, monospace" font-size="8.5" fill="#475569">D0/RX [2]</text>
+      <text x="122" y="118" text-anchor="end" font-family="Consolas, monospace" font-size="8.5" fill="#b91c1c">/RESET [3]</text>
+      <text x="122" y="138" text-anchor="end" font-family="Consolas, monospace" font-size="8.5" fill="#334155">GND [4]</text>
+      <text x="122" y="158" text-anchor="end" font-family="Consolas, monospace" font-size="8.5" font-weight="bold" fill="#0f766e">D2 (INT0) [5] ◄ BP</text>
+      <text x="122" y="178" text-anchor="end" font-family="Consolas, monospace" font-size="8.5" font-weight="bold" fill="#15803d">D3 (PWM) [6] ◄ LED V</text>
+      <text x="122" y="198" text-anchor="end" font-family="Consolas, monospace" font-size="8.5" font-weight="bold" fill="#b91c1c">D4 [7] ◄ LED R</text>
+      <text x="122" y="218" text-anchor="end" font-family="Consolas, monospace" font-size="8.5" fill="#0284c7">D5 (PWM) [8]</text>
+      <text x="122" y="238" text-anchor="end" font-family="Consolas, monospace" font-size="8.5" fill="#0284c7">D6 (PWM) [9]</text>
+      <text x="122" y="258" text-anchor="end" font-family="Consolas, monospace" font-size="8.5" fill="#475569">D7 [10]</text>
+
+      <!-- Broches Droite (16 à 30 : D13 à VIN) -->
+      <text x="366" y="78" font-family="Consolas, monospace" font-size="8.5" fill="#dc2626">[30] VIN (7-12V)</text>
+      <text x="366" y="98" font-family="Consolas, monospace" font-size="8.5" fill="#334155">[29] GND</text>
+      <text x="366" y="118" font-family="Consolas, monospace" font-size="8.5" fill="#b91c1c">[28] /RESET</text>
+      <text x="366" y="138" font-family="Consolas, monospace" font-size="8.5" font-weight="bold" fill="#dc2626">[27] +5V (VCC)</text>
+      <text x="366" y="158" font-family="Consolas, monospace" font-size="8.5" font-weight="bold" fill="#d97706">[19] A0 ◄ Pot. 10k</text>
+      <text x="366" y="178" font-family="Consolas, monospace" font-size="8.5" fill="#475569">[18..14] A1..A7</text>
+      <text x="366" y="198" font-family="Consolas, monospace" font-size="8.5" font-weight="bold" fill="#7c3aed">[13] D8 ◄ Relais</text>
+      <text x="366" y="218" font-family="Consolas, monospace" font-size="8.5" font-weight="bold" fill="#0284c7">[12] D9 (PWM) ◄ TIP31C</text>
+      <text x="366" y="238" font-family="Consolas, monospace" font-size="8.5" fill="#475569">[11] D10 (PWM)</text>
+      <text x="366" y="258" font-family="Consolas, monospace" font-size="8.5" fill="#475569">[16] D13 (LED L)</text>
+
+      <!-- Bloc Droite : Architecture Interne AVR 8 bits -->
+      <rect x="486" y="14" width="420" height="282" rx="8" fill="#ffffff" stroke="#00979d" stroke-width="1.6"/>
+      <text x="696" y="36" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11.5" font-weight="bold" fill="#006468">Architecture Interne ATmega328P (Harvard RISC 8 bits)</text>
+
+      <!-- CPU Core -->
+      <rect x="506" y="56" width="180" height="84" rx="6" fill="#1e293b" stroke="#0f172a" stroke-width="1.5"/>
+      <text x="596" y="78" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10.5" font-weight="bold" fill="#38bdf8">Cœur CPU AVR (16 MHz)</text>
+      <text x="596" y="96" text-anchor="middle" font-family="Consolas, monospace" font-size="8.5" fill="#94a3b8">ALU 8 bits + Registres R0..R31</text>
+      <text x="596" y="112" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.2" fill="#86efac">1 instruction / cycle d'horloge</text>
+      <text x="596" y="128" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.2" fill="#fde047">16 MIPS à 16 MHz</text>
+
+      <!-- Périphériques -->
+      <rect x="704" y="56" width="186" height="84" rx="6" fill="#f0fdfa" stroke="#00979d" stroke-width="1.5"/>
+      <text x="797" y="76" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#006468">Périphériques Internes</text>
+      <text x="714" y="94" font-family="Consolas, monospace" font-size="8" fill="#334155">&bull; Timers 8b (T0,T2) + 16b (T1)</text>
+      <text x="714" y="108" font-family="Consolas, monospace" font-size="8" fill="#334155">&bull; CAN 10 bits 8 voies (A0..A7)</text>
+      <text x="714" y="122" font-family="Consolas, monospace" font-size="8" fill="#334155">&bull; UART Matériel (D0/D1)</text>
+      <text x="714" y="136" font-family="Consolas, monospace" font-size="8" fill="#334155">&bull; Interr. Matérielles INT0/INT1</text>
+
+      <!-- Mémoires (Flash, SRAM, EEPROM) -->
+      <rect x="506" y="152" width="384" height="132" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+      <text x="698" y="172" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#0b3c5d">3 Espaces Mémoire Séparés (Architecture Harvard)</text>
+
+      <rect x="518" y="184" width="114" height="88" rx="4" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.2"/>
+      <text x="575" y="202" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9" font-weight="bold" fill="#1e40af">FLASH (ROM)</text>
+      <text x="575" y="222" text-anchor="middle" font-family="Consolas, monospace" font-size="12" font-weight="bold" fill="#1d4ed8">32 Ko</text>
+      <text x="575" y="240" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="7.8" fill="#475569">Stocke le code compilé</text>
+      <text x="575" y="254" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="7.8" fill="#475569">+ constantes F("...")</text>
+
+      <rect x="641" y="184" width="114" height="88" rx="4" fill="#fee2e2" stroke="#dc2626" stroke-width="1.4"/>
+      <text x="698" y="202" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9" font-weight="bold" fill="#b91c1c">SRAM (RAM)</text>
+      <text x="698" y="222" text-anchor="middle" font-family="Consolas, monospace" font-size="12" font-weight="bold" fill="#dc2626">2 Ko</text>
+      <text x="698" y="240" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="7.8" font-weight="bold" fill="#991b1b">2048 octets !</text>
+      <text x="698" y="254" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="7.8" fill="#475569">Variables, Pile, Tas</text>
+
+      <rect x="764" y="184" width="114" height="88" rx="4" fill="#fef3c7" stroke="#d97706" stroke-width="1.2"/>
+      <text x="821" y="202" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9" font-weight="bold" fill="#92400e">EEPROM</text>
+      <text x="821" y="222" text-anchor="middle" font-family="Consolas, monospace" font-size="12" font-weight="bold" fill="#b45309">1 Ko</text>
+      <text x="821" y="240" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="7.8" fill="#475569">Données non volatiles</text>
+      <text x="821" y="254" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="7.8" fill="#475569">(paramètres réseau/FSM)</text>
+    </svg>
+    <div class="svg-caption">Figure 0.1 — Brochage physique de l'Arduino Nano (DIP-30) et architecture interne Harvard de l'ATmega328P (Flash 32 Ko vs SRAM 2 Ko).</div>
+  </div>
+
+  <div class="student-answer">
+    <strong>💡 Question d'explication de code n°0 (La structure minimale Arduino — Google Docs) :</strong><br>
+    En MicroPython, le code s'exécute séquentiellement du haut vers le bas du fichier. En C Arduino, un programme minimal contient obligatoirement deux fonctions fondamentales :
+    <pre><code><span class="typ">void</span> <span class="fu">setup</span>() {
+    <span class="co">// Instructions exécutées une seule fois au démarrage</span>
+}
+
+<span class="typ">void</span> <span class="fu">loop</span>() {
+    <span class="co">// Instructions répétées en boucle infinie</span>
+}</code></pre>
+    <strong>Questions :</strong>
+    <br>1. Que signifie le mot-clé <code>void</code> placé devant <code>setup()</code> et <code>loop()</code> ? Que renvoient ces deux fonctions ?
+    <br>2. En langage C standard (sur PC ou Linux), le point d'entrée d'un programme s'appelle obligatoirement <code>int main()</code>. En inspectant les fichiers sources du cœur Arduino, expliquez ce que fait la fonction <code>main()</code> cachée en coulisses avant et pendant l'appel à <code>loop()</code>.
+  </div>
+
+  <label class="step-check no-print">
+    <input type="checkbox" class="tp-step-cb" data-step="0" onchange="updateProgress()">
+    <span>Étape 0 validée : Trame Google Docs copiée dans Classroom, Arduino IDE / Proteus 8 configuré et architecture 8 bits ATmega328P comprise.</span>
+  </label>
+</div>
+
+<!-- ===================================================================== -->
+<!-- PARTIE 1 : TYPAGE STRICT, SIZEOF, OVERFLOW ET GESTION MÉMOIRE (2 KO) -->
+<!-- ===================================================================== -->
+<h2 id="sec-p1">PARTIE 1 : Typage Statique Strict, Format des Variables, <code>sizeof()</code> &amp; Débordement Binaire <span class="badge badge-time">1h00</span></h2>
+
+<div class="card-block">
+  <h3>1.1 Le Choc du Typage Statique : Python vs C</h3>
+  <p>
+    En Python, les variables n'ont pas de type déclaré : c'est la valeur qui porte le type, et une même variable peut changer de type à tout instant (<code>x = 10</code> puis <code>x = "Capteur OK"</code>).
+    En C, <strong>le type de chaque variable doit être impérativement spécifié avant la compilation</strong>. Le compilateur réserve alors un nombre exact d'octets en mémoire vive (SRAM) qui ne pourra jamais changer.
+  </p>
+
+  <h3>1.2 Tableau de Référence des Types Primitifs en C Arduino (Architecture AVR 8 bits)</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Type C standard</th>
+        <th>Type équivalent <code>&lt;stdint.h&gt;</code></th>
+        <th class="center col-c">Taille mémoire <code>sizeof()</code></th>
+        <th>Plage de valeurs autorisée (sur ATmega328P)</th>
+        <th class="col-py">Comparaison Raspberry Pi Pico (RP2040) / Python</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>bool</code> / <code>boolean</code></td>
+        <td><code>bool</code></td>
+        <td class="center"><strong>1 octet</strong> (8 bits)</td>
+        <td><code>false</code> (0) ou <code>true</code> (1)</td>
+        <td>Identique (Python <code>bool</code>)</td>
+      </tr>
+      <tr>
+        <td><code>char</code></td>
+        <td><code>int8_t</code></td>
+        <td class="center"><strong>1 octet</strong> (8 bits)</td>
+        <td>-128 à +127 (ou caractère ASCII 'A', 'Z'...)</td>
+        <td>1 octet</td>
+      </tr>
+      <tr>
+        <td><code>byte</code> / <code>unsigned char</code></td>
+        <td><code>uint8_t</code></td>
+        <td class="center"><strong>1 octet</strong> (8 bits)</td>
+        <td><strong>0 à 255</strong> (registres matériels, PWM 8b)</td>
+        <td>1 octet</td>
+      </tr>
+      <tr>
+        <td><code>int</code></td>
+        <td><code>int16_t</code></td>
+        <td class="center" style="background:#fee2e2; color:#b91c1c; font-weight:bold;">2 octets (16 bits)</td>
+        <td><strong>-32 768 à +32 767</strong></td>
+        <td><strong>PIÈGE : Sur Pico / PC, <code>int</code> fait 4 octets !</strong></td>
+      </tr>
+      <tr>
+        <td><code>unsigned int</code></td>
+        <td><code>uint16_t</code></td>
+        <td class="center"><strong>2 octets</strong> (16 bits)</td>
+        <td><strong>0 à 65 535</strong> (codes CAN 10 bits, compteurs)</td>
+        <td>Sur Pico / PC : 4 octets</td>
+      </tr>
+      <tr>
+        <td><code>long</code></td>
+        <td><code>int32_t</code></td>
+        <td class="center"><strong>4 octets</strong> (32 bits)</td>
+        <td>-2 147 483 648 à +2 147 483 647</td>
+        <td>Identique (4 octets)</td>
+      </tr>
+      <tr>
+        <td><code>unsigned long</code></td>
+        <td><code>uint32_t</code></td>
+        <td class="center"><strong>4 octets</strong> (32 bits)</td>
+        <td><strong>0 à 4 294 967 295</strong> (OBLIGATOIRE pour <code>millis()</code> !)</td>
+        <td>Identique (4 octets)</td>
+      </tr>
+      <tr>
+        <td><code>float</code></td>
+        <td><code>float</code></td>
+        <td class="center"><strong>4 octets</strong> (32 bits)</td>
+        <td>&plusmn;3,4 &times; 10<sup>38</sup> (6 à 7 chiffres significatifs)</td>
+        <td>IEEE 754 simple précision</td>
+      </tr>
+      <tr>
+        <td><code>double</code></td>
+        <td><code>double</code></td>
+        <td class="center" style="background:#fee2e2; color:#b91c1c; font-weight:bold;">4 octets (32 bits)</td>
+        <td><strong>SUR AVR, <code>double</code> EST IDENTIQUE À <code>float</code> !</strong></td>
+        <td><strong>Sur Pico / PC : <code>double</code> fait 8 octets (64 bits) !</strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- SVG 2 : DÉBORDEMENT BINAIRE (OVERFLOW) & MAPPING MÉMOIRE SRAM 2048 OCTETS -->
+  <div class="svg-card">
+    <svg viewBox="0 0 920 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Débordement binaire 8 bits et cartographie SRAM 2048 octets">
+      <rect x="0" y="0" width="920" height="280" fill="#f8fafc" rx="8"/>
+
+      <!-- Bloc Gauche : Le Phénomène d'Integer Overflow (Débordement Binaire) -->
+      <rect x="14" y="14" width="440" height="252" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+      <text x="234" y="36" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11.5" font-weight="bold" fill="#0b3c5d">Phénomène d'Integer Overflow (Débordement sur uint8_t)</text>
+
+      <!-- Roue ou échelle circulaire 0..255 -->
+      <circle cx="130" cy="145" r="70" fill="#f0fdfa" stroke="#00979d" stroke-width="2.5"/>
+      <text x="130" y="92" text-anchor="middle" font-family="Consolas, monospace" font-size="10" font-weight="bold" fill="#dc2626">255 (0xFF)</text>
+      <text x="130" y="80" text-anchor="middle" font-family="Consolas, monospace" font-size="7.5" fill="#7f1d1d">[1111 1111]</text>
+      <text x="130" y="210" text-anchor="middle" font-family="Consolas, monospace" font-size="10" font-weight="bold" fill="#15803d">0 (0x00)</text>
+      <text x="130" y="222" text-anchor="middle" font-family="Consolas, monospace" font-size="7.5" fill="#14532d">[0000 0000]</text>
+      <text x="195" y="150" text-anchor="middle" font-family="Consolas, monospace" font-size="9" fill="#0284c7">64</text>
+      <text x="65" y="150" text-anchor="middle" font-family="Consolas, monospace" font-size="9" fill="#0284c7">192</text>
+
+      <!-- Flèche circulaire de passage 255 -> 0 -->
+      <path d="M 120 76 A 70 70 0 0 1 140 76" fill="none" stroke="#dc2626" stroke-width="3"/>
+      <polygon points="144,79 138,72 136,82" fill="#dc2626"/>
+      <text x="130" y="142" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9" font-weight="bold" fill="#b91c1c">+ 1</text>
+      <text x="130" y="156" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8" fill="#7f1d1d">DÉBORDE !</text>
+
+      <!-- Encadré explicatif à droite de la roue -->
+      <rect x="225" y="60" width="215" height="186" rx="5" fill="#fef2f2" stroke="#fca5a5" stroke-width="1.2"/>
+      <text x="332" y="80" text-anchor="middle" font-family="Consolas, monospace" font-size="9.5" font-weight="bold" fill="#991b1b">uint8_t x = 255;</text>
+      <text x="332" y="98" text-anchor="middle" font-family="Consolas, monospace" font-size="9.5" font-weight="bold" fill="#991b1b">x = x + 1; // x devient 0 !</text>
+      <line x1="235" y1="108" x2="430" y2="108" stroke="#fca5a5" stroke-width="1"/>
+      <text x="238" y="126" font-family="Segoe UI, sans-serif" font-size="8.3" fill="#334155">&bull; <strong>En Python :</strong> entier arbitraire,</text>
+      <text x="238" y="140" font-family="Segoe UI, sans-serif" font-size="8.3" fill="#334155">&nbsp; <code>255 + 1</code> donne <code>256</code> sans fin.</text>
+      <text x="238" y="160" font-family="Segoe UI, sans-serif" font-size="8.3" fill="#334155">&bull; <strong>En C 8 bits :</strong> la retenue est</text>
+      <text x="238" y="174" font-family="Segoe UI, sans-serif" font-size="8.3" fill="#334155">&nbsp; perdue (flag Carry du CPU) !</text>
+      <text x="238" y="196" font-family="Segoe UI, sans-serif" font-size="8.3" font-weight="bold" fill="#b91c1c">&bull; Bug historique : fusée Ariane 5</text>
+      <text x="238" y="210" font-family="Segoe UI, sans-serif" font-size="8" fill="#7f1d1d">&nbsp; (dépassement 64b vers 16b !)</text>
+
+      <!-- Bloc Droite : Cartographie de la SRAM 2 Ko (Heap vs Stack collision) -->
+      <rect x="470" y="14" width="436" height="252" rx="8" fill="#ffffff" stroke="#00979d" stroke-width="1.6"/>
+      <text x="688" y="36" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11.5" font-weight="bold" fill="#006468">Cartographie de la SRAM (2048 Octets) : Danger de Collision !</text>
+
+      <!-- Représentation mémoire verticale 0x0100 à 0x08FF -->
+      <rect x="496" y="58" width="130" height="192" rx="4" fill="#f8fafc" stroke="#475569" stroke-width="1.5"/>
+      <rect x="496" y="58" width="130" height="42" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+      <text x="561" y="76" text-anchor="middle" font-family="Consolas, monospace" font-size="8.5" font-weight="bold" fill="#1e40af">.data &amp; .bss</text>
+      <text x="561" y="90" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="7.5" fill="#1e40af">Variables globales</text>
+
+      <rect x="496" y="100" width="130" height="34" fill="#fef3c7" stroke="#d97706" stroke-width="1"/>
+      <text x="561" y="116" text-anchor="middle" font-family="Consolas, monospace" font-size="8.5" font-weight="bold" fill="#92400e">Tas (Heap &darr;)</text>
+      <text x="561" y="128" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="7.2" fill="#78350f">malloc() / String</text>
+
+      <!-- Zone libre critique -->
+      <rect x="496" y="134" width="130" height="66" fill="#f0fdf4" stroke="#86efac" stroke-width="1" stroke-dasharray="3,2"/>
+      <text x="561" y="164" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9" font-weight="bold" fill="#15803d">SRAM LIBRE</text>
+      <text x="561" y="178" text-anchor="middle" font-family="Consolas, monospace" font-size="8" fill="#166534">SP &larr;&rarr; brkval</text>
+
+      <rect x="496" y="200" width="130" height="50" fill="#fee2e2" stroke="#dc2626" stroke-width="1"/>
+      <text x="561" y="218" text-anchor="middle" font-family="Consolas, monospace" font-size="8.5" font-weight="bold" fill="#b91c1c">Pile (Stack &uarr;)</text>
+      <text x="561" y="232" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="7.2" fill="#7f1d1d">Variables locales,</text>
+      <text x="561" y="244" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="7.2" fill="#7f1d1d">retours fonctions</text>
+
+      <!-- Adresses hexadécimales -->
+      <text x="490" y="66" text-anchor="end" font-family="Consolas, monospace" font-size="7.5" fill="#64748b">0x0100</text>
+      <text x="490" y="248" text-anchor="end" font-family="Consolas, monospace" font-size="7.5" fill="#64748b">0x08FF</text>
+
+      <!-- Explications à droite -->
+      <rect x="640" y="58" width="250" height="192" rx="5" fill="#f0f9ff" stroke="#bae6fd" stroke-width="1.2"/>
+      <text x="765" y="78" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9" font-weight="bold" fill="#0369a1">Règles Vitales en C Embarqué :</text>
+      <text x="648" y="100" font-family="Segoe UI, sans-serif" font-size="8.2" fill="#334155">1. <strong>Bannir l'objet <code>String</code> :</strong> il fragmente</text>
+      <text x="648" y="114" font-family="Segoe UI, sans-serif" font-size="8.2" fill="#334155">&nbsp;&nbsp; la Heap et provoque un crash fatal.</text>
+      <text x="648" y="134" font-family="Segoe UI, sans-serif" font-size="8.2" fill="#334155">2. <strong>Préférer les tableaux <code>char[]</code></strong> fixes.</text>
+      <text x="648" y="154" font-family="Segoe UI, sans-serif" font-size="8.2" fill="#334155">3. <strong>Utiliser la macro <code>F()</code> :</strong></text>
+      <text x="648" y="170" font-family="Consolas, monospace" font-size="8.5" font-weight="bold" fill="#006468">Serial.print(F("Texte"));</text>
+      <text x="648" y="186" font-family="Segoe UI, sans-serif" font-size="8" fill="#475569">Garde le texte en mémoire Flash (32 Ko)</text>
+      <text x="648" y="200" font-family="Segoe UI, sans-serif" font-size="8" fill="#475569">au lieu de le copier dans la SRAM (2 Ko) !</text>
+      <text x="648" y="224" font-family="Segoe UI, sans-serif" font-size="8.2" font-weight="bold" fill="#dc2626">&rarr; Stack Overflow si Pile et Tas se croisent !</text>
+    </svg>
+    <div class="svg-caption">Figure 1.1 — Débordement arithmétique 8 bits (255 &rarr; 0) et cartographie SRAM de l'ATmega328P (Heap &darr; vs Stack &uarr;).</div>
+  </div>
+
+  <h3>1.3 Questions d'Explication de Code (À Rédiger sur votre Google Docs)</h3>
+
+  <div class="student-answer">
+    <strong>💡 Question d'explication de code n°1 (Analyse de boucle et overflow) :</strong><br>
+    Observez attentivement le fragment de code C suivant téléversé sur l'Arduino Nano :
+    <pre><code><span class="typ">uint8_t</span> compteur = <span class="dv">250</span>;
+
+<span class="kw">for</span> (<span class="typ">int</span> i = <span class="dv">0</span>; i &lt; <span class="dv">10</span>; i++) {
+    compteur = compteur + <span class="dv">1</span>;
+    Serial.print(<span class="st">"i="</span>); Serial.print(i);
+    Serial.print(<span class="st">" -&gt; compteur="</span>); Serial.println(compteur);
+}</code></pre>
+    <strong>Questions :</strong>
+    <br>1. Donnez la liste exacte des 10 valeurs qui vont s'afficher sur le moniteur série pour la variable <code>compteur</code> (de <code>i=0</code> à <code>i=9</code>).
+    <br>2. Expliquez physiquement ce qui se passe au niveau des 8 bits du registre interne du microcontrôleur lorsque <code>compteur</code> passe de 255 à l'itération suivante.
+    <br>3. Que se passerait-il si le développeur écrivait par mégarde : <code>for (uint8_t i = 10; i &gt;= 0; i--) { ... }</code> ? Pourquoi cette boucle ne s'arrêtera-t-elle JAMAIS ?
+  </div>
+
+  <div class="student-answer">
+    <strong>💡 Question d'explication de code n°2 (Économie de mémoire SRAM &amp; macro <code>F()</code>) :</strong><br>
+    Dans le sketch officiel <a href="sketch_nano_synthese_complete.ino">sketch_nano_synthese_complete.ino</a>, observez la ligne suivante :
+    <pre><code>Serial.println(<span class="fu">F</span>(<span class="st">"🚨 [ISR MATÉRIELLE] ARRÊT D'URGENCE COUP-DE-POING DÉCLENCHÉ !"</span>));</code></pre>
+    <strong>Questions :</strong>
+    <br>1. Quelle est la différence fondamentale d'allocation mémoire entre <code>Serial.println("Mon texte")</code> et <code>Serial.println(F("Mon texte"))</code> ?
+    <br>2. Sachant que la chaîne ci-dessus compte 64 caractères (avec le caractère de fin de chaîne <code>'\0'</code>), calculez le pourcentage de la mémoire SRAM totale de l'ATmega328P (2048 octets) qui serait gaspillé par ce seul message si la macro <code>F()</code> n'était pas employée !
+  </div>
+
+  <label class="step-check no-print">
+    <input type="checkbox" class="tp-step-cb" data-step="1" onchange="updateProgress()">
+    <span>Partie 1 validée : Tableau des types C complété, démonstration de l'overflow réalisée et questions d'analyse 1 et 2 rédigées.</span>
+  </label>
+</div>
+
+<!-- ===================================================================== -->
+<!-- PARTIE 2 : STRUCTURES DE CONTRÔLE — CONDITIONNELLES & BOUCLES C      -->
+<!-- ===================================================================== -->
+<h2 id="sec-p2">PARTIE 2 : Structures de Contrôle : <code>if/else</code>, <code>switch/case</code>, <code>while</code> &amp; <code>for</code> <span class="badge badge-time">55 min</span></h2>
+
+<div class="card-block">
+  <h3>2.1 Syntaxe Comparée des Structures Algorithmiques : Python ↔ C Arduino</h3>
+  <p>
+    En Python, la structure des blocs repose sur l'<strong>indentation invisible</strong> (tabulations / espaces) et les deux-points <code>:</code>.
+    En C, <strong>l'indentation n'est que visuelle pour le programmeur</strong> : le compilateur délimite strictement chaque bloc d'instructions par des <strong>accolades ouvrantes et fermantes <code>{ }</code></strong>, chaque instruction simple se termine obligatoirement par un <strong>point-virgule <code>;</code></strong>, et toute condition doit être placée entre <strong>parenthèses <code>( )</code></strong>.
+  </p>
+
+  <div class="dual-grid">
+    <div class="protocol-box protocol-python">
+      <h4>🐍 Syntaxe MicroPython (RP2040)</h4>
+      <pre><code><span class="co"># Conditionnelle à plusieurs branches</span>
+<span class="kw">if</span> tension &gt; <span class="dv">3.0</span>:
+    relais.<span class="fu">value</span>(<span class="dv">1</span>)
+<span class="kw">elif</span> tension &gt; <span class="dv">1.5</span>:
+    relais.<span class="fu">value</span>(<span class="dv">0</span>)
+<span class="kw">else</span>:
+    alarme.<span class="fu">value</span>(<span class="dv">1</span>)
+
+<span class="co"># Boucle bornée (range)</span>
+<span class="kw">for</span> i <span class="kw">in</span> <span class="fu">range</span>(<span class="dv">0</span>, <span class="dv">10</span>, <span class="dv">2</span>):
+    <span class="fu">print</span>(i)
+
+<span class="co"># Boucle conditionnelle</span>
+<span class="kw">while</span> en_marche:
+    mesurer()</code></pre>
+    </div>
+
+    <div class="protocol-box protocol-c">
+      <h4>⚙️ Syntaxe Langage C / Arduino (ATmega328P)</h4>
+      <pre><code><span class="co">// Conditionnelle à plusieurs branches</span>
+<span class="kw">if</span> (tension &gt; <span class="dv">3.0f</span>) {
+    digitalWrite(PIN_RELAIS, HIGH);
+} <span class="kw">else if</span> (tension &gt; <span class="dv">1.5f</span>) {
+    digitalWrite(PIN_RELAIS, LOW);
+} <span class="kw">else</span> {
+    digitalWrite(PIN_ALARME, HIGH);
+}
+
+<span class="co">// Boucle bornée (initialisation; condition; incrément)</span>
+<span class="kw">for</span> (<span class="typ">uint8_t</span> i = <span class="dv">0</span>; i &lt; <span class="dv">10</span>; i += <span class="dv">2</span>) {
+    Serial.println(i);
+}
+
+<span class="co">// Boucle conditionnelle</span>
+<span class="kw">while</span> (enMarche) {
+    mesurer();
+}</code></pre>
+    </div>
+  </div>
+
+  <h3>2.2 La Sélection Multiple : L'Instruction <code>switch / case</code></h3>
+  <p>
+    En C embarqué, lorsque vous testez une variable entière ou énumérée prenant plusieurs états discrets, vous devez privilégier l'instruction <strong><code>switch / case</code></strong> plutôt qu'une cascade de <code>if / else if</code> :
+    le compilateur <code>avr-gcc</code> génère alors une table de saut direct en mémoire Flash (<em>Jump Table</em>), exécutant la transition en un seul cycle d'horloge (62,5 ns) sans évaluer séquentiellement chaque condition !
+  </p>
+
+  <h3>2.3 Questions d'Explication de Code (Structures de Contrôle)</h3>
+
+  <div class="student-answer">
+    <strong>💡 Question d'explication de code n°3 (Le piège diabolique de l'affectation dans un <code>if</code>) :</strong><br>
+    Un étudiant de BTS CIEL souhaite tester si le bouton poussoir de sécurité est enfoncé. Il écrit :
+    <pre><code><span class="typ">bool</span> boutonAppuye = <span class="kw">false</span>;
+
+<span class="co">// L'étudiant tape par erreur un seul signe '=' :</span>
+<span class="kw">if</span> (boutonAppuye = <span class="kw">true</span>) {
+    Serial.println(<span class="fu">F</span>(<span class="st">"Arrêt d'urgence déclenché !"</span>));
+    couperMoteur();
+}</code></pre>
+    <strong>Questions :</strong>
+    <br>1. Que fait exactement l'instruction <code>(boutonAppuye = true)</code> avec un seul signe égal ? Pourquoi le message s'affiche-t-il TOUJOURS, même si le bouton n'a jamais été touché ?
+    <br>2. Pourquoi le compilateur C ne génère-t-il souvent qu'un simple avertissement (<em>warning</em>) au lieu d'une erreur bloquante ?
+    <br>3. Quelle est la syntaxe exacte pour tester l'égalité logique ? Donnez également l'astuce professionnelle dite « Yoda Condition » (ex: <code>if (true == boutonAppuye)</code>) qui empêche formellement cette erreur de compilation.
+  </div>
+
+  <div class="student-answer">
+    <strong>💡 Question d'explication de code n°4 (L'omission du <code>break;</code> dans un <code>switch</code>) :</strong><br>
+    Observez le fragment d'aiguillage suivant extrait d'un décodeur de commande :
+    <pre><code><span class="typ">uint8_t</span> modeVitesse = <span class="dv">1</span>;
+
+<span class="kw">switch</span> (modeVitesse) {
+    <span class="kw">case</span> <span class="dv">1</span>:
+        Serial.println(<span class="fu">F</span>(<span class="st">"Vitesse LENTE (30%)"</span>));
+        <span class="co">// &lt;--- Omission volontaire de l'instruction break;</span>
+    <span class="kw">case</span> <span class="dv">2</span>:
+        Serial.println(<span class="fu">F</span>(<span class="st">"Vitesse RAPIDE (80%)"</span>));
+        <span class="kw">break</span>;
+    <span class="kw">default</span>:
+        Serial.println(<span class="fu">F</span>(<span class="st">"Vitesse INCONNUE"</span>));
+        <span class="kw">break</span>;
+}</code></pre>
+    <strong>Questions :</strong>
+    <br>1. Quel sera le texte exact imprimé sur la console si <code>modeVitesse == 1</code> ?
+    <br>2. Expliquez le phénomène de « cascade » (<em>Fall-Through</em>) en C. Dans quel cas rare ce comportement est-il délibérément recherché par un développeur ?
+  </div>
+
+  <label class="step-check no-print">
+    <input type="checkbox" class="tp-step-cb" data-step="2" onchange="updateProgress()">
+    <span>Partie 2 validée : Syntaxe C des boucles for/while et du switch maîtrisée, questions d'analyse 3 et 4 rédigées.</span>
+  </label>
+</div>
+
+<!-- ===================================================================== -->
+<!-- PARTIE 3 : FONCTIONS EN C — RETOURS TYPÉS ET PASSAGE PAR RÉFÉRENCE   -->
+<!-- ===================================================================== -->
+<h2 id="sec-p3">PARTIE 3 : Fonctions en C : Types Renvoyés &amp; Passage par Référence <code>&amp;</code> <span class="badge badge-time">50 min</span></h2>
+
+<div class="card-block">
+  <h3>3.1 Anatomie d'une Fonction C vs Fonction Python</h3>
+  <p>
+    En Python, une fonction commence par <code>def nom(arg1, arg2):</code> sans préciser ce qu'elle reçoit ni ce qu'elle renvoie.
+    En langage C, <strong>le type renvoyé par la fonction doit obligatoirement précéder son nom</strong>, et chaque paramètre d'entrée doit posséder son type strict :
+  </p>
+  <div class="code-wrapper">
+    <pre><code><span class="co">// Prototype canonique en langage C</span>
+<span class="typ">type_renvoye</span> <span class="fu">nomFonction</span>(<span class="typ">type_param1</span> param1, <span class="typ">type_param2</span> param2) {
+    <span class="co">// Corps de la fonction</span>
+    <span class="kw">return</span> valeur_du_bon_type;
+}</code></pre>
+  </div>
+
+  <h3>3.2 Passage par Valeur vs Passage par Référence (L'Opérateur <code>&amp;</code>)</h3>
+  <p>
+    C'est la différence la plus fondamentale entre le C et le Python :
+    <br>&bull; <strong>Par valeur (par défaut) :</strong> Le compilateur duplique la variable dans la pile (Stack). La fonction travaille sur une <strong>copie</strong> : toute modification apportée au paramètre est <strong>perdue dès la sortie de la fonction</strong> !
+    <br>&bull; <strong>Par référence (opérateur <code>&amp;</code>) :</strong> Le compilateur ne copie pas la donnée, il transmet l'<strong>adresse mémoire</strong> de la variable d'origine. La fonction modifie directement la variable de l'appelant, sans consommer d'octets supplémentaires en SRAM !
+  </p>
+
+  <!-- SVG 3 : PILE D'EXÉCUTION (STACK) — PASSAGE PAR VALEUR VS PASSAGE PAR RÉFÉRENCE -->
+  <div class="svg-card">
+    <svg viewBox="0 0 920 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Comparaison du passage par valeur et du passage par référence en langage C">
+      <rect x="0" y="0" width="920" height="280" fill="#f8fafc" rx="8"/>
+
+      <!-- Bloc Gauche : Passage par Valeur (Copie) -->
+      <rect x="14" y="14" width="440" height="252" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+      <text x="234" y="36" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11.5" font-weight="bold" fill="#0b3c5d">1. Passage par Valeur (Par Défaut en C : Copie)</text>
+
+      <rect x="34" y="58" width="180" height="74" rx="5" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.2"/>
+      <text x="124" y="78" text-anchor="middle" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#1e40af">Dans loop() [Appelant] :</text>
+      <text x="44" y="98" font-family="Consolas, monospace" font-size="8.8" fill="#0f172a">uint16_t code = 512;</text>
+      <text x="44" y="116" font-family="Consolas, monospace" font-size="8.2" fill="#475569">Adresse RAM : 0x08F0</text>
+
+      <!-- Flèche de duplication -->
+      <path d="M 214 95 L 260 95 L 260 175 L 214 175" fill="none" stroke="#dc2626" stroke-width="2"/>
+      <polygon points="214,175 224,170 224,180" fill="#dc2626"/>
+      <text x="280" y="138" font-family="Segoe UI, sans-serif" font-size="8.5" font-weight="bold" fill="#b91c1c">DUPLICATION</text>
+      <text x="280" y="152" font-family="Segoe UI, sans-serif" font-size="7.8" fill="#7f1d1d">(2 octets gaspillés)</text>
+
+      <rect x="34" y="146" width="180" height="104" rx="5" fill="#fee2e2" stroke="#dc2626" stroke-width="1.2"/>
+      <text x="124" y="166" text-anchor="middle" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#b91c1c">Dans fonction(uint16_t c) :</text>
+      <text x="44" y="186" font-family="Consolas, monospace" font-size="8.8" fill="#0f172a">c = 1023; // Modifie la COPIE !</text>
+      <text x="44" y="206" font-family="Consolas, monospace" font-size="8.2" fill="#7f1d1d">Adresse RAM : 0x08E0 (Pile)</text>
+      <text x="44" y="234" font-family="Segoe UI, sans-serif" font-size="8.2" font-weight="bold" fill="#dc2626">&rarr; Au retour, 'code' vaut TOUJOURS 512 !</text>
+
+      <!-- Bloc Droite : Passage par Référence (Opérateur &) -->
+      <rect x="470" y="14" width="436" height="252" rx="8" fill="#ffffff" stroke="#00979d" stroke-width="1.6"/>
+      <text x="688" y="36" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11.5" font-weight="bold" fill="#006468">2. Passage par Référence (Opérateur &amp; : Adresse Directe)</text>
+
+      <rect x="490" y="58" width="190" height="74" rx="5" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.2"/>
+      <text x="585" y="78" text-anchor="middle" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#1e40af">Dans loop() [Appelant] :</text>
+      <text x="500" y="98" font-family="Consolas, monospace" font-size="8.8" fill="#0f172a">uint16_t code = 512;</text>
+      <text x="500" y="116" font-family="Consolas, monospace" font-size="8.2" fill="#0369a1">Adresse RAM unique : 0x08F0</text>
+
+      <!-- Flèche de liaison d'adresse directe -->
+      <line x1="680" y1="95" x2="720" y2="95" stroke="#15803d" stroke-width="2.2"/>
+      <line x1="720" y1="95" x2="720" y2="175" stroke="#15803d" stroke-width="2.2"/>
+      <line x1="720" y1="175" x2="680" y2="175" stroke="#15803d" stroke-width="2.2"/>
+      <polygon points="680,175 690,170 690,180" fill="#15803d"/>
+      <text x="735" y="132" font-family="Segoe UI, sans-serif" font-size="8.5" font-weight="bold" fill="#15803d">POINTEUR / ALIAS</text>
+      <text x="735" y="146" font-family="Segoe UI, sans-serif" font-size="7.8" fill="#166534">Zéro copie mémoire !</text>
+
+      <rect x="490" y="146" width="190" height="104" rx="5" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.4"/>
+      <text x="585" y="166" text-anchor="middle" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#166534">fonction(uint16_t &amp;c) :</text>
+      <text x="500" y="186" font-family="Consolas, monospace" font-size="8.8" fill="#0f172a">c = 1023; // Écrit en 0x08F0 !</text>
+      <text x="500" y="206" font-family="Consolas, monospace" font-size="8.2" fill="#15803d">Agit directement sur l'original !</text>
+      <text x="500" y="234" font-family="Segoe UI, sans-serif" font-size="8.2" font-weight="bold" fill="#15803d">&rarr; Au retour, 'code' vaut bien 1023 !</text>
+    </svg>
+    <div class="svg-caption">Figure 3.1 — Pile d'exécution SRAM : duplication inutile (passage par valeur) vs modification directe en mémoire (passage par référence <code>&amp;</code>).</div>
+  </div>
+
+  <h3>3.3 Questions d'Explication de Code (Fonctions &amp; Signatures)</h3>
+
+  <div class="student-answer">
+    <strong>💡 Question d'explication de code n°5 (Dissection d'un prototype de fonction industriel) :</strong><br>
+    Dans le sketch officiel <a href="sketch_nano_synthese_complete.ino">sketch_nano_synthese_complete.ino</a>, examinez la fonction de mesure :
+    <pre><code><span class="typ">float</span> <span class="fu">lireConsigneAnalogique</span>(<span class="typ">uint16_t</span> &amp;codeCanBrut, <span class="typ">float</span> tensionReference = <span class="dv">5.0f</span>) {
+    codeCanBrut = analogRead(PIN_POT_CONSIGNE);
+    <span class="typ">float</span> tensionVolts = (codeCanBrut / <span class="dv">1023.0f</span>) * tensionReference;
+    <span class="kw">return</span> tensionVolts;
+}</code></pre>
+    <strong>Questions :</strong>
+    <br>1. Quel est le type de la valeur renvoyée par cette fonction ? Quelle est sa taille en mémoire ?
+    <br>2. Expliquez le rôle précis du caractère <code>&amp;</code> placé devant <code>codeCanBrut</code>. Que se passerait-il dans la variable de l'appelant si on l'enlevait ?
+    <br>3. Que signifie la notation <code>float tensionReference = 5.0f</code> dans la liste des paramètres ? Comment peut-on appeler cette fonction dans le <code>loop()</code> avec un seul argument ?
+    <br>4. Que signifie le suffixe littéral <code>f</code> à la fin de <code>5.0f</code> et <code>1023.0f</code> ? Que ferait le compilateur sans ce suffixe ?
+  </div>
+
+  <div class="student-answer">
+    <strong>💡 Question d'explication de code n°6 (Renvoyer plusieurs valeurs : Python vs C) :</strong><br>
+    En MicroPython, une fonction peut renvoyer simultanément trois grandeurs sous forme de tuple :
+    <pre><code><span class="kw">def</span> <span class="fu">mesurer_tout</span>():
+    <span class="kw">return</span> tension, courant, puissance  <span class="co"># Tuple de 3 valeurs</span></code></pre>
+    En langage C classique, une fonction ne peut avoir qu'un <strong>unique type de retour</strong>. Expliquez en 3 lignes comment la technique du passage par référence (vue à la question n°5) permet de contourner cette limitation et de « renvoyer » autant de valeurs modifiées que nécessaire.
+  </div>
+
+  <label class="step-check no-print">
+    <input type="checkbox" class="tp-step-cb" data-step="3" onchange="updateProgress()">
+    <span>Partie 3 validée : Prototypes C, types de retour et passage par référence &amp; compris, questions 5 et 6 rédigées.</span>
+  </label>
+</div>
+
+<!-- ===================================================================== -->
+<!-- PARTIE 4 : COMMUNICATION SÉRIE BIDIRECTIONNELLE & PARSING SÉRIE       -->
+<!-- ===================================================================== -->
+<h2 id="sec-p4">PARTIE 4 : Communication Série Bidirectionnelle (UART), Formats &amp; Parsing de Commandes <span class="badge badge-time">55 min</span></h2>
+
+<div class="card-block">
+  <h3>4.1 L'UART Matériel de l'ATmega328P (Broches D0/RX et D1/TX)</h3>
+  <p>
+    L'Arduino Nano communique avec le PC via son interface série asynchrone (UART) cadencée à <strong>115 200 bauds</strong> (8 bits de données, 1 bit de stop, sans parité : format <code>8N1</code>).
+    Les octets reçus du PC sont automatiquement empilés en tâche de fond dans un <strong>buffer circulaire matériel de 64 octets</strong> géré par interruption.
+  </p>
+
+  <h3>4.2 Affichage Multi-Format avec <code>Serial.print()</code></h3>
+  <p>
+    En C Arduino, la méthode <code>Serial.print()</code> accepte un second paramètre optionnel définissant la base de conversion numérique :
+  </p>
+  <ul>
+    <li><code>Serial.print(valeur, DEC);</code> : Affiche en décimal (par défaut, ex: <code>181</code>).</li>
+    <li><code>Serial.print(valeur, HEX);</code> : Affiche en hexadécimal (très utile en protocole bus, ex: <code>B5</code>).</li>
+    <li><code>Serial.print(valeur, BIN);</code> : Affiche en binaire direct (ex: <code>10110101</code>).</li>
+    <li><code>Serial.print(tension, 3);</code> : Pour un nombre flottant, impose <strong>3 décimales après la virgule</strong> !</li>
+  </ul>
+
+  <h3>4.3 Questions d'Explication de Code (Communication Série &amp; Console)</h3>
+
+  <div class="student-answer">
+    <strong>💡 Question d'explication de code n°7 (Réception non-bloquante avec <code>Serial.available()</code>) :</strong><br>
+    Dans le sketch officiel, examinez la boucle de réception des ordres :
+    <pre><code><span class="kw">void</span> <span class="fu">traiterCommandesSerie</span>() {
+    <span class="kw">while</span> (Serial.available() &gt; <span class="dv">0</span>) {
+        <span class="typ">char</span> cmd = (<span class="typ">char</span>)Serial.read();
+        <span class="co">// Traitement du caractère reçu</span>
+    }
+}</code></pre>
+    <strong>Questions :</strong>
+    <br>1. Que renvoie la méthode <code>Serial.available()</code> ? Pourquoi doit-on tester <code>&gt; 0</code> avant d'appeler <code>Serial.read()</code> ?
+    <br>2. Que renverrait la fonction <code>Serial.read()</code> si un programmeur l'appelait alors qu'aucun octet n'est présent dans le buffer série ?
+    <br>3. Pourquoi la signature officielle de <code>Serial.read()</code> renvoie-t-elle un entier <code>int</code> (16 bits) et non directement un <code>char</code> (8 bits) ? À quoi sert alors le transtypage explicite <code>(char)</code> ?
+  </div>
+
+  <div class="student-answer">
+    <strong>💡 Question d'explication de code n°8 (Gestion des caractères invisibles <code>\r</code> et <code>\n</code>) :</strong><br>
+    Dans le moniteur série d'Arduino IDE ou de Proteus, lorsque l'utilisateur tape la touche <kbd>Entrée</kbd> pour valider un ordre (par exemple la lettre <code>M</code>), la console envoie généralement <strong>trois octets successifs</strong> : <code>'M'</code> (code ASCII 77), <code>'\r'</code> (Carriage Return, ASCII 13) et <code>'\n'</code> (Line Feed, ASCII 10).
+    <br><strong>Question :</strong> Expliquez comment la ligne suivante dans le sketch évite d'afficher des messages d'erreur parasites « Commande inconnue » lors de la réception des sauts de ligne :
+    <pre><code><span class="kw">if</span> (cmd != <span class="st">'\r'</span> &amp;&amp; cmd != <span class="st">'\n'</span>) {
+    Serial.print(<span class="fu">F</span>(<span class="st">"Commande inconnue : "</span>)); Serial.println(cmd);
+}</code></pre>
+  </div>
+
+  <label class="step-check no-print">
+    <input type="checkbox" class="tp-step-cb" data-step="4" onchange="updateProgress()">
+    <span>Partie 4 validée : Émission formatée HEX/BIN/DEC testée, réception non-bloquante et questions 7 et 8 complétées.</span>
+  </label>
+</div>
+
+<!-- ===================================================================== -->
+<!-- PARTIE 5 : SYNTHÈSE FSM EN C ARDUINO & COUPLAGE CHAÎNE DE PUISSANCE   -->
+<!-- ===================================================================== -->
+<h2 id="sec-p5">PARTIE 5 : Synthèse : Machine à États Finis (FSM) en C, <code>millis()</code> &amp; Banc Puissance <span class="badge badge-time">1h00</span></h2>
+
+<div class="card-block">
+  <h3>5.1 Transposition Complète de la Machine à États (FSM) de Python vers C Arduino</h3>
+  <p>
+    Au TP 3 et au TP 4, vous coordonniez vos systèmes avec une <strong>Machine à États Finis (FSM)</strong> en MicroPython.
+    Voici la transposition professionnelle en <strong>langage C Arduino</strong> :
+    <br>&bull; Les états sont regroupés dans une <strong>énumération fortement typée sur 8 bits</strong> : <code>enum class EtatSysteme : uint8_t { ... };</code>
+    <br>&bull; L'aiguillage instantané est assuré par un <strong><code>switch (etatCourant)</code></strong>.
+    <br>&bull; Le multitâche coopératif sans blocage remplace <code>time.ticks_ms()</code> par la fonction native <strong><code>millis()</code></strong> !
+  </p>
+
+  <!-- SVG 4 : DIAGRAMME D'ÉTATS FSM (ARRET, VEILLE, MARCHE, ALARME) -->
+  <div class="svg-card">
+    <svg viewBox="0 0 920 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diagramme d'états FSM du système de commande PICO-TO-NANO">
+      <rect x="0" y="0" width="920" height="280" fill="#f8fafc" rx="8"/>
+
+      <rect x="14" y="14" width="892" height="252" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+      <text x="460" y="36" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="12" font-weight="bold" fill="#0b3c5d">Diagramme d'États FSM (Machine de Moore / Mealy) — Arduino Nano</text>
+
+      <!-- État 0 : ARRET_SECURITE (Rouge) -->
+      <rect x="40" y="80" width="170" height="90" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+      <text x="125" y="105" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10.5" font-weight="bold" fill="#b91c1c">ARRET_SECURITE (0)</text>
+      <text x="125" y="125" text-anchor="middle" font-family="Consolas, monospace" font-size="8.5" fill="#7f1d1d">Relais = 0 | PWM = 0%</text>
+      <text x="125" y="142" text-anchor="middle" font-family="Consolas, monospace" font-size="8.5" font-weight="bold" fill="#dc2626">LED Rouge FIXE</text>
+
+      <!-- État 1 : VEILLE_ATTENTE (Bleu / Prêt) -->
+      <rect x="270" y="80" width="180" height="90" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
+      <text x="360" y="105" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10.5" font-weight="bold" fill="#1e40af">VEILLE_ATTENTE (1)</text>
+      <text x="360" y="125" text-anchor="middle" font-family="Consolas, monospace" font-size="8.5" fill="#1e3a8a">Relais = 0 | PWM = 0%</text>
+      <text x="360" y="142" text-anchor="middle" font-family="Consolas, monospace" font-size="8.5" fill="#2563eb">LED Verte CLIGNOTE lente</text>
+
+      <!-- État 2 : MARCHE_ACTIVE (Vert) -->
+      <rect x="510" y="80" width="180" height="90" rx="8" fill="#f0fdf4" stroke="#16a34a" stroke-width="2"/>
+      <text x="600" y="105" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10.5" font-weight="bold" fill="#166534">MARCHE_ACTIVE (2)</text>
+      <text x="600" y="125" text-anchor="middle" font-family="Consolas, monospace" font-size="8.5" font-weight="bold" fill="#15803d">Relais = 1 | PWM = Pot %</text>
+      <text x="600" y="142" text-anchor="middle" font-family="Consolas, monospace" font-size="8.5" fill="#166534">LED Verte FIXE</text>
+
+      <!-- État 3 : ALARME_BLOCAGE (Jaune/Orange) -->
+      <rect x="740" y="80" width="150" height="90" rx="8" fill="#fffbeb" stroke="#d97706" stroke-width="2"/>
+      <text x="815" y="105" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10.5" font-weight="bold" fill="#92400e">ALARME (3)</text>
+      <text x="815" y="125" text-anchor="middle" font-family="Consolas, monospace" font-size="8.5" fill="#78350f">Relais = 0 | PWM = 0%</text>
+      <text x="815" y="142" text-anchor="middle" font-family="Consolas, monospace" font-size="8.5" font-weight="bold" fill="#b45309">LEDs Clignotent rapide</text>
+
+      <!-- Transitions -->
+      <!-- Transition 1 -> 2 : V_pot >= 0.75 V ou Commande 'M' -->
+      <line x1="450" y1="110" x2="510" y2="110" stroke="#16a34a" stroke-width="2.2"/>
+      <polygon points="510,110 500,105 500,115" fill="#16a34a"/>
+      <text x="480" y="102" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.2" font-weight="bold" fill="#15803d">Pot &ge; 0,75V ou 'M'</text>
+
+      <!-- Transition 2 -> 1 : V_pot < 0.3 V ou Commande 'S' -->
+      <line x1="510" y1="140" x2="450" y2="140" stroke="#0284c7" stroke-width="2.2"/>
+      <polygon points="450,140 460,135 460,145" fill="#0284c7"/>
+      <text x="480" y="156" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.2" fill="#0369a1">Pot &lt; 0,3V ou 'S'</text>
+
+      <!-- Transition Tout -> 0 sur Appui BP D2 (ISR) -->
+      <path d="M 600 80 Q 600 50 125 50 L 125 80" fill="none" stroke="#dc2626" stroke-width="2.5"/>
+      <polygon points="125,80 120,70 130,70" fill="#dc2626"/>
+      <text x="360" y="44" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9" font-weight="bold" fill="#dc2626">🛑 APPUI BOUTON D2 (ISR INT0 Matérielle immédiate !)</text>
+
+      <!-- Transition 0 -> 1 : Commande 'R' (Réarmement) -->
+      <line x1="210" y1="125" x2="270" y2="125" stroke="#0284c7" stroke-width="2"/>
+      <polygon points="270,125 260,120 260,130" fill="#0284c7"/>
+      <text x="240" y="118" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.2" font-weight="bold" fill="#0f766e">Réarm. 'R'</text>
+
+      <!-- Transition vers Alarme sur commande 'A' -->
+      <line x1="690" y1="125" x2="740" y2="125" stroke="#d97706" stroke-width="2"/>
+      <polygon points="740,125 730,120 730,130" fill="#d97706"/>
+      <text x="715" y="118" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.2" font-weight="bold" fill="#d97706">Ordre 'A'</text>
+
+      <!-- Légende bas -->
+      <rect x="40" y="210" width="850" height="42" rx="5" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+      <text x="465" y="228" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.8" font-weight="bold" fill="#0b3c5d">
+        Multitâche Coopératif sans delay() : la boucle loop() s'exécute des milliers de fois par seconde, garantissant une réactivité immédiate !
+      </text>
+      <text x="465" y="244" text-anchor="middle" font-family="Consolas, monospace" font-size="8.2" fill="#006468">
+        if (millis() - dateDerniereMesureMs &gt;= 500) { télémétrie_série(); }
+      </text>
+    </svg>
+    <div class="svg-caption">Figure 5.1 — Graphe de la Machine à États Finis (FSM) implémentée en C pur dans <code>sketch_nano_synthese_complete.ino</code>.</div>
+  </div>
+
+  <!-- SVG 5 : SCHÉMA COMPLET BANC ARDUINO NANO + ÉTAGE PUISSANCE PROTEUS / RÉEL -->
+  <div class="svg-card">
+    <svg viewBox="0 0 920 310" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Schéma électrique complet Arduino Nano et banc puissance Varta">
+      <rect x="0" y="0" width="920" height="310" fill="#f8fafc" rx="8"/>
+
+      <rect x="14" y="14" width="892" height="282" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+      <text x="460" y="36" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11.5" font-weight="bold" fill="#0b3c5d">Schéma Électrique d'Interfaçage du Banc Réel &amp; Simulation Proteus 8 (VSM AVR)</text>
+
+      <!-- Bloc Carte Arduino Nano -->
+      <rect x="40" y="56" width="220" height="224" rx="6" fill="#00979d" stroke="#006468" stroke-width="2"/>
+      <text x="150" y="82" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="12" font-weight="bold" fill="#ffffff">Arduino Nano v3</text>
+      <text x="150" y="98" text-anchor="middle" font-family="Consolas, monospace" font-size="8.5" fill="#f8fafc">ATmega328P (5 V)</text>
+
+      <!-- Broches Nano dessinées -->
+      <text x="248" y="126" text-anchor="end" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#ffffff">D2 (INT0) ──►</text>
+      <text x="248" y="152" text-anchor="end" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#ffffff">D3 (PWM)  ──►</text>
+      <text x="248" y="178" text-anchor="end" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#ffffff">D4 (TOR)  ──►</text>
+      <text x="248" y="204" text-anchor="end" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#ffffff">D8 (TOR)  ──►</text>
+      <text x="248" y="230" text-anchor="end" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#ffffff">D9 (PWM)  ──►</text>
+      <text x="248" y="256" text-anchor="end" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#ffffff">A0 (CAN)  ◄──</text>
+
+      <!-- Périphériques d'entrée / signalisation (Centre) -->
+      <!-- Bouton Poussoir D2 vers GND -->
+      <line x1="260" y1="122" x2="330" y2="122" stroke="#0f172a" stroke-width="2"/>
+      <rect x="330" y="112" width="40" height="20" rx="3" fill="#ffffff" stroke="#1e293b" stroke-width="1.5"/>
+      <text x="350" y="126" text-anchor="middle" font-family="Consolas, monospace" font-size="8.5" font-weight="bold" fill="#dc2626">BP</text>
+      <line x1="370" y1="122" x2="410" y2="122" stroke="#334155" stroke-width="2"/>
+      <text x="414" y="126" font-family="Consolas, monospace" font-size="8.5" fill="#334155">GND (Pull-up int.)</text>
+
+      <!-- LED Verte D3 -->
+      <line x1="260" y1="148" x2="330" y2="148" stroke="#15803d" stroke-width="2"/>
+      <rect x="330" y="142" width="28" height="12" fill="#ffffff" stroke="#1e293b" stroke-width="1.2"/>
+      <text x="344" y="138" text-anchor="middle" font-family="Consolas, monospace" font-size="7.5" fill="#475569">330Ω</text>
+      <line x1="358" y1="148" x2="380" y2="148" stroke="#15803d" stroke-width="2"/>
+      <polygon points="380,142 392,148 380,154" fill="#22c55e" stroke="#166534" stroke-width="1.2"/>
+      <line x1="392" y1="142" x2="392" y2="154" stroke="#166534" stroke-width="1.5"/>
+      <line x1="392" y1="148" x2="410" y2="148" stroke="#334155" stroke-width="2"/>
+      <text x="414" y="152" font-family="Segoe UI, sans-serif" font-size="8" fill="#15803d">LED Verte (D3)</text>
+
+      <!-- LED Rouge D4 -->
+      <line x1="260" y1="174" x2="330" y2="174" stroke="#dc2626" stroke-width="2"/>
+      <rect x="330" y="168" width="28" height="12" fill="#ffffff" stroke="#1e293b" stroke-width="1.2"/>
+      <text x="344" y="164" text-anchor="middle" font-family="Consolas, monospace" font-size="7.5" fill="#475569">330Ω</text>
+      <line x1="358" y1="174" x2="380" y2="174" stroke="#dc2626" stroke-width="2"/>
+      <polygon points="380,168 392,174 380,180" fill="#ef4444" stroke="#991b1b" stroke-width="1.2"/>
+      <line x1="392" y1="168" x2="392" y2="180" stroke="#991b1b" stroke-width="1.5"/>
+      <line x1="392" y1="174" x2="410" y2="174" stroke="#334155" stroke-width="2"/>
+      <text x="414" y="178" font-family="Segoe UI, sans-serif" font-size="8" fill="#b91c1c">LED Rouge (D4)</text>
+
+      <!-- Potentiomètre A0 -->
+      <line x1="260" y1="252" x2="330" y2="252" stroke="#d97706" stroke-width="2"/>
+      <rect x="330" y="240" width="36" height="24" rx="3" fill="#fffbeb" stroke="#d97706" stroke-width="1.5"/>
+      <text x="348" y="256" text-anchor="middle" font-family="Consolas, monospace" font-size="8" font-weight="bold" fill="#b45309">10k</text>
+      <text x="375" y="256" font-family="Segoe UI, sans-serif" font-size="8" fill="#78350f">A0 (0..5V)</text>
+
+      <!-- Chaîne de Puissance Réutilisée (Droite : D8 Relais + D9 TIP31C + Moteur 5V Varta) -->
+      <rect x="520" y="56" width="370" height="224" rx="8" fill="#fef2f2" stroke="#dc2626" stroke-width="2"/>
+      <text x="705" y="78" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#b91c1c">Chaîne d'Énergie (Powerbank Varta 5 V)</text>
+
+      <!-- Relais Grove D8 -->
+      <rect x="540" y="96" width="160" height="58" rx="5" fill="#ffffff" stroke="#7c3aed" stroke-width="1.5"/>
+      <text x="620" y="118" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#6d28d9">Module Relais Grove (D8)</text>
+      <text x="620" y="136" text-anchor="middle" font-family="Consolas, monospace" font-size="8" fill="#475569">Contacteur Sécurité 5 V Varta</text>
+      <line x1="260" y1="200" x2="540" y2="120" stroke="#7c3aed" stroke-width="2"/>
+
+      <!-- Hacheur TIP31C D9 -->
+      <rect x="540" y="168" width="160" height="96" rx="5" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
+      <text x="620" y="188" text-anchor="middle" font-family="Consolas, monospace" font-size="9.5" font-weight="bold" fill="#854d0e">Hacheur TIP31C (D9)</text>
+      <text x="620" y="206" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8" fill="#713f12">R_B = 330 Ω sur Base [1]</text>
+      <text x="620" y="224" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8" fill="#713f12">+ Roue libre 1N4001</text>
+      <text x="620" y="244" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8" font-weight="bold" fill="#dc2626">PWM 490 Hz (Timer 1)</text>
+      <line x1="260" y1="226" x2="540" y2="200" stroke="#0284c7" stroke-width="2"/>
+
+      <!-- Moteur CC jaune -->
+      <circle cx="810" cy="180" r="34" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+      <text x="810" y="186" text-anchor="middle" font-family="Consolas, monospace" font-size="14" font-weight="bold" fill="#ca8a04">M</text>
+      <text x="810" y="230" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.5" font-weight="bold" fill="#854d0e">Moteur CC 3–6V</text>
+      <line x1="700" y1="125" x2="810" y2="146" stroke="#dc2626" stroke-width="2.2"/>
+      <line x1="700" y1="200" x2="810" y2="214" stroke="#0f172a" stroke-width="2.2"/>
+    </svg>
+    <div class="svg-caption">Figure 5.2 — Câblage complet du banc d'essai réel et simulation Proteus 8 associant l'Arduino Nano à la chaîne de puissance 5 V.</div>
+  </div>
+
+  <h3>5.2 Questions d'Explication de Code (FSM &amp; Horloge <code>millis()</code>)</h3>
+
+  <div class="student-answer">
+    <strong>💡 Question d'explication de code n°9 (Le chronométrage sans bug de débordement avec <code>millis()</code>) :</strong><br>
+    Dans la boucle principale <code>loop()</code>, la temporisation non-bloquante de 500 ms est codée par :
+    <pre><code><span class="typ">uint32_t</span> tempsActuelMs = millis();
+
+<span class="kw">if</span> (tempsActuelMs - dateDerniereMesureMs &gt;= <span class="dv">500</span>) {
+    dateDerniereMesureMs = tempsActuelMs;
+    <span class="co">// Émission de la télémétrie</span>
+}</code></pre>
+    <strong>Questions :</strong>
+    <br>1. La fonction <code>millis()</code> compte le nombre de millisecondes écoulées depuis le démarrage. Au bout de combien de jours la variable <code>millis()</code> (codée sur 32 bits non signés) va-t-elle déborder et repartir à 0 ? (Faites le calcul : $2^{32} - 1$ millisecondes en jours).
+    <br>2. Expliquez pourquoi l'écriture par soustraction <code>(tempsActuelMs - dateDerniereMesureMs &gt;= 500)</code> fonctionne <strong>parfaitement même lors du passage par zéro</strong>, alors qu'une écriture telle que <code>if (tempsActuelMs &gt;= dateProchaineMesureMs)</code> bloquerait définitivement le système pendant des semaines lors de l'overflow !
+  </div>
+
+  <div class="student-answer">
+    <strong>💡 Question d'explication de code n°10 (Typage de l'énumération FSM <code>enum class : uint8_t</code>) :</strong><br>
+    Observez la déclaration de la Machine à États :
+    <pre><code><span class="kw">enum class</span> <span class="typ">EtatSysteme</span> : <span class="typ">uint8_t</span> {
+    ARRET_SECURITE = <span class="dv">0</span>,
+    VEILLE_ATTENTE = <span class="dv">1</span>,
+    MARCHE_ACTIVE  = <span class="dv">2</span>,
+    ALARME_BLOCAGE = <span class="dv">3</span>
+};</code></pre>
+    <strong>Questions :</strong>
+    <br>1. En C/C++ moderne, pourquoi utilise-t-on <code>enum class</code> plutôt qu'un <code>enum</code> classique ? (Quel risque de conflit de nom évite-t-on ?).
+    <br>2. Pourquoi avoir explicitement ajouté le suffixe <code>: uint8_t</code> ? Si on omettait ce suffixe, quelle serait la taille mémoire allouée par défaut par le compilateur pour stocker la variable <code>etatCourant</code> ?
+  </div>
+
+  <label class="step-check no-print">
+    <input type="checkbox" class="tp-step-cb" data-step="5" onchange="updateProgress()">
+    <span>Partie 5 validée : Programme complet téléversé sur l'Arduino Nano (ou simulé sous Proteus), banc moteur opérationnel et questions 9 et 10 rédigées.</span>
+  </label>
+</div>
+
+<!-- ===================================================================== -->
+<!-- GRILLE D'ÉVALUATION BTS CIEL (/20)                                    -->
+<!-- ===================================================================== -->
+<h2 id="sec-eval">📝 Grille d'Évaluation Officielle BTS CIEL (sur 20 points — 5h00)</h2>
+
+<div class="card-block">
+  <table>
+    <thead>
+      <tr>
+        <th style="width:12%;">Compétence BO</th>
+        <th style="width:28%;">Critère d'évaluation BTS CIEL</th>
+        <th style="width:44%;">Indicateurs de performance attendus</th>
+        <th class="center" style="width:8%;">Barème</th>
+        <th class="center" style="width:8%;">Note</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C08</span></td>
+        <td><strong>Typage Statique &amp; Mémoire C</strong></td>
+        <td>Exactitude des réponses sur <code>sizeof()</code>, maîtrise du débordement <code>uint8_t</code> et utilisation systématique de la macro <code>F()</code> pour préserver la SRAM.</td>
+        <td class="center"><strong>4 pts</strong></td>
+        <td class="center"></td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C08</span></td>
+        <td><strong>Structures Algorithmiques &amp; Fonctions</strong></td>
+        <td>Maîtrise des boucles <code>for/while</code>, du <code>switch/case</code> sans bug d'affectation, écriture de prototypes rigoureux et passage de paramètres par référence <code>&amp;</code>.</td>
+        <td class="center"><strong>4 pts</strong></td>
+        <td class="center"></td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C04</span></td>
+        <td><strong>Explication Technique des Codes</strong></td>
+        <td>Pertinence, rigueur et profondeur des réponses rédigées aux 10 questions d'analyse de code (Yoda condition, null bit, FSM, rollover millis).</td>
+        <td class="center"><strong>4 pts</strong></td>
+        <td class="center"></td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C05</span></td>
+        <td><strong>Architecture FSM &amp; Multitâche</strong></td>
+        <td>Transposition réussie de la FSM Python vers le C Arduino, chronométrage coopératif non-bloquant avec <code>millis()</code> et réactivité de l'ISR d'arrêt d'urgence.</td>
+        <td class="center"><strong>3 pts</strong></td>
+        <td class="center"></td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C06 / C07</span></td>
+        <td><strong>Validation Réelle &amp; Simulation Proteus</strong></td>
+        <td>Câblage sans faute de l'Arduino Nano sur breadboard ou simulation fonctionnelle Proteus 8 VSM avec Virtual Terminal (commandes M, S, A, R fonctionnelles).</td>
+        <td class="center"><strong>3 pts</strong></td>
+        <td class="center"></td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C01</span></td>
+        <td><strong>Dossier Google Docs &amp; Rangement</strong></td>
+        <td>Clarté du compte rendu Google Docs Classroom, tableaux complets, boîtes de composants rangées avec soin.</td>
+        <td class="center"><strong>2 pts</strong></td>
+        <td class="center"></td>
+      </tr>
+      <tr>
+        <td colspan="3" style="text-align:right; font-weight:bold;">TOTAL GÉNÉRAL (Durée : 5h00) :</td>
+        <td class="center"><strong>/ 20</strong></td>
+        <td class="center"></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <label class="step-check no-print">
+    <input type="checkbox" class="tp-step-cb" data-step="6" onchange="updateProgress()">
+    <span>Dossier finalisé : Compte rendu remis sur Google Classroom, code C .ino annexé et matériel rangé ! 🎉</span>
+  </label>
+</div>
+
+<!-- ===================================================================== -->
+<!-- SCRIPTS JS : CALCULATEURS INTERACTIFS & COPIE TRAME CLASSROOM         -->
+<!-- ===================================================================== -->
+<script>
+  // 1. Simulateur de types C et d'overflow
+  function simulerTypeC() {
+    const type = document.getElementById('selTypeC').value;
+    let val = parseInt(document.getElementById('inpValTest').value);
+    const res = document.getElementById('resTypeC');
+
+    if (isNaN(val)) val = 0;
+
+    let size = 1;
+    let range = "";
+    let nextVal = val + 1;
+    let note = "";
+
+    switch(type) {
+      case 'bool':
+        size = 1; range = "0 (false) ou 1 (true)";
+        nextVal = val ? 1 : 0;
+        break;
+      case 'char':
+        size = 1; range = "-128 à +127";
+        if (val > 127 || val < -128) note = "⚠️ Dépassement de la plage int8_t !";
+        break;
+      case 'uint8_t':
+        size = 1; range = "0 à 255";
+        nextVal = (val + 1) % 256;
+        if (val === 255) note = "🔥 OVERFLOW : 255 + 1 = 0 !";
+        break;
+      case 'int':
+        size = 2; range = "-32 768 à +32 767 (AVR 8 bits !)";
+        if (val === 32767) note = "🔥 OVERFLOW : 32767 + 1 = -32768 !";
+        break;
+      case 'int_pico':
+        size = 4; range = "-2 147 483 648 à +2 147 483 647 (RP2040 / 32 bits)";
+        break;
+      case 'uint16_t':
+        size = 2; range = "0 à 65 535";
+        nextVal = (val + 1) % 65536;
+        if (val === 65535) note = "🔥 OVERFLOW : 65535 + 1 = 0 !";
+        break;
+      case 'long':
+        size = 4; range = "-2 147 483 648 à +2 147 483 647";
+        break;
+      case 'uint32_t':
+        size = 4; range = "0 à 4 294 967 295 (requis pour millis())";
+        break;
+      case 'float':
+        size = 4; range = "±3,4 × 10^38 (IEEE 754 simple précision)";
+        break;
+      case 'double':
+        size = 4; range = "SUR AVR NANO : IDENTIQUE AU FLOAT (4 octets) !";
+        note = "⚠️ double n'est PAS 64 bits sur ATmega328P !";
+        break;
+    }
+
+    res.textContent = `Taille : ${size} octet(s) | Plage : ${range} ${note ? '| ' + note : ''}`;
+  }
+
+  // 2. Traducteur de syntaxe Python -> C
+  function traduireSyntaxe() {
+    const sel = document.getElementById('selSyntaxe').value;
+    const res = document.getElementById('resSyntaxe');
+    switch(sel) {
+      case 'for_range':
+        res.textContent = "// En Python : for i in range(10):\nfor (int i = 0; i < 10; i++) {\n    Serial.println(i);\n}";
+        break;
+      case 'while_cond':
+        res.textContent = "// En Python : while x < 100:\nwhile (x < 100) {\n    x += 5;\n}";
+        break;
+      case 'if_elif':
+        res.textContent = "// En Python : if/elif/else\nif (tension >= 3.0f) {\n    relais.on();\n} else if (tension >= 1.5f) {\n    relais.off();\n} else {\n    alarme();\n}";
+        break;
+      case 'fsm_enum':
+        res.textContent = "enum class Etat : uint8_t { REPOS, RUN, ERR };\nswitch (etatCourant) {\n    case Etat::REPOS: actionRepos(); break;\n    case Etat::RUN:   actionRun();   break;\n}";
+        break;
+      case 'ticks_millis':
+        res.textContent = "// En MicroPython : ticks_ms() et ticks_diff()\nuint32_t t_now = millis();\nif (t_now - t_prev >= 500) {\n    t_prev = t_now;\n    executerTache();\n}";
+        break;
+      case 'func_ref':
+        res.textContent = "// Passage par référence avec '&' :\nvoid mesurer(uint16_t &code) {\n    code = analogRead(A0); // Modifie la variable originale !\n}";
+        break;
+    }
+  }
+
+  // 3. Barre de progression sauvegardée
+  const STORAGE_KEY = 'bts_ciel1_tp9_progress_v1';
+  function updateProgress() {
+    const boxes = document.querySelectorAll('.tp-step-cb');
+    let done = 0;
+    const state = {};
+    boxes.forEach(cb => {
+      state[cb.dataset.step] = cb.checked;
+      if (cb.checked) done++;
+    });
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+    const pct = Math.round((done / boxes.length) * 100);
+    document.getElementById('tpProgressFill').style.width = pct + '%';
+    document.getElementById('tpProgressText').textContent = `${done} / ${boxes.length}`;
+  }
+
+  (function initPage() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+      document.querySelectorAll('.tp-step-cb').forEach(cb => {
+        if (saved[cb.dataset.step]) cb.checked = true;
+      });
+    } catch (e) {}
+    updateProgress();
+    simulerTypeC();
+    traduireSyntaxe();
+  })();
+
+  // 4. Copie d'un bloc de code
+  function copierCode(btn) {
+    const codeText = btn.parentElement.querySelector('code').innerText;
+    navigator.clipboard.writeText(codeText).then(() => {
+      const old = btn.textContent;
+      btn.textContent = '✅ Copié !';
+      setTimeout(() => { btn.textContent = old; }, 1800);
+    });
+  }
+
+  // 5. Copie HTML riche de la trame complète TP 9 pour Google Docs (Classroom)
+  async function copierTrameClassroom() {
+    const htmlTemplate = `
+      <div style="font-family: Arial, sans-serif; color: #1e293b; line-height: 1.45;">
+        <h1 style="color:#0b3c5d; border-bottom:2px solid #00979d;">DOSSIER TECHNIQUE TP 9 (5H) — BTS CIEL (1re Année)</h1>
+        <h2 style="color:#00979d;">TP 9 : PICO-TO-NANO — Du MicroPython au Langage C Embarqué sur Arduino Nano</h2>
+        <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; width:100%; margin-bottom:14px;">
+          <tr style="background:#f0fdfa;">
+            <td><b>Binôme (NOM Prénom 1 &amp; 2) :</b></td><td>....................................................</td>
+            <td><b>Date :</b></td><td>.... / .... / 202..</td>
+          </tr>
+          <tr>
+            <td><b>Cible matérielle :</b></td><td><b>Arduino Nano (ATmega328P — 16 MHz — 5V)</b></td>
+            <td><b>SRAM Totale :</b></td><td><b>2048 octets (2 Ko)</b></td>
+          </tr>
+        </table>
+
+        <h2 style="color:#0b3c5d;">ÉTAPE 0 &amp; PARTIE 1 — Typage Statique Strict, Formats des Variables &amp; sizeof()</h2>
+        <p><b>Réponse Question d'explication de code n°0 (Rôle de void, setup() et loop()) :</b><br>........................................................................................................</p>
+        <p><b>Réponse Question d'explication de code n°1 (Analyse de boucle for et débordement uint8_t 255 &rarr; 0) :</b><br>........................................................................................................</p>
+        <p><b>Réponse Question d'explication de code n°2 (Économie SRAM de la macro F() dans Serial.println) :</b><br>........................................................................................................</p>
+
+        <h2 style="color:#0b3c5d;">PARTIE 2 — Structures de Contrôle (Conditionnelles &amp; Boucles C)</h2>
+        <p><b>Réponse Question d'explication de code n°3 (Piège d'affectation if (x = true) vs if (x == true)) :</b><br>........................................................................................................</p>
+        <p><b>Réponse Question d'explication de code n°4 (Omission du break; dans un switch et Fall-Through) :</b><br>........................................................................................................</p>
+
+        <h2 style="color:#0b3c5d;">PARTIE 3 — Fonctions C : Prototypes, Types Renvoyés &amp; Passage par Référence (&amp;)</h2>
+        <p><b>Réponse Question d'explication de code n°5 (Dissection signature float lireConsigne(uint16_t &amp;code, float ref=5.0f)) :</b><br>........................................................................................................</p>
+        <p><b>Réponse Question d'explication de code n°6 (Technique pour renvoyer plusieurs valeurs en C sans tuple) :</b><br>........................................................................................................</p>
+
+        <h2 style="color:#0b3c5d;">PARTIE 4 — Communication Série Bidirectionnelle &amp; Parsing UART</h2>
+        <p><b>Réponse Question d'explication de code n°7 (Rôle de Serial.available() et retour int de Serial.read()) :</b><br>........................................................................................................</p>
+        <p><b>Réponse Question d'explication de code n°8 (Traitement des caractères invisibles \\r et \\n) :</b><br>........................................................................................................</p>
+
+        <h2 style="color:#0b3c5d;">PARTIE 5 — Synthèse Machine à États Finis (FSM) &amp; Banc Puissance Varta</h2>
+        <p><i>[📷 Insérer capture Proteus 8 (ou photo Breadboard Nano) + capture du Moniteur Série avec les commandes M, S, A, R et ? testées]</i></p>
+        <p><b>Réponse Question d'explication de code n°9 (Chronométrage millis() et calcul sans bug d'overflow à 49,7 jours) :</b><br>........................................................................................................</p>
+        <p><b>Réponse Question d'explication de code n°10 (Typage enum class : uint8_t et économie de SRAM) :</b><br>........................................................................................................</p>
+
+        <h3>Annexe : Code C Arduino (.ino) final complété</h3>
+        <pre style="background:#f8fafc; padding:10px; border:1px solid #cbd5e1;">[Coller ici votre code .ino complet fonctionnel]</pre>
+      </div>`;
+
+    const plainFallback = "DOSSIER TECHNIQUE TP 9 BTS CIEL — PICO-TO-NANO (5h)\nCollez dans Google Docs (Classroom) pour obtenir les tableaux formatés.";
+
+    try {
+      if (window.ClipboardItem) {
+        const blobHtml = new Blob([htmlTemplate], { type: 'text/html' });
+        const blobText = new Blob([plainFallback], { type: 'text/plain' });
+        await navigator.clipboard.write([new ClipboardItem({ 'text/html': blobHtml, 'text/plain': blobText })]);
+      } else {
+        await navigator.clipboard.writeText(plainFallback);
+      }
+      const toast = document.getElementById('copyToast');
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 7000);
+    } catch (err) {
+      alert("Copie automatique bloquée par le navigateur : ouvrez ce fichier dans Chrome/Edge et réessayez.");
+    }
+  }
+</script>
+
+</body>
+</html>

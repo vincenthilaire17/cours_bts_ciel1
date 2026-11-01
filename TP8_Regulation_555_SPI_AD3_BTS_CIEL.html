@@ -1,0 +1,1814 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>TP 8 : PICO-POWERDAC — Régulation d'Énergie (LM317 / Zener), PWM Matérielle (TLC555CP) &amp; CAN Série SPI 12 bits (ADS7816P) — BTS CIEL Option B (5h)</title>
+  <style>
+    :root {
+      --primary: #0b3c5d;
+      --primary-light: #e0f2fe;
+      --secondary: #1d4ed8;
+      --accent: #d97706;
+      --ad3-teal: #0d9488;
+      --ad3-bg: #f0fdfa;
+      --sim-purple: #7c3aed;
+      --sim-bg: #f5f3ff;
+      --cmd-blue: #0284c7;
+      --cmd-bg: #f0f9ff;
+      --pwr-red: #dc2626;
+      --pwr-bg: #fef2f2;
+      --real-green: #15803d;
+      --real-bg: #f0fdf4;
+      --bg-page: #f8fafc;
+      --bg-card: #ffffff;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --border: #cbd5e1;
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      color: var(--text-main);
+      background-color: var(--bg-page);
+      scroll-behavior: smooth;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.58;
+      color: var(--text-main);
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 18px 20px 70px 20px;
+    }
+
+    @page {
+      margin: 1.3cm;
+      size: A4;
+    }
+
+    @media print {
+      body {
+        max-width: 100%;
+        padding: 0;
+        font-size: 9.5pt;
+        color: #000;
+        background: #fff;
+      }
+      .no-print { display: none !important; }
+      .card-block {
+        box-shadow: none !important;
+        border: 1px solid #cbd5e1 !important;
+      }
+      pre, blockquote, table, .svg-card, .callout { page-break-inside: avoid; }
+      h1, h2, h3, h4 { page-break-after: avoid; }
+      a { color: #000; text-decoration: underline; }
+    }
+
+    /* Barre supérieure collante */
+    .top-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 16px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+    }
+    .top-bar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .back-link {
+      font-weight: 700;
+      color: var(--primary);
+      text-decoration: none;
+      font-size: 9.5pt;
+      padding: 5px 10px;
+      border-radius: 6px;
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+    }
+    .back-link:hover { background: #e2e8f0; text-decoration: none; }
+
+    .progress-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 9pt;
+      font-weight: 600;
+      color: #334155;
+    }
+    .progress-track {
+      width: 150px;
+      height: 10px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #d97706, #0d9488);
+      transition: width 0.25s ease;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+      padding: 7px 13px;
+      font-size: 9pt;
+      font-weight: 700;
+      font-family: inherit;
+      transition: transform 0.1s ease, opacity 0.15s ease;
+      text-decoration: none;
+    }
+    .btn:hover { opacity: 0.93; text-decoration: none; }
+    .btn:active { transform: translateY(1px); }
+    .btn-docs {
+      background: linear-gradient(135deg, #0f766e, #15803d);
+      color: #ffffff;
+      box-shadow: 0 2px 6px rgba(15, 118, 110, 0.25);
+    }
+    .btn-outline {
+      background: #ffffff;
+      color: #1e293b;
+      border: 1px solid #cbd5e1;
+    }
+
+    /* En-tête principal */
+    .header-box {
+      background: linear-gradient(135deg, #0b3c5d 0%, #7c2d12 52%, #0f766e 100%);
+      color: #ffffff;
+      border-radius: 12px;
+      padding: 24px 26px;
+      margin-bottom: 22px;
+      box-shadow: 0 6px 18px rgba(11, 60, 93, 0.2);
+    }
+    .header-kicker {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.18);
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 8.5pt;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .header-box h1 {
+      color: #ffffff;
+      font-size: 18pt;
+      margin: 0 0 10px 0;
+      border: none;
+      padding: 0;
+      line-height: 1.25;
+    }
+    .header-subtitle {
+      color: #fef3c7;
+      font-size: 10.2pt;
+      margin: 0 0 14px 0;
+    }
+    .header-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 9pt;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.22);
+    }
+    .meta-pill {
+      background: rgba(15, 23, 42, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 4px 10px;
+      border-radius: 6px;
+      color: #f8fafc;
+    }
+
+    /* Titres */
+    h1, h2, h3, h4 {
+      color: var(--primary);
+      font-weight: 700;
+      line-height: 1.28;
+    }
+    h2 {
+      font-size: 14.5pt;
+      margin-top: 30px;
+      margin-bottom: 12px;
+      color: #0b3c5d;
+      border-left: 5px solid var(--ad3-teal);
+      padding: 6px 0 6px 12px;
+      background: linear-gradient(90deg, #f0fdfa 0%, transparent 100%);
+      border-radius: 0 6px 6px 0;
+    }
+    h3 {
+      font-size: 11.8pt;
+      margin-top: 20px;
+      margin-bottom: 8px;
+      border-left: 4px solid #328cc1;
+      padding-left: 9px;
+      color: #0f3a5d;
+    }
+    h4 {
+      font-size: 10.5pt;
+      margin-top: 14px;
+      margin-bottom: 6px;
+      color: #1e293b;
+    }
+    p { margin: 0.75em 0; }
+
+    /* Sections cartes */
+    .card-block {
+      background: var(--bg-card);
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 20px 22px;
+      margin-bottom: 22px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      font-size: 8.2pt;
+      font-weight: 700;
+      border-radius: 4px;
+      background-color: #e0f2fe;
+      color: #0369a1;
+      margin-right: 4px;
+      vertical-align: middle;
+    }
+    .badge-bo { background: #0b3c5d; color: #ffffff; }
+    .badge-optb { background: #0f766e; color: #ffffff; }
+    .badge-sim { background: #ede9fe; color: #6d28d9; border: 1px solid #ddd6fe; }
+    .badge-ad3 { background: #ccfbf1; color: #0f766e; border: 1px solid #99f6e4; }
+    .badge-cmd { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+    .badge-pwr { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+    .badge-time { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+
+    /* Encadrés */
+    .callout {
+      margin: 14px 0;
+      padding: 13px 16px;
+      border-radius: 8px;
+      border-left: 5px solid #0284c7;
+      background-color: #f0f9ff;
+      font-size: 9.5pt;
+    }
+    .callout-warn { border-left-color: #f59e0b; background-color: #fffbeb; }
+    .callout-danger { border-left-color: #dc2626; background-color: #fef2f2; }
+    .callout-tip { border-left-color: #16a34a; background-color: #f0fdf4; }
+    .callout-proteus { border-left-color: #7c3aed; background-color: #f5f3ff; }
+    .callout-ad3 { border-left-color: #0d9488; background-color: #f0fdfa; }
+    .callout-docs {
+      border-left-color: #0f766e;
+      background-color: #f0fdfa;
+      border: 1px solid #99f6e4;
+      border-left-width: 5px;
+    }
+
+    /* Grille double protocole Proteus vs AD3 WaveForms */
+    .dual-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 14px 0;
+    }
+    @media (max-width: 760px) {
+      .dual-grid { grid-template-columns: 1fr; }
+    }
+    .protocol-box {
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-size: 9.4pt;
+    }
+    .protocol-proteus {
+      background: var(--sim-bg);
+      border: 1px solid #ddd6fe;
+      border-top: 4px solid var(--sim-purple);
+    }
+    .protocol-proteus h4 { color: #5b21b6; margin-top: 0; }
+    .protocol-ad3 {
+      background: var(--ad3-bg);
+      border: 1px solid #99f6e4;
+      border-top: 4px solid var(--ad3-teal);
+    }
+    .protocol-ad3 h4 { color: #0f766e; margin-top: 0; }
+
+    /* Tableaux */
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 14px 0;
+      font-size: 9.2pt;
+      background: #ffffff;
+    }
+    th, td {
+      border-collapse: collapse;
+      border: 1px solid #cbd5e1;
+      padding: 7px 9px;
+      text-align: left;
+      vertical-align: middle;
+    }
+    th {
+      background-color: #f1f5f9;
+      color: var(--primary);
+      font-weight: 700;
+    }
+    tr:nth-child(even) { background-color: #f8fafc; }
+    td.center, th.center { text-align: center; }
+    th.col-calc { background: #eff6ff; color: #1e40af; }
+    th.col-sim { background: #f5f3ff; color: #5b21b6; }
+    th.col-ad3 { background: #f0fdfa; color: #0f766e; }
+
+    /* Zones réponses & jalons */
+    .student-answer {
+      background-color: #ffffff;
+      border: 1.5px dashed #94a3b8;
+      border-radius: 6px;
+      padding: 10px 14px;
+      margin: 10px 0;
+      color: #334155;
+      font-size: 9.3pt;
+    }
+    .step-check {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-top: 14px;
+      font-weight: 600;
+      font-size: 9.5pt;
+      color: #0f172a;
+      cursor: pointer;
+    }
+    .step-check input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: #0d9488;
+      cursor: pointer;
+    }
+
+    /* SVG Cards */
+    .svg-card {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 14px;
+      margin: 16px 0;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+      overflow-x: auto;
+    }
+    .svg-card svg {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
+    .svg-caption {
+      font-size: 8.8pt;
+      color: var(--text-muted);
+      margin-top: 8px;
+      font-style: italic;
+    }
+
+    /* Code */
+    code {
+      background-color: #f1f5f9;
+      color: #0f172a;
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-size: 8.8pt;
+      font-family: Consolas, 'Courier New', monospace;
+    }
+    .code-wrapper {
+      position: relative;
+      margin: 12px 0;
+    }
+    .copy-code-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: #334155;
+      color: #f8fafc;
+      border: 1px solid #475569;
+      border-radius: 5px;
+      padding: 4px 9px;
+      font-size: 8pt;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .copy-code-btn:hover { background: #475569; }
+    pre {
+      background-color: #0f172a;
+      color: #e2e8f0;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-size: 8.9pt;
+      line-height: 1.48;
+      overflow-x: auto;
+      font-family: Consolas, 'Courier New', monospace;
+      margin: 0;
+    }
+    pre code { background: transparent; color: inherit; padding: 0; }
+    .kw { color: #f472b6; font-weight: bold; }
+    .im { color: #c084fc; font-weight: bold; }
+    .fu { color: #38bdf8; font-weight: 600; }
+    .st { color: #86efac; }
+    .dv { color: #fbbf24; }
+    .co { color: #94a3b8; font-style: italic; }
+    .todo-hl { color: #fde047; font-weight: bold; }
+
+    /* Formules hors-ligne */
+    .formula-box {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-left: 4px solid var(--ad3-teal);
+      border-radius: 6px;
+      padding: 10px 16px;
+      margin: 10px 0;
+      font-family: 'Cambria Math', Georgia, serif;
+      font-size: 10.5pt;
+      text-align: center;
+      color: #0f172a;
+    }
+    .frac {
+      display: inline-block;
+      vertical-align: middle;
+      text-align: center;
+      margin: 0 3px;
+    }
+    .frac > span { display: block; padding: 0 4px; }
+    .frac span.num { border-bottom: 1.2px solid #0f172a; }
+    .frac span.den { padding-top: 1px; }
+
+    /* Outils interactifs d'atelier */
+    .tools-strip {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin: 14px 0;
+    }
+    @media (max-width: 780px) {
+      .tools-strip { grid-template-columns: 1fr; }
+    }
+    .mini-tool {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 9pt;
+    }
+    .mini-tool h4 { margin: 0 0 8px 0; color: var(--primary); }
+    .mini-tool select, .mini-tool input[type="number"] {
+      padding: 5px 7px;
+      border: 1px solid #94a3b8;
+      border-radius: 5px;
+      font-size: 8.8pt;
+      font-family: inherit;
+    }
+    .tool-result {
+      margin-top: 8px;
+      padding: 7px 10px;
+      background: #ffffff;
+      border-radius: 5px;
+      border: 1px solid #cbd5e1;
+      font-weight: 700;
+      color: #0b3c5d;
+    }
+
+    /* Timeline 5h */
+    .timeline-bar {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 6px;
+      margin: 12px 0;
+    }
+    @media (max-width: 760px) {
+      .timeline-bar { grid-template-columns: repeat(2, 1fr); }
+    }
+    .tl-item {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-top: 3px solid var(--accent);
+      border-radius: 6px;
+      padding: 8px;
+      font-size: 8.3pt;
+      text-decoration: none;
+      color: var(--text-main);
+    }
+    .tl-item:hover { background: #fef3c7; text-decoration: none; }
+    .tl-time { font-weight: 800; color: #b45309; display: block; }
+
+    .toast-copy {
+      display: none;
+      margin-top: 8px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      background: #dcfce7;
+      color: #166534;
+      border: 1px solid #86efac;
+      font-weight: 600;
+      font-size: 9pt;
+    }
+  </style>
+</head>
+<body>
+
+<!-- BARRE DE NAVIGATION ET DE SUIVI -->
+<div class="top-bar no-print">
+  <div class="top-bar-left">
+    <a href="index.html" class="back-link">← Portail BTS CIEL 1</a>
+    <div class="progress-wrap" title="Cochez chaque étape validée au fil des 5 heures">
+      <span>Avancement TP 8 (5h) :</span>
+      <div class="progress-track"><div class="progress-fill" id="tpProgressFill"></div></div>
+      <span id="tpProgressText">0 / 7</span>
+    </div>
+  </div>
+  <div class="top-actions">
+    <button type="button" class="btn btn-docs" onclick="copierTrameClassroom()">📋 Copier la trame Google Docs (Classroom)</button>
+    <button type="button" class="btn btn-outline" onclick="window.print()">🖨️ Imprimer / PDF</button>
+  </div>
+</div>
+
+<!-- EN-TÊTE PRINCIPAL -->
+<div class="header-box">
+  <div class="header-kicker">BTS CIEL — Option B : Électronique et Réseaux (1<sup>re</sup> Année — Semestre 2) | Énergie, Timer 555 &amp; Conversion Série SPI</div>
+  <h1>TP 8 : PICO-POWERDAC — Régulation Linéaire (<code>LM317</code> / Zener <code>1N4735A</code>), PWM Matérielle (<code>TLC555CP</code>) &amp; CAN Série 12 bits (<code>ADS7816P</code>)</h1>
+  <p class="header-subtitle">
+    Clôture du cycle matériel Option B (TP 5 &rarr; TP 8) : conception d'une référence de tension régulée à <strong><code>2,50 V</code> par <code>LM317</code></strong>, génération autonome d'une <strong>commande PWM matérielle par timer LinCMOS <code>TLC555CP</code></strong>, et mise en œuvre d'un <strong>convertisseur analogique-numérique externe 12 bits à approximations successives <code>ADS7816P</code></strong> décodé sur bus série synchrone à l'<strong>Analyseur Logique AD3</strong>, sous <strong>Proteus 8</strong> et en <strong>MicroPython sur Raspberry Pi Pico</strong>.
+  </p>
+  <div class="header-meta">
+    <span class="meta-pill">⏱️ <strong>Durée :</strong> 5h00</span>
+    <span class="meta-pill">🔬 <strong>Instrumentation :</strong> Digilent Analog Discovery 3 (Supplies &plusmn;5V, Scope, Wavegen, Logic SPI)</span>
+    <span class="meta-pill">🧰 <strong>CI Kit TI :</strong> <code>LM317</code>, <code>1N4735A</code>, <code>TLC555CP</code>, <code>ADS7816P</code>, <code>1N5819</code>, <code>TIP31C</code></span>
+    <span class="meta-pill">🖥️ <strong>CAO :</strong> Proteus 8 (ISIS)</span>
+    <span class="meta-pill">📝 <strong>Livrable :</strong> Google Docs (Classroom)</span>
+  </div>
+</div>
+
+<!-- PLANIFICATION HORAIRE & RÉFÉRÉTIEL OPTION B -->
+<div class="card-block">
+  <h3 style="margin-top:0;">⏱️ Découpage Temporel des 5 Heures (Synthèse Semestre 2 Option B)</h3>
+  <div class="timeline-bar">
+    <a class="tl-item" href="#sec-prep"><span class="tl-time">0h00 → 0h20 (20 min)</span><strong>Étape 0</strong><br>Brochage TO-220 <code>LM317</code> vs <code>TIP31C</code>, DIP-8 &amp; Docs Classroom</a>
+    <a class="tl-item" href="#sec-p1"><span class="tl-time">0h20 → 1h20 (1h00)</span><strong>Partie 1</strong><br>Stabilisation Zener <code>1N4735A</code> &amp; Régulateur <code>LM317</code> (Réf. 2,50 V)</a>
+    <a class="tl-item" href="#sec-p2"><span class="tl-time">1h20 → 2h25 (1h05)</span><strong>Partie 2</strong><br>Timer LinCMOS <code>TLC555CP</code> : Astable &amp; Modulateur PWM matériel</a>
+    <a class="tl-item" href="#sec-p3"><span class="tl-time">2h25 → 3h25 (1h00)</span><strong>Partie 3</strong><br>CAN 12 bits externe <code>ADS7816P</code> : Architecture SAR &amp; Trame 15 coups</a>
+    <a class="tl-item" href="#sec-p4"><span class="tl-time">3h25 → 4h05 (40 min)</span><strong>Partie 4</strong><br>Décodage Série Synchrone <code>ADS7816P</code> au <em>Logic Analyzer</em> AD3</a>
+    <a class="tl-item" href="#sec-p5"><span class="tl-time">4h05 → 5h00 (55 min)</span><strong>Partie 5</strong><br>Banc « PICO-POWERDAC » : Métrologie <code>ADS7816</code> vs RP2040 &amp; Moteur</a>
+  </div>
+
+  <h3>🎯 Ancrage au Référentiel Officiel BTS CIEL — Option B : Électronique et Réseaux (BO du 25/01/2023)</h3>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:13%;">Code BO</th>
+        <th style="width:29%;">Compétence BTS CIEL Option B</th>
+        <th style="width:58%;">Savoirs Associés (Physique Appliquée / STI) &amp; Activités du TP 8</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C04</span></td>
+        <td><strong>Analyser une structure matérielle et logicielle</strong></td>
+        <td>Claquage Zener contrôlé (<code>1N4735A</code>), régulateur série linéaire ajustable à référence interne <code>1,25 V</code> (<code>LM317</code>), comparateurs à fenêtre $\frac{1}{3}V_{DD}$ / $\frac{2}{3}V_{DD}$ du timer <code>TLC555CP</code>, CAN 12 bits à approximations successives (SAR) <code>ADS7816P</code>.</td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C05</span></td>
+        <td><strong>Concevoir et dimensionner un sous-ensemble</strong></td>
+        <td>Calcul du pont de réglage $V_{\text{out}} = 1,25\,(1 + R_2/R_1)$, calcul des temps de charge/décharge $t_H, t_L$ d'un astable PWM à aiguillage par diodes, simulation transitoire sous <strong>Proteus 8</strong>.</td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C06</span></td>
+        <td><strong>Valider par l'instrumentation mixte (AD3)</strong></td>
+        <td>Mesure du taux de réjection d'ondulation (<em>Ripple Rejection</em>) au <strong>Scope + Wavegen AD3</strong>, relevé des seuils de basculement du <code>TLC555CP</code>, et décodage de trame série synchrone 15 bits au <strong>Logic Analyzer AD3</strong>.</td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C07</span></td>
+        <td><strong>Réaliser et interfacer des prototypes</strong></td>
+        <td>Distinction du brochage TO-220 (<code>LM317</code> vs <code>TIP31C</code>), couplage de la référence <code>2,50 V</code> du <code>LM317</code> sur <code>VREF [1]</code> de l'<code>ADS7816P</code>, adaptation 5 V &rarr; 3,3 V sur <code>DOUT [6]</code>.</td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C08</span></td>
+        <td><strong>Coder un pilote de bus série synchrone</strong></td>
+        <td>Implémentation en MicroPython du chronogramme 15 coups d'horloge de l'<code>ADS7816P</code> (<em>Sample &amp; Hold</em> + <em>Null Bit</em> + 12 bits MSB-first) et comparaison métrologique avec le CAN interne du RP2040.</td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C01</span></td>
+        <td><strong>Communiquer en situation professionnelle</strong></td>
+        <td>Dossier d'essais complet sous <strong>Google Docs (Classroom)</strong> avec oscillogrammes et trames série décodées.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- LIVRABLE CLASSROOM + OUTILS INTERACTIFS D'ATELIER -->
+<div class="callout callout-docs" id="trame-classroom">
+  <strong style="font-size:10.5pt; color:#0f766e;">📄 LIVRABLE ATTENDU : Dossier d'Essais « PICO-POWERDAC » sous Google Docs (Classroom)</strong>
+  <p style="margin:6px 0;">
+    Ouvrez le devoir <strong>« TP 8 — Régulation LM317, PWM TLC555 &amp; Convertisseur Série ADS7816P »</strong> dans Google Classroom, créez votre document <strong>Google Docs</strong>, cliquez sur le bouton ci-dessous puis faites <code>Ctrl + V</code> :
+  </p>
+  <div class="no-print">
+    <button type="button" class="btn btn-docs" onclick="copierTrameClassroom()">📋 Copier la trame complète TP 8 pour Google Docs</button>
+    <div id="copyToast" class="toast-copy">✅ Trame TP 8 copiée ! Ouvrez votre Google Docs Classroom et faites <strong>Ctrl + V</strong>.</div>
+  </div>
+</div>
+
+<!-- MINI-OUTILS INTERACTIFS : LM317 / TLC555 + DÉCODEUR ADS7816P 12 BITS -->
+<div class="tools-strip no-print">
+  <div class="mini-tool">
+    <h4>🔋 Calculateur Régulateur <code>LM317</code> &amp; Astable <code>TLC555CP</code></h4>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
+      <label><i>R</i><sub>1</sub> LM317 (&Omega;) :<br><input type="number" id="inpR1Lm" value="220" step="10" style="width:100%;" oninput="calcLm555()"></label>
+      <label><i>R</i><sub>2</sub> LM317 (&Omega;) :<br><input type="number" id="inpR2Lm" value="220" step="10" style="width:100%;" oninput="calcLm555()"></label>
+      <label><i>R<sub>A</sub></i> / <i>R<sub>B</sub></i> 555 (k&Omega;) :<br>
+        <select id="sel555" style="width:100%;" onchange="calcLm555()">
+          <option value="1,10" selected>R_A=1 k&Omega;, R_B=10 k&Omega; (Standard)</option>
+          <option value="2.2,4.7">R_A=2,2 k&Omega;, R_B=4,7 k&Omega;</option>
+          <option value="4.7,10">R_A=4,7 k&Omega;, R_B=10 k&Omega;</option>
+        </select>
+      </label>
+      <label><i>C</i> 555 (nF) :<br><input type="number" id="inpC555" value="100" step="10" style="width:100%;" oninput="calcLm555()"></label>
+    </div>
+    <div class="tool-result" id="lm555Result">LM317 : V_out = 2,50 V | TLC555 : f = 686 Hz, Rapport &alpha; = 52,4 %</div>
+  </div>
+
+  <div class="mini-tool">
+    <h4>🔢 Simulateur Trame 12 bits <code>ADS7816P</code> (Quantum &amp; Code Hex/Bin)</h4>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
+      <label><i>V<sub>REF</sub></i> broche 1 (V) :<br><input type="number" id="inpVrefAds" value="2.50" step="0.05" style="width:100%;" oninput="calcAds()"></label>
+      <label><i>V<sub>+In</sub></i> broche 2 (V) :<br><input type="number" id="inpVinAds" value="1.25" step="0.05" style="width:100%;" oninput="calcAds()"></label>
+    </div>
+    <div class="tool-result" id="adsResult">q = 0,610 mV | Code = 2048 / 4095 (0x800) | Trame : [0] 1000 0000 0000</div>
+  </div>
+</div>
+
+<!-- ===================================================================== -->
+<!-- ÉTAPE 0 : REPÉRAGE DES BOÎTIERS TO-220 (LM317 VS TIP31C) & DIP-8      -->
+<!-- ===================================================================== -->
+<h2 id="sec-prep">ÉTAPE 0 : Inventaire Matériel &amp; Repérage Critique des Brochages TO-220 / DIP-8 <span class="badge badge-time">20 min</span></h2>
+
+<div class="card-block">
+  <h3>0.1 Composants du <em>TI myParts Kit</em> Utilisés &amp; Modèles Proteus 8</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Sous-ensemble</th>
+        <th>Composant TI myParts Kit</th>
+        <th>Boîtier &amp; Rôle dans le TP 8</th>
+        <th class="col-sim">Modèle Proteus 8 (<code>Pick Devices</code>)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Stabilisation Zener</strong></td>
+        <td>Diode Zener <code>1N4735A</code> (6,2 V — 1 W)</td>
+        <td>DO-41 verre (bague noire = Cathode <code>K</code>)</td>
+        <td><code>1N4735A</code></td>
+      </tr>
+      <tr>
+        <td><strong>Régulateur linéaire</strong></td>
+        <td><code>LM317</code> (1,25 V à 37 V — 1,5 A)</td>
+        <td><strong>TO-220 : <code>1 = ADJ</code>, <code>2 = VOUT</code>, <code>3 = VIN</code></strong></td>
+        <td><code>LM317T</code></td>
+      </tr>
+      <tr>
+        <td><strong>Timer / PWM matériel</strong></td>
+        <td><code>TLC555CP</code> (Timer LinCMOS)</td>
+        <td>DIP-8 (2 V à 15 V, sortie CMOS rail-à-rail)</td>
+        <td><code>555</code> ou <code>TLC555</code></td>
+      </tr>
+      <tr>
+        <td><strong>CAN 12 bits série</strong></td>
+        <td><code>ADS7816P</code> (SAR 12 bits — 200 kSPS)</td>
+        <td>DIP-8 (<code>1=VREF</code>, <code>5=/CS</code>, <code>6=DOUT</code>, <code>7=DCLOCK</code>)</td>
+        <td><code>ADS7816</code> (ou <code>LTC1286</code> compatible broche à broche !)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- SVG 1 : COMPARAISON BROCHAGES TO-220 (LM317 vs TIP31C) ET DIP-8 (TLC555CP & ADS7816P) -->
+  <div class="svg-card">
+    <svg viewBox="0 0 920 275" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Brochages comparés LM317 vs TIP31C en TO-220 et TLC555CP / ADS7816P en DIP-8">
+      <rect x="0" y="0" width="920" height="275" fill="#f8fafc" rx="8"/>
+
+      <!-- Zone 1 : Attention TO-220 LM317 vs TIP31C -->
+      <rect x="14" y="14" width="310" height="247" rx="8" fill="#fef2f2" stroke="#dc2626" stroke-width="1.6"/>
+      <text x="169" y="35" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#b91c1c">⚠️ Piège TO-220 : LM317 ≠ TIP31C !</text>
+
+      <!-- Boîtier LM317 -->
+      <rect x="44" y="54" width="104" height="20" fill="#94a3b8" stroke="#475569" stroke-width="1.5"/>
+      <circle cx="96" cy="64" r="5" fill="#f8fafc" stroke="#475569" stroke-width="1.2"/>
+      <rect x="44" y="74" width="104" height="62" rx="4" fill="#1e293b"/>
+      <text x="96" y="102" text-anchor="middle" font-family="Consolas, monospace" font-size="11" font-weight="bold" fill="#fde047">LM317</text>
+      <text x="96" y="120" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8" fill="#cbd5e1">(Semelle = VOUT)</text>
+      <line x1="62" y1="136" x2="62" y2="176" stroke="#475569" stroke-width="3.5"/>
+      <line x1="96" y1="136" x2="96" y2="176" stroke="#dc2626" stroke-width="3.5"/>
+      <line x1="130" y1="136" x2="130" y2="176" stroke="#0284c7" stroke-width="3.5"/>
+      <text x="62" y="192" text-anchor="middle" font-family="Consolas, monospace" font-size="8.5" font-weight="bold" fill="#0f172a">[1] ADJ</text>
+      <text x="96" y="206" text-anchor="middle" font-family="Consolas, monospace" font-size="8.5" font-weight="bold" fill="#dc2626">[2] VOUT</text>
+      <text x="130" y="192" text-anchor="middle" font-family="Consolas, monospace" font-size="8.5" font-weight="bold" fill="#0284c7">[3] VIN</text>
+
+      <!-- Boîtier TIP31C (rappel TP 5) -->
+      <rect x="188" y="54" width="104" height="20" fill="#94a3b8" stroke="#475569" stroke-width="1.5"/>
+      <circle cx="240" cy="64" r="5" fill="#f8fafc" stroke="#475569" stroke-width="1.2"/>
+      <rect x="188" y="74" width="104" height="62" rx="4" fill="#334155"/>
+      <text x="240" y="102" text-anchor="middle" font-family="Consolas, monospace" font-size="11" font-weight="bold" fill="#f8fafc">TIP31C</text>
+      <text x="240" y="120" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8" fill="#cbd5e1">(Rappel TP 5)</text>
+      <line x1="206" y1="136" x2="206" y2="176" stroke="#475569" stroke-width="3.5"/>
+      <line x1="240" y1="136" x2="240" y2="176" stroke="#475569" stroke-width="3.5"/>
+      <line x1="274" y1="136" x2="274" y2="176" stroke="#475569" stroke-width="3.5"/>
+      <text x="206" y="192" text-anchor="middle" font-family="Consolas, monospace" font-size="8.5" fill="#334155">[1] Base</text>
+      <text x="240" y="206" text-anchor="middle" font-family="Consolas, monospace" font-size="8.5" fill="#334155">[2] Coll.</text>
+      <text x="274" y="192" text-anchor="middle" font-family="Consolas, monospace" font-size="8.5" fill="#334155">[3] Émett.</text>
+
+      <text x="169" y="242" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.5" font-weight="bold" fill="#991b1b">Sur le LM317, l'entrée VIN est à DROITE [3] !</text>
+
+      <!-- Zone 2 : Brochage DIP-8 TLC555CP -->
+      <rect x="338" y="14" width="276" height="247" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+      <text x="476" y="35" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#0b3c5d">Timer LinCMOS TLC555CP (DIP-8)</text>
+      <rect x="424" y="62" width="104" height="145" rx="6" fill="#1e293b" stroke="#0f172a" stroke-width="2"/>
+      <path d="M 462 62 A 14 14 0 0 0 490 62" fill="#f8fafc" stroke="#0f172a" stroke-width="1.5"/>
+      <circle cx="438" cy="76" r="3.5" fill="#fbbf24"/>
+
+      <text x="416" y="85" text-anchor="end" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#334155">GND [1]</text>
+      <text x="416" y="118" text-anchor="end" font-family="Consolas, monospace" font-size="9" fill="#0284c7">TRIG [2]</text>
+      <text x="416" y="151" text-anchor="end" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#15803d">OUT [3]</text>
+      <text x="416" y="184" text-anchor="end" font-family="Consolas, monospace" font-size="9" fill="#dc2626">/RESET [4]</text>
+
+      <text x="536" y="85" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#dc2626">[8] VDD (+5V)</text>
+      <text x="536" y="118" font-family="Consolas, monospace" font-size="9" fill="#7c3aed">[7] DISCH</text>
+      <text x="536" y="151" font-family="Consolas, monospace" font-size="9" fill="#0284c7">[6] THRES</text>
+      <text x="536" y="184" font-family="Consolas, monospace" font-size="9" fill="#64748b">[5] CONT</text>
+      <text x="476" y="138" text-anchor="middle" font-family="Consolas, monospace" font-size="10.5" font-weight="bold" fill="#38bdf8">TLC555CP</text>
+      <text x="476" y="236" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.5" fill="#475569">Relier /RESET [4] à +5 V pour autoriser l'oscillation</text>
+
+      <!-- Zone 3 : Brochage DIP-8 ADS7816P -->
+      <rect x="628" y="14" width="278" height="247" rx="8" fill="#ffffff" stroke="#0d9488" stroke-width="1.6"/>
+      <text x="767" y="35" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#0f766e">CAN 12 bits Série ADS7816P (DIP-8)</text>
+      <rect x="715" y="62" width="104" height="145" rx="6" fill="#0f172a" stroke="#0d9488" stroke-width="2"/>
+      <path d="M 753 62 A 14 14 0 0 0 781 62" fill="#f8fafc" stroke="#0d9488" stroke-width="1.5"/>
+      <circle cx="729" cy="76" r="3.5" fill="#5eead4"/>
+
+      <text x="707" y="85" text-anchor="end" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#d97706">VREF [1]</text>
+      <text x="707" y="118" text-anchor="end" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#15803d">+In [2]</text>
+      <text x="707" y="151" text-anchor="end" font-family="Consolas, monospace" font-size="9" fill="#475569">-In [3]</text>
+      <text x="707" y="184" text-anchor="end" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#334155">GND [4]</text>
+
+      <text x="827" y="85" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#dc2626">[8] +VCC (+5V)</text>
+      <text x="827" y="118" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#0284c7">[7] DCLOCK</text>
+      <text x="827" y="151" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#7c3aed">[6] DOUT</text>
+      <text x="827" y="184" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#b91c1c">[5] /CS</text>
+      <text x="767" y="138" text-anchor="middle" font-family="Consolas, monospace" font-size="10.5" font-weight="bold" fill="#5eead4">ADS7816P</text>
+      <text x="767" y="236" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.5" font-weight="bold" fill="#0f766e">Attention : [6] = DOUT et [7] = DCLOCK !</text>
+    </svg>
+    <div class="svg-caption">Figure 0.1 — Repérage physique des boîtiers TO-220 (<code>LM317</code> vs <code>TIP31C</code>) et DIP-8 (<code>TLC555CP</code> et <code>ADS7816P</code>).</div>
+  </div>
+
+  <label class="step-check no-print">
+    <input type="checkbox" class="tp-step-cb" data-step="0" onchange="updateProgress()">
+    <span>Étape 0 validée : Trame Google Docs créée dans Classroom et brochages du LM317 (1=ADJ, 2=VOUT, 3=VIN) et de l'ADS7816P repérés.</span>
+  </label>
+</div>
+
+<!-- ===================================================================== -->
+<!-- PARTIE 1 : STABILISATION ZENER 1N4735A & RÉGULATEUR LINÉAIRE LM317    -->
+<!-- ===================================================================== -->
+<h2 id="sec-p1">PARTIE 1 : Stabilisation Zener (<code>1N4735A</code>) &amp; Régulateur Ajustable <code>LM317</code> — Référence <code>2,50 V</code> <span class="badge badge-time">1h00</span></h2>
+
+<div class="card-block">
+  <h3>1.1 Stabilisation par Diode Zener <code>1N4735A</code> (<i>V<sub>Z</sub></i> = 6,2 V) polarisée en inverse</h3>
+  <p>
+    La diode Zener <strong><code>1N4735A</code></strong> du <em>TI myParts Kit</em> présente une tension d'avalanche nominale de <strong><code>6,2 V</code></strong> lorsqu'elle est polarisée <strong>en inverse</strong> (cathode à bague noire du côté positif).
+    <br><strong>Astuce d'instrumentation AD3 :</strong> Comme le rail <code>V+</code> seul plafonne à <code>+5,00 V</code>, activez dans <strong><code>Supplies</code></strong> à la fois <strong><code>V+ = +5,00 V</code></strong> (fil Rouge) et <strong><code>V- = &minus;5,00 V</code></strong> (fil Blanc) : vous disposez ainsi d'une source de <strong><code>10,00 V</code></strong> entre <code>V+</code> et <code>V-</code> !
+  </p>
+
+  <h3>1.2 Régulateur Linéaire Ajustable <code>LM317</code> : Création d'une Tension Étalon <i>V<sub>REF</sub></i> = 2,500 V</h3>
+  <p>
+    Contrairement à une simple Zener dont la tension varie légèrement avec le courant de charge, le régulateur intégré <strong><code>LM317</code></strong> contient un amplificateur d'erreur interne maintenant une tension de référence constante de <strong><code>1,250 V</code></strong> entre sa sortie <code>VOUT [2]</code> et sa broche d'ajustement <code>ADJ [1]</code> :
+  </p>
+
+  <div class="formula-box">
+    Loi du régulateur linéaire <code>LM317</code> :
+    &nbsp;&nbsp;
+    <i>V<sub>OUT</sub></i> = 1,250 V &times;
+    <left>(</left>1 + <span class="frac"><span class="num"><i>R</i><sub>2</sub></span><span class="den"><i>R</i><sub>1</sub></span></span><right>)</right>
+    + <i>I<sub>ADJ</sub></i> &middot; <i>R</i><sub>2</sub>
+    &nbsp;&nbsp;&rArr;&nbsp;&nbsp;
+    Pour <i>R</i><sub>1</sub> = <strong>220 &Omega;</strong> et <i>R</i><sub>2</sub> = <strong>220 &Omega;</strong> :
+    &nbsp; <strong><i>V<sub>OUT</sub></i> = 2,50 V</strong> !
+  </div>
+
+  <!-- SVG 2 : SCHÉMAS ZENER 1N4735A + RÉGULATEUR LM317 (2,50 V ÉTALON) -->
+  <div class="svg-card">
+    <svg viewBox="0 0 920 275" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Schémas de stabilisation Zener 1N4735A et régulateur linéaire LM317 à 2,50 V">
+      <rect x="0" y="0" width="920" height="275" fill="#f8fafc" rx="8"/>
+
+      <!-- Moitié Gauche : Stabilisation Zener 1N4735A sous 10 V (V+ / V-) -->
+      <rect x="14" y="14" width="420" height="247" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+      <text x="224" y="36" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#0b3c5d">1.1 Stabilisation Zener 1N4735A (Sous 10 V = V+ à V-)</text>
+
+      <line x1="48" y1="68" x2="120" y2="68" stroke="#dc2626" stroke-width="2.2"/>
+      <text x="44" y="60" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#dc2626">V+ (+5,0 V)</text>
+      <rect x="120" y="59" width="56" height="18" fill="#ffffff" stroke="#1e293b" stroke-width="1.8"/>
+      <text x="148" y="53" text-anchor="middle" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#0f172a">R_S = 470 Ω</text>
+      <line x1="176" y1="68" x2="350" y2="68" stroke="#0284c7" stroke-width="2.2"/>
+      <circle cx="235" cy="68" r="3.5" fill="#0284c7"/>
+
+      <!-- Diode Zener en inverse (Cathode en haut !) -->
+      <line x1="235" y1="68" x2="235" y2="120" stroke="#0284c7" stroke-width="2"/>
+      <!-- Barre Zener cathode en haut -->
+      <polyline points="223,126 227,120 243,120 247,114" fill="none" stroke="#b91c1c" stroke-width="2.4"/>
+      <polygon points="225,142 245,142 235,120" fill="#fee2e2" stroke="#b91c1c" stroke-width="2"/>
+      <line x1="235" y1="142" x2="235" y2="212" stroke="#334155" stroke-width="2"/>
+      <text x="208" y="135" text-anchor="end" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#b91c1c">1N4735A</text>
+      <text x="208" y="148" text-anchor="end" font-family="Segoe UI, sans-serif" font-size="8" fill="#7f1d1d">(Bague K en haut !)</text>
+
+      <!-- Charge R_L débranchable (1 kΩ) -->
+      <line x1="330" y1="68" x2="330" y2="108" stroke="#15803d" stroke-width="1.8" stroke-dasharray="4,3"/>
+      <rect x="321" y="108" width="18" height="46" fill="#f0fdf4" stroke="#15803d" stroke-width="1.6"/>
+      <text x="348" y="134" font-family="Consolas, monospace" font-size="8.5" font-weight="bold" fill="#15803d">R_L = 1 kΩ</text>
+      <line x1="330" y1="154" x2="330" y2="212" stroke="#334155" stroke-width="1.8"/>
+
+      <line x1="48" y1="212" x2="365" y2="212" stroke="#334155" stroke-width="2.2"/>
+      <text x="44" y="228" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#334155">V- (-5,0 V = Réf. bas 10 V)</text>
+      <text x="235" y="246" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.6" font-weight="bold" fill="#0369a1">Mesurer U_Z entre Cathode et Anode : ~6,2 V</text>
+
+      <!-- Moitié Droite : Régulateur Linéaire LM317 (2,50 V étalon) -->
+      <rect x="448" y="14" width="458" height="247" rx="8" fill="#ffffff" stroke="#0d9488" stroke-width="1.6"/>
+      <text x="677" y="36" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#0f766e">1.2 Régulateur Linéaire LM317 → Référence V_REF = 2,50 V</text>
+
+      <!-- Entrée VIN [3] (+5,00 V) -->
+      <line x1="472" y1="86" x2="565" y2="86" stroke="#dc2626" stroke-width="2.4"/>
+      <text x="472" y="76" font-family="Consolas, monospace" font-size="9.5" font-weight="bold" fill="#dc2626">+5,00 V (V+ AD3)</text>
+      <!-- Condensateur d'entrée 100 nF -->
+      <line x1="518" y1="86" x2="518" y2="140" stroke="#334155" stroke-width="1.6"/>
+      <line x1="508" y1="140" x2="528" y2="140" stroke="#0b3c5d" stroke-width="2.4"/>
+      <line x1="508" y1="147" x2="528" y2="147" stroke="#0b3c5d" stroke-width="2.4"/>
+      <line x1="518" y1="147" x2="518" y2="222" stroke="#334155" stroke-width="1.6"/>
+      <text x="502" y="146" text-anchor="end" font-family="Consolas, monospace" font-size="8" fill="#334155">100nF</text>
+
+      <!-- Bloc LM317 -->
+      <rect x="565" y="64" width="116" height="46" rx="5" fill="#1e293b" stroke="#0f172a" stroke-width="2"/>
+      <text x="623" y="85" text-anchor="middle" font-family="Consolas, monospace" font-size="11" font-weight="bold" fill="#fde047">LM317</text>
+      <text x="573" y="102" font-family="Consolas, monospace" font-size="8" fill="#93c5fd">VIN[3]</text>
+      <text x="673" y="102" text-anchor="end" font-family="Consolas, monospace" font-size="8" fill="#86efac">VOUT[2]</text>
+      <text x="623" y="106" text-anchor="middle" font-family="Consolas, monospace" font-size="8" fill="#fca5a5">ADJ[1]</text>
+
+      <!-- Sortie VOUT [2] = 2,500 V -->
+      <line x1="681" y1="86" x2="880" y2="86" stroke="#15803d" stroke-width="2.6"/>
+      <text x="815" y="75" text-anchor="middle" font-family="Consolas, monospace" font-size="10" font-weight="bold" fill="#15803d">V_REF = 2,50 V</text>
+      <text x="815" y="102" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.2" font-weight="bold" fill="#0f766e">(Vers broche 1 ADS7816P)</text>
+
+      <!-- Résistance R1 = 220 Ω entre VOUT [2] et ADJ [1] -->
+      <line x1="716" y1="86" x2="716" y2="112" stroke="#15803d" stroke-width="1.8"/>
+      <rect x="707" y="112" width="18" height="36" fill="#ffffff" stroke="#15803d" stroke-width="1.8"/>
+      <text x="732" y="134" font-family="Consolas, monospace" font-size="8.8" font-weight="bold" fill="#166534">R1 = 220 Ω (1,25V)</text>
+      <line x1="716" y1="148" x2="716" y2="162" stroke="#d97706" stroke-width="1.8"/>
+      <line x1="623" y1="110" x2="623" y2="162" stroke="#d97706" stroke-width="1.8"/>
+      <line x1="623" y1="162" x2="716" y2="162" stroke="#d97706" stroke-width="1.8"/>
+      <circle cx="716" cy="162" r="3" fill="#d97706"/>
+
+      <!-- Résistance R2 = 220 Ω entre ADJ [1] et GND -->
+      <line x1="716" y1="162" x2="716" y2="174" stroke="#d97706" stroke-width="1.8"/>
+      <rect x="707" y="174" width="18" height="34" fill="#ffffff" stroke="#d97706" stroke-width="1.8"/>
+      <text x="732" y="195" font-family="Consolas, monospace" font-size="8.8" font-weight="bold" fill="#b45309">R2 = 220 Ω</text>
+      <line x1="716" y1="208" x2="716" y2="222" stroke="#334155" stroke-width="1.8"/>
+
+      <!-- Condensateur de sortie 1 µF / 100 nF -->
+      <line x1="852" y1="86" x2="852" y2="145" stroke="#15803d" stroke-width="1.6"/>
+      <line x1="842" y1="145" x2="862" y2="145" stroke="#0b3c5d" stroke-width="2.4"/>
+      <line x1="842" y1="152" x2="862" y2="152" stroke="#0b3c5d" stroke-width="2.4"/>
+      <line x1="852" y1="152" x2="852" y2="222" stroke="#334155" stroke-width="1.6"/>
+      <text x="870" y="152" font-family="Consolas, monospace" font-size="8" fill="#334155">1µF</text>
+
+      <line x1="472" y1="222" x2="884" y2="222" stroke="#334155" stroke-width="2.2"/>
+      <text x="472" y="238" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#334155">GND commun</text>
+    </svg>
+    <div class="svg-caption">Figure 1.1 — Stabilisation par diode Zener <code>1N4735A</code> (1.1) et régulateur linéaire intégré <code>LM317</code> réglé à <code>2,50 V</code> (1.2).</div>
+  </div>
+
+  <h3>1.3 Comparaison Expérimentale : Régulation de Charge &amp; Réjection d'Ondulation (Proteus vs AD3)</h3>
+  <ol>
+    <li><strong>Stabilisation Zener (1.1) :</strong> Sous Proteus puis sur Breadboard (entre <code>V+ = +5 V</code> et <code>V- = &minus;5 V</code>), mesurez la tension <i>U<sub>Z</sub></i> aux bornes de la <code>1N4735A</code> <strong>à vide</strong>, puis <strong>en charge</strong> en branchant <code>R<sub>L</sub> = 1 k&Omega;</code> en parallèle.</li>
+    <li><strong>Régulateur <code>LM317</code> (1.2) :</strong> Câblez le <code>LM317</code> entre <code>+5,00 V</code> et <code>GND</code> avec <code>R<sub>1</sub> = 220 &Omega;</code> et <code>R<sub>2</sub> = 220 &Omega;</code>. Relevez <i>V<sub>OUT</sub></i> à vide, puis avec une charge <code>R<sub>L</sub> = 220 &Omega;</code> (~11 mA), et enfin lorsque vous abaissez la tension d'entrée <code>V+</code> de <code>5,00 V</code> à <code>4,20 V</code> dans <code>Supplies</code> !</li>
+  </ol>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Montage &amp; Condition d'essai</th>
+        <th class="center col-calc">Valeur Théorique</th>
+        <th class="center col-sim">Simulation Proteus</th>
+        <th class="center col-ad3">Mesure Réelle (Multimètre / AD3)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Zener <code>1N4735A</code></strong> — À vide (sans <i>R<sub>L</sub></i>)</td>
+        <td class="center">~6,20 V</td>
+        <td class="center">________ V</td>
+        <td class="center">________ V</td>
+      </tr>
+      <tr>
+        <td><strong>Zener <code>1N4735A</code></strong> — En charge (<i>R<sub>L</sub></i> = 1 k&Omega;)</td>
+        <td class="center">Légère chute</td>
+        <td class="center">________ V</td>
+        <td class="center">&Delta;<i>U<sub>Z</sub></i> = ________ mV</td>
+      </tr>
+      <tr>
+        <td><strong>Régulateur <code>LM317</code> (220/220)</strong> — Tension <i>V<sub>ADJ-OUT</sub></i> (sur <i>R</i><sub>1</sub>)</td>
+        <td class="center"><strong>1,250 V</strong></td>
+        <td class="center">________ V</td>
+        <td class="center">________ V</td>
+      </tr>
+      <tr>
+        <td><strong>Régulateur <code>LM317</code></strong> — Sortie <i>V<sub>OUT</sub></i> à vide vs chargé (220 &Omega;)</td>
+        <td class="center"><strong>2,500 V</strong></td>
+        <td class="center">________ V</td>
+        <td class="center">Vide : ______ V | Chargé : ______ V</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-tip">
+    <strong>📌 Conservez votre montage <code>LM317</code> (2,50 V) sur un coin de la breadboard !</strong> Sa sortie <i>V<sub>OUT</sub></i> = 2,50 V servira de référence métrologique externe à la broche <code>1 (VREF)</code> du convertisseur 12 bits <code>ADS7816P</code> en Parties 3, 4 et 5.
+  </div>
+
+  <label class="step-check no-print">
+    <input type="checkbox" class="tp-step-cb" data-step="1" onchange="updateProgress()">
+    <span>Partie 1 validée : Diode Zener 1N4735A caractérisée et référence étalon 2,50 V par LM317 opérationnelle sur la breadboard.</span>
+  </label>
+</div>
+
+<!-- ===================================================================== -->
+<!-- PARTIE 2 : GÉNÉRATION PWM MATÉRIELLE PAR TIMER LINCMOS TLC555CP       -->
+<!-- ===================================================================== -->
+<h2 id="sec-p2">PARTIE 2 : Oscillateur Astable &amp; Modulateur PWM Matériel par Timer <code>TLC555CP</code> <span class="badge badge-time">1h05</span></h2>
+
+<div class="card-block">
+  <h3>2.1 Fonctionnement Interne du Timer LinCMOS <code>TLC555CP</code> en Mode Astable</h3>
+  <p>
+    Le circuit intégré <strong><code>TLC555CP</code></strong> contient un pont diviseur interne à trois résistances identiques fixant deux seuils de basculement à <strong>$\frac{1}{3}V_{DD}$ (&approx; 1,67 V sous 5 V)</strong> et <strong>$\frac{2}{3}V_{DD}$ (&approx; 3,33 V sous 5 V)</strong> :
+    <br>&bull; Tant que le condensateur <i>C</i> se charge vers <code>+5 V</code> à travers $R_A + R_B$, la sortie <code>OUT [3]</code> vaut <strong><code>1</code> (+5 V)</strong>.
+    <br>&bull; Dès que $V_C(t)$ atteint <strong>$\frac{2}{3}V_{DD}$ (3,33 V)</strong>, le comparateur haut bascule la mémoire interne : <code>OUT [3]</code> passe à <strong><code>0</code> (0 V)</strong> et le transistor <code>DISCH [7]</code> décharge $C$ à travers $R_B$ jusqu'à <strong>$\frac{1}{3}V_{DD}$ (1,67 V)</strong>, où le cycle recommence !
+  </p>
+
+  <div class="formula-box">
+    Astable classique (sans diodes) :
+    &nbsp;
+    <i>t<sub>H</sub></i> = <span class="frac"><span class="num">&ln;(2) &middot; (<i>R<sub>A</sub></i> + <i>R<sub>B</sub></i>) &middot; <i>C</i></span><span class="den">1</span></span>
+    &nbsp;|&nbsp;
+    <i>t<sub>L</sub></i> = 0,693 &middot; <i>R<sub>B</sub></i> &middot; <i>C</i>
+    &nbsp;|&nbsp;
+    <i>f</i> = <span class="frac"><span class="num">1,44</span><span class="den">(<i>R<sub>A</sub></i> + 2 <i>R<sub>B</sub></i>) &middot; <i>C</i></span></span>
+  </div>
+
+  <!-- SVG 3 : SCHÉMA ASTABLE / PWM TLC555CP + OSCILLOGRAMME CH1 (OUT) & CH2 (V_C) -->
+  <div class="svg-card">
+    <svg viewBox="0 0 920 295" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Schéma de l'oscillateur astable TLC555CP et oscillogrammes Scope AD3">
+      <rect x="0" y="0" width="920" height="295" fill="#f8fafc" rx="8"/>
+
+      <!-- Zone Schéma Gauche -->
+      <rect x="14" y="14" width="510" height="267" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+      <text x="269" y="35" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#0b3c5d">Montage Astable TLC555CP (R_A = 1 kΩ, R_B = 10 kΩ, C = 100 nF)</text>
+
+      <!-- Rail +5V -->
+      <line x1="40" y1="54" x2="495" y2="54" stroke="#dc2626" stroke-width="2.2"/>
+      <text x="44" y="48" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#dc2626">+5,00 V (Broches 8 VDD et 4 /RESET)</text>
+
+      <!-- R_A = 1 kΩ entre +5V et DISCH [7] -->
+      <line x1="115" y1="54" x2="115" y2="70" stroke="#dc2626" stroke-width="1.8"/>
+      <rect x="106" y="70" width="18" height="36" fill="#ffffff" stroke="#1e293b" stroke-width="1.8"/>
+      <text x="98" y="92" text-anchor="end" font-family="Consolas, monospace" font-size="8.8" font-weight="bold" fill="#0f172a">R_A = 1 kΩ</text>
+      <line x1="115" y1="106" x2="115" y2="122" stroke="#7c3aed" stroke-width="2"/>
+      <line x1="115" y1="122" x2="225" y2="122" stroke="#7c3aed" stroke-width="2"/>
+      <circle cx="115" cy="122" r="3" fill="#7c3aed"/>
+
+      <!-- R_B = 10 kΩ entre DISCH [7] et THRES [6] / TRIG [2] -->
+      <line x1="115" y1="122" x2="115" y2="136" stroke="#7c3aed" stroke-width="1.8"/>
+      <rect x="106" y="136" width="18" height="40" fill="#ffffff" stroke="#0284c7" stroke-width="1.8"/>
+      <text x="98" y="160" text-anchor="end" font-family="Consolas, monospace" font-size="8.8" font-weight="bold" fill="#0369a1">R_B = 10 kΩ</text>
+      <line x1="115" y1="176" x2="115" y2="192" stroke="#0284c7" stroke-width="2"/>
+      <line x1="115" y1="192" x2="225" y2="192" stroke="#0284c7" stroke-width="2"/>
+      <circle cx="115" cy="192" r="3.5" fill="#0284c7"/>
+      <text x="168" y="185" text-anchor="middle" font-family="Consolas, monospace" font-size="8.5" font-weight="bold" fill="#0284c7">Scope Ch2 (2+)</text>
+
+      <!-- Condensateur C = 100 nF vers GND -->
+      <line x1="115" y1="192" x2="115" y2="215" stroke="#0284c7" stroke-width="1.8"/>
+      <line x1="103" y1="215" x2="127" y2="215" stroke="#0b3c5d" stroke-width="2.5"/>
+      <line x1="103" y1="223" x2="127" y2="223" stroke="#0b3c5d" stroke-width="2.5"/>
+      <line x1="115" y1="223" x2="115" y2="256" stroke="#334155" stroke-width="1.8"/>
+      <text x="96" y="223" text-anchor="end" font-family="Consolas, monospace" font-size="8.8" font-weight="bold" fill="#0b3c5d">C = 100 nF</text>
+
+      <!-- Boîtier TLC555CP -->
+      <rect x="225" y="92" width="128" height="126" rx="5" fill="#1e293b" stroke="#0f172a" stroke-width="2.2"/>
+      <text x="289" y="152" text-anchor="middle" font-family="Consolas, monospace" font-size="11" font-weight="bold" fill="#38bdf8">TLC555CP</text>
+      <text x="233" y="126" font-family="Consolas, monospace" font-size="8.2" fill="#e9d5ff">[7] DISCH</text>
+      <text x="233" y="196" font-family="Consolas, monospace" font-size="8.2" fill="#bae6fd">[6] THRES + [2] TRIG</text>
+      <text x="345" y="156" text-anchor="end" font-family="Consolas, monospace" font-size="8.5" font-weight="bold" fill="#86efac">OUT [3]</text>
+
+      <!-- Liaison +5V vers [8] et [4], GND vers [1] -->
+      <line x1="289" y1="54" x2="289" y2="92" stroke="#dc2626" stroke-width="2"/>
+      <text x="295" y="80" font-family="Consolas, monospace" font-size="8" font-weight="bold" fill="#dc2626">[8] &amp; [4]</text>
+      <line x1="289" y1="218" x2="289" y2="256" stroke="#334155" stroke-width="2"/>
+      <text x="295" y="242" font-family="Consolas, monospace" font-size="8" fill="#334155">[1] GND</text>
+
+      <!-- Sortie OUT [3] vers Scope Ch1 (1+) et étage puissance -->
+      <line x1="353" y1="152" x2="495" y2="152" stroke="#15803d" stroke-width="2.6"/>
+      <text x="424" y="140" text-anchor="middle" font-family="Consolas, monospace" font-size="9.2" font-weight="bold" fill="#15803d">OUT [3] → Scope Ch1 (1+)</text>
+      <text x="424" y="170" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.3" fill="#334155">(ou vers R_B=330Ω + TIP31C !)</text>
+
+      <line x1="40" y1="256" x2="495" y2="256" stroke="#334155" stroke-width="2.2"/>
+
+      <!-- Zone Oscillogramme Droite (Scope AD3 : Ch1 OUT & Ch2 V_C) -->
+      <rect x="538" y="14" width="368" height="267" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1.5"/>
+      <text x="722" y="35" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#38bdf8">Oscillogramme Attendu — Scope AD3 (Ch1 &amp; Ch2)</text>
+
+      <!-- Seuils 2/3 VDD (3,33V -> y=95) et 1/3 VDD (1,67V -> y=155) -->
+      <line x1="565" y1="95" x2="885" y2="95" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="562" y="92" font-family="Consolas, monospace" font-size="8" fill="#cbd5e1">2/3 VDD = 3,33 V</text>
+      <line x1="565" y1="155" x2="885" y2="155" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="562" y="168" font-family="Consolas, monospace" font-size="8" fill="#cbd5e1">1/3 VDD = 1,67 V</text>
+
+      <!-- Courbe exponentielle V_C(t) (Ch2 Bleu) -->
+      <path d="M 575 155 Q 615 108 660 95 Q 695 138 738 155 Q 778 108 823 95 Q 858 138 885 150" fill="none" stroke="#38bdf8" stroke-width="2.5"/>
+      <text x="815" y="84" font-family="Consolas, monospace" font-size="8.5" font-weight="bold" fill="#38bdf8">Ch2 : V_C(t)</text>
+
+      <!-- Créneau de sortie OUT [3] (Ch1 Vert/Jaune en bas : y=238 pour 0V, y=192 pour 5V) -->
+      <polyline points="575,238 575,192 660,192 660,238 738,238 738,192 823,192 823,238 885,238" fill="none" stroke="#4ade80" stroke-width="2.5"/>
+      <text x="617" y="185" text-anchor="middle" font-family="Consolas, monospace" font-size="8.5" font-weight="bold" fill="#4ade80">Ch1 : OUT (t_H)</text>
+      <text x="699" y="253" text-anchor="middle" font-family="Consolas, monospace" font-size="8.5" fill="#fca5a5">t_L (Décharge)</text>
+      <text x="722" y="270" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.2" fill="#fde047">f_th ≈ 686 Hz | α_th = (1+10)/(1+20) = 52,4 %</text>
+    </svg>
+    <div class="svg-caption">Figure 2.1 — Câblage de l'oscillateur astable à <code>TLC555CP</code> et relevé simultané de $V_C(t)$ (entre 1,67 V et 3,33 V) et de <code>OUT [3]</code> au Scope AD3.</div>
+  </div>
+
+  <h3>2.2 Mesures au <em>Scope</em> AD3, Puis Extension en Variateur PWM Matériel (10 % &rarr; 90 %)</h3>
+  <ol>
+    <li><strong>Astable de base (Figure 2.1) :</strong> Câblez le <code>TLC555CP</code> avec <code>R<sub>A</sub> = 1 k&Omega;</code>, <code>R<sub>B</sub> = 10 k&Omega;</code> et <code>C = 100 nF</code> (reliez bien les broches <code>2</code> et <code>6</code> ensemble, et les broches <code>4</code> et <code>8</code> au <code>+5 V</code> !). Connectez <strong><code>1+</code></strong> sur <code>OUT [3]</code> et <strong><code>2+</code></strong> sur le condensateur <code>C</code> (<code>1-</code> et <code>2-</code> à <code>GND</code>). Relevez au Scope AD3 les tensions min/max de $V_C(t)$, la fréquence <i>f</i> et le rapport cyclique &alpha; (%).</li>
+    <li><strong>Variateur PWM matériel autonome (avec potentiomètre <code>10 k&Omega;</code> + 2 diodes <code>1N5819</code>) :</strong> Remplacez <code>R<sub>B</sub></code> par votre potentiomètre <code>10 k&Omega;</code> équipé de deux diodes Schottky <code>1N5819</code> tête-bêche orientant la charge par le demi-potentiomètre gauche et la décharge par le demi-potentiomètre droit (curseur relié à <code>C [2/6]</code>). Tournez le potentiomètre : observez au Scope que le rapport cyclique varie de <strong>~10 % à ~90 % à fréquence quasi-constante</strong> !</li>
+    <li><strong>Essai sur le Moteur CC jaune 5 V Varta :</strong> Reliez la sortie <code>OUT [3]</code> du <code>TLC555CP</code> à la résistance de base <code>R<sub>B</sub> = 330 &Omega;</code> du transistor <strong><code>TIP31C</code></strong> : faites varier la vitesse du moteur CC <strong>100 % matériellement sans aucun microcontrôleur</strong> !</li>
+  </ol>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Grandeur mesurée sur le <code>TLC555CP</code></th>
+        <th class="center col-calc">Modèle Théorique</th>
+        <th class="center col-sim">Simulation Proteus</th>
+        <th class="center col-ad3">Mesure Scope AD3</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Seuils bas et haut sur le condensateur (<i>V<sub>C,min</sub></i> / <i>V<sub>C,max</sub></i>)</td>
+        <td class="center"><strong>1,67 V / 3,33 V</strong></td>
+        <td class="center">_____ V / _____ V</td>
+        <td class="center">_____ V / _____ V</td>
+      </tr>
+      <tr>
+        <td>Durées à l'état haut <i>t<sub>H</sub></i> et bas <i>t<sub>L</sub></i> (ms)</td>
+        <td class="center">0,76 ms / 0,69 ms</td>
+        <td class="center">_____ ms / _____ ms</td>
+        <td class="center">_____ ms / _____ ms</td>
+      </tr>
+      <tr>
+        <td>Fréquence <i>f</i> (Hz) &amp; Rapport cyclique &alpha; (%)</td>
+        <td class="center"><strong>686 Hz | 52,4 %</strong></td>
+        <td class="center">_____ Hz | _____ %</td>
+        <td class="center">_____ Hz | _____ %</td>
+      </tr>
+      <tr>
+        <td>Plage PWM mesurée avec potentiomètre + 2 diodes</td>
+        <td class="center">~10 % à ~90 %</td>
+        <td class="center">___ % &rarr; ___ %</td>
+        <td class="center">___ % &rarr; ___ %</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="student-answer">
+    <strong>💡 Question d'analyse Option B n°1 (Comparaison <code>NE555</code> bipolaire vs <code>TLC555CP</code> LinCMOS — Google Docs) :</strong><br>
+    D'après vos mesures au Scope AD3, quelle est l'amplitude haute <i>V<sub>OH</sub></i> de la sortie <code>OUT [3]</code> du <code>TLC555CP</code> sous +5,00 V ? Pourquoi un <code>TLC555CP</code> en technologie CMOS atteint-il quasiment +5,00 V (<em>rail-to-rail</em>) tout en consommant 10 fois moins au repos qu'un <code>NE555</code> bipolaire historique ?
+  </div>
+
+  <label class="step-check no-print">
+    <input type="checkbox" class="tp-step-cb" data-step="2" onchange="updateProgress()">
+    <span>Partie 2 validée : Oscillogrammes Ch1/Ch2 du TLC555CP capturés et variation PWM matérielle testée sur le moteur CC.</span>
+  </label>
+</div>
+
+<!-- ===================================================================== -->
+<!-- PARTIE 3 : CAN 12 BITS ADS7816P & ARCHITECTURE SAR SYNCHRONE         -->
+<!-- ===================================================================== -->
+<h2 id="sec-p3">PARTIE 3 : Convertisseur Analogique-Numérique 12 bits <code>ADS7816P</code> (SAR) &amp; Trame Série <span class="badge badge-time">1h00</span></h2>
+
+<div class="card-block">
+  <h3>3.1 Pourquoi un CAN Externe Dédié face au CAN Interne du Microcontrôleur RP2040 ?</h3>
+  <p>
+    En instrumentation et métrologie industrielle (épreuve E4/E5 Option B), le CAN intégré d'un microcontrôleur d'entrée de gamme présente souvent des limites notables :
+    le CAN 12 bits du <strong>RP2040</strong> utilise le rail d'alimentation <code>3,3 V</code> (souvent bruité par les commutations numériques) comme référence, ce qui donne un pas de quantification $q \approx 0,806\text{ mV}$ sujet à des non-linéarités différentielles (DNL).
+    <br>Le circuit <strong>Texas Instruments / Burr-Brown <code>ADS7816P</code></strong> est un convertisseur 12 bits à <strong>Approximations Successives (SAR)</strong> à échantillonneur-bloqueur interne (<em>Sample &amp; Hold</em>), alimenté sous <code>+5,00 V</code> et cadencé jusqu'à <code>200 kSPS</code>. Grâce à sa broche <strong><code>VREF [1]</code> dédiée</strong> reliée à notre régulateur étalon <code>LM317</code> (calibré à <code>2,500 V</code> en Partie 1), son quantum vaut exactement :
+  </p>
+
+  <div class="formula-box">
+    Résolution et quantum métrologique de l'ADS7816P :
+    &nbsp;&nbsp;
+    <i>q</i> = <span class="frac"><span class="num"><i>V<sub>REF</sub></i></span><span class="den">2<sup>12</sup></span></span>
+    = <span class="frac"><span class="num">2,500 V</span><span class="den">4096</span></span>
+    &approx; <strong>0,610 mV</strong>
+    &nbsp;&nbsp;|&nbsp;&nbsp;
+    Tension mesurée :
+    <i>V<sub>mes</sub></i> = <span class="frac"><span class="num">Code<sub>12b</sub></span><span class="den">4096</span></span> &times; 2,500 V
+  </div>
+
+  <!-- SVG 4 : CHRONOGRAMME DE TRAME 15 COUPS ADS7816P (DATASHEET SBAS061) -->
+  <div class="svg-card">
+    <svg viewBox="0 0 920 310" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Chronogramme de la trame série 15 coups d'horloge de l'ADS7816P">
+      <rect x="0" y="0" width="920" height="310" fill="#f8fafc" rx="8"/>
+
+      <rect x="14" y="14" width="892" height="282" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1.8"/>
+      <text x="460" y="38" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="12" font-weight="bold" fill="#38bdf8">Trame Série Synchrone 15 Coups de l'ADS7816P (Datasheet TI / Burr-Brown SBAS061)</text>
+
+      <!-- Signal /CS (Broche 5) -->
+      <text x="28" y="72" font-family="Consolas, monospace" font-size="9.5" font-weight="bold" fill="#fca5a5">/CS [5] (Pico GP17)</text>
+      <!-- Niveau haut au début, descente à x=160, remonte à x=840 -->
+      <polyline points="150,60 170,60 170,82 825,82 825,60 885,60" fill="none" stroke="#f87171" stroke-width="2.6"/>
+      <text x="170" y="98" font-family="Segoe UI, sans-serif" font-size="8.2" font-weight="bold" fill="#fca5a5">↓ Début conversion (Sample)</text>
+      <text x="825" y="98" text-anchor="end" font-family="Segoe UI, sans-serif" font-size="8.2" font-weight="bold" fill="#fca5a5">↑ Fin &amp; Veille Low-Power</text>
+
+      <!-- Signal DCLOCK (Broche 7) : 15 coups (15 périodes de x=200 à x=800, soit 40 px par période) -->
+      <text x="28" y="132" font-family="Consolas, monospace" font-size="9.5" font-weight="bold" fill="#7dd3fc">DCLOCK [7] (GP18)</text>
+      <path d="
+        M 170 144 L 200 144
+        L 200 120 L 220 120 L 220 144 L 240 144
+        L 240 120 L 260 120 L 260 144 L 280 144
+        L 280 120 L 300 120 L 300 144 L 320 144
+        L 320 120 L 340 120 L 340 144 L 360 144
+        L 360 120 L 380 120 L 380 144 L 400 144
+        L 400 120 L 420 120 L 420 144 L 440 144
+        L 440 120 L 460 120 L 460 144 L 480 144
+        L 480 120 L 500 120 L 500 144 L 520 144
+        L 520 120 L 540 120 L 540 144 L 560 144
+        L 560 120 L 580 120 L 580 144 L 600 144
+        L 600 120 L 620 120 L 620 144 L 640 144
+        L 640 120 L 660 120 L 660 144 L 680 144
+        L 680 120 L 700 120 L 700 144 L 720 144
+        L 720 120 L 740 120 L 740 144 L 760 144
+        L 760 120 L 780 120 L 780 144 L 800 144
+        L 800 144 L 885 144
+      " fill="none" stroke="#38bdf8" stroke-width="2"/>
+
+      <!-- Numéros des impulsions 1 à 15 -->
+      <text x="210" y="115" text-anchor="middle" font-family="Consolas, monospace" font-size="8" fill="#94a3b8">#1</text>
+      <text x="250" y="115" text-anchor="middle" font-family="Consolas, monospace" font-size="8" fill="#94a3b8">#2</text>
+      <text x="290" y="115" text-anchor="middle" font-family="Consolas, monospace" font-size="8" font-weight="bold" fill="#fde047">#3</text>
+      <text x="330" y="115" text-anchor="middle" font-family="Consolas, monospace" font-size="8" fill="#94a3b8">#4</text>
+      <text x="370" y="115" text-anchor="middle" font-family="Consolas, monospace" font-size="8" fill="#94a3b8">#5</text>
+      <text x="410" y="115" text-anchor="middle" font-family="Consolas, monospace" font-size="8" fill="#94a3b8">#6</text>
+      <text x="450" y="115" text-anchor="middle" font-family="Consolas, monospace" font-size="8" fill="#94a3b8">#7</text>
+      <text x="490" y="115" text-anchor="middle" font-family="Consolas, monospace" font-size="8" fill="#94a3b8">#8</text>
+      <text x="530" y="115" text-anchor="middle" font-family="Consolas, monospace" font-size="8" fill="#94a3b8">#9</text>
+      <text x="570" y="115" text-anchor="middle" font-family="Consolas, monospace" font-size="8" fill="#94a3b8">#10</text>
+      <text x="610" y="115" text-anchor="middle" font-family="Consolas, monospace" font-size="8" fill="#94a3b8">#11</text>
+      <text x="650" y="115" text-anchor="middle" font-family="Consolas, monospace" font-size="8" fill="#94a3b8">#12</text>
+      <text x="690" y="115" text-anchor="middle" font-family="Consolas, monospace" font-size="8" fill="#94a3b8">#13</text>
+      <text x="730" y="115" text-anchor="middle" font-family="Consolas, monospace" font-size="8" font-weight="bold" fill="#fde047">#14</text>
+      <text x="770" y="115" text-anchor="middle" font-family="Consolas, monospace" font-size="8" fill="#64748b">#15</text>
+
+      <!-- Signal DOUT (Broche 6) -->
+      <text x="28" y="202" font-family="Consolas, monospace" font-size="9.5" font-weight="bold" fill="#86efac">DOUT [6] (GP16)</text>
+
+      <!-- Zone Haute Impédance (Hi-Z) avant impulsion 2 -->
+      <line x1="150" y1="205" x2="220" y2="205" stroke="#64748b" stroke-width="2" stroke-dasharray="3,3"/>
+      <text x="185" y="196" text-anchor="middle" font-family="Consolas, monospace" font-size="8" fill="#94a3b8">Hi-Z</text>
+
+      <!-- Null Bit (0) pendant coup 2 -->
+      <rect x="220" y="210" width="40" height="18" fill="#1e293b" stroke="#64748b" stroke-width="1"/>
+      <text x="240" y="223" text-anchor="middle" font-family="Consolas, monospace" font-size="8.5" font-weight="bold" fill="#fca5a5">0 (Null)</text>
+
+      <!-- 12 Bits de données B11 (MSB) à B0 (LSB) sur coups 3 à 14 -->
+      <!-- B11 (MSB) -->
+      <rect x="260" y="198" width="40" height="30" fill="#065f46" stroke="#34d399" stroke-width="1.5"/>
+      <text x="280" y="217" text-anchor="middle" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#6ee7b7">B11</text>
+      <text x="280" y="240" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="7.5" fill="#a7f3d0">MSB</text>
+
+      <!-- B10..B1 -->
+      <rect x="300" y="198" width="40" height="30" fill="#1e293b" stroke="#475569" stroke-width="1"/>
+      <text x="320" y="217" text-anchor="middle" font-family="Consolas, monospace" font-size="8.5" fill="#cbd5e1">B10</text>
+      <rect x="340" y="198" width="40" height="30" fill="#1e293b" stroke="#475569" stroke-width="1"/>
+      <text x="360" y="217" text-anchor="middle" font-family="Consolas, monospace" font-size="8.5" fill="#cbd5e1">B9</text>
+      <rect x="380" y="198" width="40" height="30" fill="#1e293b" stroke="#475569" stroke-width="1"/>
+      <text x="400" y="217" text-anchor="middle" font-family="Consolas, monospace" font-size="8.5" fill="#cbd5e1">B8</text>
+      <rect x="420" y="198" width="40" height="30" fill="#1e293b" stroke="#475569" stroke-width="1"/>
+      <text x="440" y="217" text-anchor="middle" font-family="Consolas, monospace" font-size="8.5" fill="#cbd5e1">B7</text>
+      <rect x="460" y="198" width="40" height="30" fill="#1e293b" stroke="#475569" stroke-width="1"/>
+      <text x="480" y="217" text-anchor="middle" font-family="Consolas, monospace" font-size="8.5" fill="#cbd5e1">B6</text>
+      <rect x="500" y="198" width="40" height="30" fill="#1e293b" stroke="#475569" stroke-width="1"/>
+      <text x="520" y="217" text-anchor="middle" font-family="Consolas, monospace" font-size="8.5" fill="#cbd5e1">B5</text>
+      <rect x="540" y="198" width="40" height="30" fill="#1e293b" stroke="#475569" stroke-width="1"/>
+      <text x="560" y="217" text-anchor="middle" font-family="Consolas, monospace" font-size="8.5" fill="#cbd5e1">B4</text>
+      <rect x="580" y="198" width="40" height="30" fill="#1e293b" stroke="#475569" stroke-width="1"/>
+      <text x="600" y="217" text-anchor="middle" font-family="Consolas, monospace" font-size="8.5" fill="#cbd5e1">B3</text>
+      <rect x="620" y="198" width="40" height="30" fill="#1e293b" stroke="#475569" stroke-width="1"/>
+      <text x="640" y="217" text-anchor="middle" font-family="Consolas, monospace" font-size="8.5" fill="#cbd5e1">B2</text>
+      <rect x="660" y="198" width="40" height="30" fill="#1e293b" stroke="#475569" stroke-width="1"/>
+      <text x="680" y="217" text-anchor="middle" font-family="Consolas, monospace" font-size="8.5" fill="#cbd5e1">B1</text>
+
+      <!-- B0 (LSB) -->
+      <rect x="700" y="198" width="40" height="30" fill="#065f46" stroke="#34d399" stroke-width="1.5"/>
+      <text x="720" y="217" text-anchor="middle" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#6ee7b7">B0</text>
+      <text x="720" y="240" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="7.5" fill="#a7f3d0">LSB</text>
+
+      <!-- Répétition LSB-first ou Hi-Z au-delà -->
+      <rect x="740" y="206" width="40" height="18" fill="#1e293b" stroke="#64748b" stroke-width="1"/>
+      <text x="760" y="219" text-anchor="middle" font-family="Consolas, monospace" font-size="8" fill="#94a3b8">(B0-bis)</text>
+      <line x1="780" y1="205" x2="885" y2="205" stroke="#64748b" stroke-width="2" stroke-dasharray="3,3"/>
+
+      <!-- Annotations explicatives -->
+      <rect x="80" y="258" width="760" height="26" rx="4" fill="#1e293b" stroke="#475569" stroke-width="1"/>
+      <text x="460" y="275" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.6" fill="#fde047">
+        Règle d'échantillonnage SPI : DOUT change sur chaque FRONT DESCENDANT (↓) de DCLOCK et se lit stable sur FRONT MONTANT (↑) !
+      </text>
+    </svg>
+    <div class="svg-caption">Figure 3.1 — Séquence synchrone 15 coups de l'<code>ADS7816P</code> : échantillonnage sur 1,5 coup, bit nul (0), puis émission des 12 bits de $B_{11}$ à $B_0$.</div>
+  </div>
+
+  <h3>3.2 Câblage de l'<code>ADS7816P</code> &amp; Protection Obligatoire 5 V &rarr; 3,3 V sur <code>DOUT</code></h3>
+  <div class="callout callout-danger">
+    <strong>⚠️ Règle de sécurité métrologique BTS CIEL (Protection du RP2040) :</strong>
+    L'<code>ADS7816P</code> est alimenté sous <code>+5,00 V</code> (broche 8) pour fonctionner de pair avec la référence $V_{\text{REF}} = 2,50\text{ V}$.
+    À l'état HAUT, sa broche <code>DOUT [6]</code> délivre typiquement <strong>$4,2\text{ V}$ à $4,5\text{ V}$</strong>, ce qui <strong>détruirait l'entrée GPIO du Raspberry Pi Pico</strong> !
+    <br>Il faut impérativement intercaler le pont diviseur du kit TI :
+    <br>&bull; Reliez <code>DOUT [6]</code> à une résistance série <strong><code>1 k&Omega;</code></strong>.
+    <br>&bull; Connectez le point milieu vers <strong><code>GP16</code></strong> du Pico et vers une résistance de <strong><code>2,2 k&Omega;</code> à <code>GND</code></strong> ($V_{\text{Pico}} \approx 4,3\text{ V} \times \frac{2,2}{3,2} \approx 2,95\text{ V} \le 3,3\text{ V}$).
+    <br>&bull; <em>Réciproquement</em>, les sorties 3,3 V du Pico (<code>GP17 /CS</code> et <code>GP18 DCLOCK</code>) pilotent <strong>directement</strong> les entrées CMOS de l'<code>ADS7816P</code> sans adaptation ($V_{IH,\min} = 2,0\text{ V} &le; 3,3\text{ V}$).
+  </div>
+
+  <label class="step-check no-print">
+    <input type="checkbox" class="tp-step-cb" data-step="3" onchange="updateProgress()">
+    <span>Partie 3 validée : Architecture SAR 12 bits assimilée, quantum de 0,610 mV calculé et pont diviseur de protection câblé sur DOUT.</span>
+  </label>
+</div>
+
+<!-- ===================================================================== -->
+<!-- PARTIE 4 : DÉCODAGE DU BUS SÉRIE SYNCHRONE À L'ANALYSEUR LOGIQUE AD3 -->
+<!-- ===================================================================== -->
+<h2 id="sec-p4">PARTIE 4 : Décodage Série Synchrone (SPI) au <em>Logic Analyzer</em> de l'Analog Discovery 3 <span class="badge badge-time">40 min</span></h2>
+
+<div class="card-block">
+  <h3>4.1 Configuration du Décodeur de Protocole SPI sous WaveForms</h3>
+  <p>
+    L'Analog Discovery 3 permet d'observer la trame physique et de décoder automatiquement les octets/mots binaires en clair à l'écran :
+  </p>
+  <div class="dual-grid">
+    <div class="protocol-box protocol-proteus">
+      <h4>🟣 Simulation Proteus 8</h4>
+      <ol style="margin:6px 0 0 0; padding-left:18px;">
+        <li>Placez un <code>ADS7816</code> (ou <code>LTC1286</code> compatible). Reliez <code>VREF [1]</code> à <code>2.50V</code> et <code>-In [3]</code> à <code>GROUND</code>.</li>
+        <li>Injectez une tension variable sur <code>+In [2]</code> via un <code>POT-HG</code> sous <code>2.5V</code>.</li>
+        <li>Placez un instrument virtuel <code>SPI DEBUGGER</code> : configurez <code>Clock polarity: 0</code>, <code>Clock phase: 0</code> et visualisez la conversion dans la fenêtre console.</li>
+      </ol>
+    </div>
+
+    <div class="protocol-box protocol-ad3">
+      <h4>🟢 Instrumentation WaveForms (AD3)</h4>
+      <ol style="margin:6px 0 0 0; padding-left:18px;">
+        <li>Raccordez les voies numériques AD3 : <strong><code>DIO 0</code> &rarr; <code>/CS [5]</code></strong>, <strong><code>DIO 1</code> &rarr; <code>DCLOCK [7]</code></strong>, et <strong><code>DIO 2</code> &rarr; <code>DOUT [6]</code></strong> (directement sur la broche 6 du CI, car l'AD3 tolère 5 V !).</li>
+        <li>Dans <strong><code>Logic</code></strong> : cliquez <em>Add &rarr; SPI</em> :
+          <br>&bull; <strong>Select :</strong> <code>DIO 0 (/CS)</code> (Active Low).
+          <br>&bull; <strong>Clock :</strong> <code>DIO 1 (DCLOCK)</code> (Sample on Rising edge).
+          <br>&bull; <strong>Data (MISO) :</strong> <code>DIO 2 (DOUT)</code>.
+          <br>&bull; <strong>Words / Format :</strong> 16 bits (ou décodage bit à bit avec curseurs).
+        </li>
+        <li>Lancez le script MicroPython (Partie 5) : admirez les mots hexadécimaux et binaires se synchroniser en direct sur l'écran WaveForms !</li>
+      </ol>
+    </div>
+  </div>
+
+  <h3>4.2 Relevé de Linéarité &amp; Confrontation Théorie / Mesure</h3>
+  <p>
+    Réglez le potentiomètre <code>10 k&Omega;</code> pour appliquer 4 tensions tests distinctes sur l'entrée <code>+In [2]</code> de l'<code>ADS7816P</code> (mesurées au multimètre de précision), et relevez le code numérique 12 bits décodé à l'Analyseur Logique AD3 :
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Tension d'entrée analogique <i>V<sub>+In</sub></i> mesurée</th>
+        <th class="center col-calc">Code 12 bits Théorique ($N = \frac{V}{q}$)</th>
+        <th class="center col-calc">Trame Binaire 12 bits attendue</th>
+        <th class="center col-ad3">Code 12 bits lu au Logic AD3</th>
+        <th class="center col-ad3">Tension recalculée &amp; Écart &epsilon; (mV)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>0,000 V</strong> (Relié à GND)</td>
+        <td class="center">0 (0x000)</td>
+        <td class="center"><code>0000 0000 0000</code></td>
+        <td class="center">____ (0x____)</td>
+        <td class="center">________ V | &Delta; = ____ mV</td>
+      </tr>
+      <tr>
+        <td><strong>0,625 V</strong> (1/4 de l'échelle pleine)</td>
+        <td class="center">1024 (0x400)</td>
+        <td class="center"><code>0100 0000 0000</code></td>
+        <td class="center">____ (0x____)</td>
+        <td class="center">________ V | &Delta; = ____ mV</td>
+      </tr>
+      <tr>
+        <td><strong>1,250 V</strong> (Mi-échelle exacte)</td>
+        <td class="center">2048 (0x800)</td>
+        <td class="center"><code>1000 0000 0000</code></td>
+        <td class="center">____ (0x____)</td>
+        <td class="center">________ V | &Delta; = ____ mV</td>
+      </tr>
+      <tr>
+        <td><strong>2,500 V</strong> (Pleine échelle <i>V<sub>REF</sub></i>)</td>
+        <td class="center">4095 (0xFFF)</td>
+        <td class="center"><code>1111 1111 1111</code></td>
+        <td class="center">____ (0x____)</td>
+        <td class="center">________ V | &Delta; = ____ mV</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="student-answer">
+    <strong>💡 Question d'analyse Option B n°2 (Trame synchrone &amp; Null Bit — Google Docs) :</strong><br>
+    À partir de votre capture d'écran WaveForms Logic, repérez l'état de la ligne <code>DOUT</code> lors du <strong>2<sup>e</sup> front montant de l'horloge</strong> (juste avant l'apparition du bit de poids fort $B_{11}$). Quel est son niveau logique ? Pourquoi le constructeur Burr-Brown impose-t-il ce « Null Bit » de synchronisation avant l'envoi des 12 bits de données ?
+  </div>
+
+  <label class="step-check no-print">
+    <input type="checkbox" class="tp-step-cb" data-step="4" onchange="updateProgress()">
+    <span>Partie 4 validée : Décodage du bus série synchrone réussi au Logic Analyzer AD3 et linéarité 12 bits vérifiée.</span>
+  </label>
+</div>
+
+<!-- ===================================================================== -->
+<!-- PARTIE 5 : BANC INTÉGRÉ « PICO-POWERDAC » & COMPARAISON MÉTROLOGIQUE  -->
+<!-- ===================================================================== -->
+<h2 id="sec-p5">PARTIE 5 : Intégration Complète « PICO-POWERDAC » — Métrologie Comparée &amp; Commande Moteur <span class="badge badge-time">55 min</span></h2>
+
+<div class="card-block">
+  <h3>5.1 Schéma Général d'Interfaçage Mixte Cyber-Physique</h3>
+  <p>
+    Nous bouclons l'architecture complète : le potentiomètre alimenté entre <code>0 V</code> et la référence <code>2,50 V</code> du <code>LM317</code> attaque <strong>en parallèle</strong> l'entrée <code>+In [2]</code> de l'<code>ADS7816P</code> et l'entrée <code>GP26 (ADC0)</code> du Raspberry Pi Pico.
+    Le Pico lit simultanément les deux convertisseurs, calcule l'écart métrologique &Delta;<i>V</i> (en mV), et asservit le <strong>Relais Grove (<code>GP15</code>)</strong> + <strong>Hacheur <code>TIP31C</code> (<code>GP14</code>)</strong> + <strong>Moteur CC jaune 5 V sur Powerbank Varta</strong> !
+  </p>
+
+  <!-- SVG 5 : SCHÉMA D'ENSEMBLE DU BANC PICO-POWERDAC -->
+  <div class="svg-card">
+    <svg viewBox="0 0 920 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Schéma d'ensemble de l'architecture cyber-physique PICO-POWERDAC">
+      <rect x="0" y="0" width="920" height="320" fill="#f8fafc" rx="8"/>
+
+      <!-- Bloc 1 : Source Étalon LM317 (2,50 V) + Potentiomètre -->
+      <rect x="14" y="16" width="240" height="286" rx="8" fill="#ffffff" stroke="#d97706" stroke-width="2"/>
+      <text x="134" y="38" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#b45309">1. Référence Étalon &amp; Consigne</text>
+
+      <rect x="28" y="56" width="212" height="72" rx="6" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="134" y="78" text-anchor="middle" font-family="Consolas, monospace" font-size="10" font-weight="bold" fill="#92400e">LM317 (Partie 1)</text>
+      <text x="134" y="96" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.5" fill="#78350f">Alimenté sous +5V (V+ AD3)</text>
+      <text x="134" y="114" text-anchor="middle" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#b45309">V_REF = 2,500 V stable</text>
+
+      <rect x="28" y="146" width="212" height="74" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+      <text x="134" y="168" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#0f172a">Potentiomètre 10 kΩ</text>
+      <text x="134" y="186" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.5" fill="#475569">Extrémités : 0 V et 2,50 V</text>
+      <text x="134" y="204" text-anchor="middle" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#0284c7">Curseur V_consigne (0..2,5V)</text>
+
+      <!-- Liaisons vers ADS et Pico -->
+      <line x1="240" y1="92" x2="280" y2="92" stroke="#d97706" stroke-width="2.5"/>
+      <line x1="240" y1="183" x2="280" y2="183" stroke="#0284c7" stroke-width="2.5"/>
+
+      <!-- Bloc 2 : CAN 12 bits ADS7816P + Pont Diviseur 1k/2,2k -->
+      <rect x="280" y="16" width="310" height="286" rx="8" fill="#ffffff" stroke="#0d9488" stroke-width="2"/>
+      <text x="435" y="38" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#0f766e">2. Numérisation SAR 12 bits (ADS7816)</text>
+
+      <rect x="296" y="56" width="278" height="136" rx="6" fill="#0f172a" stroke="#0d9488" stroke-width="1.8"/>
+      <text x="435" y="80" text-anchor="middle" font-family="Consolas, monospace" font-size="11.5" font-weight="bold" fill="#5eead4">TI ADS7816P (+5V VCC)</text>
+      <text x="310" y="102" font-family="Consolas, monospace" font-size="8.5" fill="#fde047">[1] VREF ◄── 2,500 V (LM317)</text>
+      <text x="310" y="122" font-family="Consolas, monospace" font-size="8.5" fill="#38bdf8">[2] +In  ◄── Curseur Pot. (0..2,5V)</text>
+      <text x="310" y="142" font-family="Consolas, monospace" font-size="8.5" fill="#94a3b8">[3] -In  ◄── GND</text>
+      <text x="310" y="162" font-family="Consolas, monospace" font-size="8.5" fill="#fca5a5">[5] /CS  ◄── GP17 (Pico)</text>
+      <text x="310" y="180" font-family="Consolas, monospace" font-size="8.5" fill="#7dd3fc">[7] DCLK ◄── GP18 (Pico)</text>
+
+      <!-- Pont diviseur de protection sur DOUT [6] -->
+      <rect x="296" y="206" width="278" height="76" rx="6" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="435" y="226" text-anchor="middle" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#92400e">Pont Diviseur 1 kΩ / 2,2 kΩ</text>
+      <text x="435" y="244" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.5" fill="#78350f">ADS7816 DOUT [6] (~4,3V) ──► 1 kΩ</text>
+      <text x="435" y="262" text-anchor="middle" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#0f766e">Point milieu (~2,95V) ──► GP16 Pico (SÛR !)</text>
+
+      <!-- Bloc 3 : Supervision MicroPython Pico + Étage Puissance Varta -->
+      <rect x="614" y="16" width="292" height="286" rx="8" fill="#f0f9ff" stroke="#0284c7" stroke-width="2"/>
+      <text x="760" y="38" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#0369a1">3. Pico &amp; Actionneur Moteur 5V</text>
+
+      <rect x="630" y="56" width="260" height="92" rx="6" fill="#0f172a" stroke="#334155" stroke-width="1.6"/>
+      <text x="760" y="78" text-anchor="middle" font-family="Consolas, monospace" font-size="10.5" font-weight="bold" fill="#38bdf8">Raspberry Pi Pico</text>
+      <text x="644" y="98" font-family="Consolas, monospace" font-size="8.5" fill="#93c5fd">GP16, 17, 18 : Bus SPI synchrone</text>
+      <text x="644" y="116" font-family="Consolas, monospace" font-size="8.5" fill="#fde047">GP26 (ADC0)  : CAN interne RP2040</text>
+      <text x="644" y="134" font-family="Consolas, monospace" font-size="8.5" fill="#86efac">GP15: Relais | GP14: PWM Hacheur</text>
+
+      <rect x="630" y="160" width="260" height="122" rx="6" fill="#fef2f2" stroke="#dc2626" stroke-width="1.6"/>
+      <text x="760" y="180" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#b91c1c">Chaîne d'Énergie (TP 5 / TP 6)</text>
+      <text x="760" y="198" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.5" fill="#7f1d1d">Relais Grove (GP15) + TIP31C (GP14)</text>
+      <text x="760" y="216" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.5" fill="#7f1d1d">+ Roue libre 1N4001 + Moteur CC jaune 3–6 V</text>
+      <text x="760" y="238" text-anchor="middle" font-family="Consolas, monospace" font-size="8.8" font-weight="bold" fill="#991b1b">Alimenté par Powerbank Varta 5 V</text>
+      <text x="760" y="262" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.2" font-weight="bold" fill="#15803d">Masse commune (GND) générale !</text>
+    </svg>
+    <div class="svg-caption">Figure 5.1 — Architecture complète « PICO-POWERDAC » associant régulateur étalon <code>LM317</code>, CAN 12 bits <code>ADS7816P</code>, Pico et chaîne de puissance Varta.</div>
+  </div>
+
+  <h3>5.2 Programme MicroPython de Métrologie Comparée &amp; d'Asservissement</h3>
+  <p>
+    Complétez les <strong>3 zones <code># TODO</code></strong> du script ci-dessous sous Thonny (implémentation du front descendant d'échantillonnage, décalage binaire des 12 bits et calcul de la commande proportionnelle PWM) :
+  </p>
+
+  <div class="code-wrapper">
+    <button type="button" class="copy-code-btn no-print" onclick="copierCode(this)">Copier</button>
+    <pre><code><span class="co"># ==============================================================================</span>
+<span class="co"># TP 8 : PICO-POWERDAC — Pilote Série ADS7816P &amp; Métrologie Comparée CAN 12 bits</span>
+<span class="co"># ==============================================================================</span>
+<span class="im">from</span> machine <span class="im">import</span> Pin, ADC, PWM
+<span class="im">import</span> time
+
+<span class="co"># --- LIGNES DE CONTRÔLE SÉRIE SYNCHRONE VERS ADS7816P ---</span>
+cs_n   = Pin(<span class="dv">17</span>, Pin.OUT, value=<span class="dv">1</span>)   <span class="co"># /CS broche 5 (Active à l'état bas)</span>
+dclock = Pin(<span class="dv">18</span>, Pin.OUT, value=<span class="dv">0</span>)   <span class="co"># DCLOCK broche 7</span>
+dout   = Pin(<span class="dv">16</span>, Pin.IN)             <span class="co"># DOUT broche 6 (via pont 1k / 2,2k !)</span>
+
+<span class="co"># --- ENTRÉE COMPARATIVE CAN INTERNE RP2040 &amp; ACTIONNEURS PUISSANCE ---</span>
+adc_interne_pico = ADC(Pin(<span class="dv">26</span>))
+relais_varta     = Pin(<span class="dv">15</span>, Pin.OUT, value=<span class="dv">0</span>)
+pwm_moteur       = PWM(Pin(<span class="dv">14</span>))
+pwm_moteur.freq(<span class="dv">1000</span>)
+pwm_moteur.duty_u16(<span class="dv">0</span>)
+
+VREF_LM317 = <span class="dv">2.500</span>   <span class="co"># Référence externe étalonnée au LM317</span>
+
+<span class="kw">def</span> <span class="fu">lire_ads7816</span>():
+    val = <span class="dv">0</span>
+    dclock.value(<span class="dv">0</span>)
+    <span class="co"># TODO 1 : Activer la conversion en descendant /CS à l'état BAS (0)</span>
+    cs_n.value(<span class="todo-hl">1</span>)
+    time.sleep_us(<span class="dv">5</span>)
+
+    <span class="co"># 2 coups d'horloge pour l'échantillonnage + lecture du Null bit</span>
+    <span class="kw">for</span> _ <span class="kw">in</span> <span class="fu">range</span>(<span class="dv">2</span>):
+        dclock.value(<span class="dv">1</span>); time.sleep_us(<span class="dv">5</span>)
+        dclock.value(<span class="dv">0</span>); time.sleep_us(<span class="dv">5</span>)
+
+    <span class="co"># TODO 2 : Lire les 12 bits de B11 (MSB) à B0 (LSB) sur chaque coup d'horloge</span>
+    <span class="kw">for</span> _ <span class="kw">in</span> <span class="fu">range</span>(<span class="dv">12</span>):
+        dclock.value(<span class="dv">1</span>); time.sleep_us(<span class="dv">5</span>)
+        bit = dout.value()
+        val = <span class="todo-hl">(val &lt;&lt; 1) | bit</span>   <span class="co"># Décalage à gauche + insertion du bit lu</span>
+        dclock.value(<span class="dv">0</span>); time.sleep_us(<span class="dv">5</span>)
+
+    cs_n.value(<span class="dv">1</span>)   <span class="co"># Remettre /CS au repos pour replacer l'ADS7816 en veille</span>
+    <span class="kw">return</span> val
+
+<span class="kw">while</span> <span class="kw">True</span>:
+    code_ext = lire_ads7816()
+    v_ext = (code_ext / <span class="dv">4096.0</span>) * VREF_LM317
+
+    u16_int = adc_interne_pico.read_u16()
+    v_int = (u16_int / <span class="dv">65535.0</span>) * <span class="dv">3.300</span>
+    ecart_mv = (v_ext - v_int) * <span class="dv">1000.0</span>
+
+    <span class="co"># Commande proportionnelle du moteur CC</span>
+    ratio = <span class="fu">max</span>(<span class="dv">0.0</span>, <span class="fu">min</span>(<span class="dv">1.0</span>, v_ext / VREF_LM317))
+    <span class="kw">if</span> ratio &lt; <span class="dv">0.10</span>:
+        relais_varta.value(<span class="dv">0</span>); pwm_moteur.duty_u16(<span class="dv">0</span>)
+    <span class="kw">else</span>:
+        relais_varta.value(<span class="dv">1</span>)
+        <span class="co"># TODO 3 : Affecter le rapport cyclique 16 bits proportionnel sur [0 .. 65535]</span>
+        pwm_moteur.duty_u16(<span class="todo-hl">int(ratio * 65535)</span>)
+
+    <span class="fu">print</span>(<span class="st">f"ADS7816: {code_ext:4d} ({v_ext:5.3f}V) | Pico ADC0: {v_int:5.3f}V | Δ={ecart_mv:+6.1f} mV"</span>)
+    time.sleep_ms(<span class="dv">250</span>)</code></pre>
+  </div>
+
+  <h3>5.3 Résultats Métrologiques : Stabilité &amp; Bruit Comparé</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Position potentiomètre</th>
+        <th>Tension multimètre</th>
+        <th>Mesure CAN interne Pico (GP26)</th>
+        <th>Mesure <code>ADS7816P</code> (Réf. <code>LM317</code>)</th>
+        <th>Fluctuation / Bruit crête-à-crête constaté</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Consigne basse</strong> (~0,50 V)</td>
+        <td>________ V</td>
+        <td>________ V</td>
+        <td>________ V</td>
+        <td>Pico: &plusmn;____ mV | ADS7816: &plusmn;____ mV</td>
+      </tr>
+      <tr>
+        <td><strong>Consigne médiane</strong> (~1,25 V)</td>
+        <td>________ V</td>
+        <td>________ V</td>
+        <td>________ V</td>
+        <td>Pico: &plusmn;____ mV | ADS7816: &plusmn;____ mV</td>
+      </tr>
+      <tr>
+        <td><strong>Consigne haute</strong> (~2,40 V)</td>
+        <td>________ V</td>
+        <td>________ V</td>
+        <td>________ V</td>
+        <td>Pico: &plusmn;____ mV | ADS7816: &plusmn;____ mV</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="student-answer">
+    <strong>💡 Question d'analyse Option B n°3 (Synthèse métrologique finale — Google Docs) :</strong><br>
+    Comparez la dispersion (bruit crête-à-crête) observée sur le CAN interne du Pico par rapport à celle obtenue avec le convertisseur <code>ADS7816P</code> référencé par le <code>LM317</code>. En quoi l'isolation galvanique partielle de la référence de tension externe et le principe SAR améliorent-ils l'intégrité de la mesure dans un environnement perturbé par le hachage PWM d'un moteur CC ?
+  </div>
+
+  <label class="step-check no-print">
+    <input type="checkbox" class="tp-step-cb" data-step="5" onchange="updateProgress()">
+    <span>Partie 5 validée : Banc PICO-POWERDAC fonctionnel, chaîne de puissance pilotée et comparaison métrologique enregistrée !</span>
+  </label>
+</div>
+
+<!-- ===================================================================== -->
+<!-- GRILLE D'ÉVALUATION BTS CIEL OPTION B (/20) & RANGEMENT               -->
+<!-- ===================================================================== -->
+<h2 id="sec-eval">📝 Grille d'Évaluation Officielle BTS CIEL — Option B (sur 20 points — 5h00)</h2>
+
+<div class="card-block">
+  <table>
+    <thead>
+      <tr>
+        <th style="width:12%;">Compétence BO</th>
+        <th style="width:28%;">Critère d'évaluation Option B (ER)</th>
+        <th style="width:44%;">Indicateurs de performance attendus</th>
+        <th class="center" style="width:8%;">Barème</th>
+        <th class="center" style="width:8%;">Note</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C05</span></td>
+        <td><strong>Dimensionnement &amp; CAO Proteus</strong></td>
+        <td>Calculs exacts du régulateur <code>LM317</code> (2,50 V) et des fréquences du timer <code>TLC555CP</code>, schémas normalisés sous Proteus.</td>
+        <td class="center"><strong>4 pts</strong></td>
+        <td class="center"></td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C06</span></td>
+        <td><strong>Mesurage &amp; Instrumentation AD3</strong></td>
+        <td>Maîtrise autonome de WaveForms (Scope Ch1/Ch2 pour $V_C$ et OUT du 555, Supplies +5V/-5V pour la Zener, décodage SPI synchrone au Logic Analyzer).</td>
+        <td class="center"><strong>5 pts</strong></td>
+        <td class="center"></td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C07</span></td>
+        <td><strong>Prototypage Matériel &amp; Protection</strong></td>
+        <td>Respect strict du brochage TO-220 du <code>LM317</code>, pont diviseur <code>1 k&Omega; / 2,2 k&Omega;</code> protégeant <code>GP16</code>, câblage soigné sans court-circuit.</td>
+        <td class="center"><strong>4 pts</strong></td>
+        <td class="center"></td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C04</span></td>
+        <td><strong>Analyse Métrologique &amp; Physique</strong></td>
+        <td>Justesse des réponses aux 3 questions d'analyse (technologie LinCMOS rail-to-rail, rôle du Null Bit SAR, réjection de bruit par référence dédiée).</td>
+        <td class="center"><strong>3 pts</strong></td>
+        <td class="center"></td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C08</span></td>
+        <td><strong>Pilote MicroPython &amp; Bouclage</strong></td>
+        <td>Acquisition synchrone 15 coups fonctionnelle, calcul exact des tensions étalons et commande proportionnelle de l'actionneur moteur CC.</td>
+        <td class="center"><strong>2 pts</strong></td>
+        <td class="center"></td>
+      </tr>
+      <tr>
+        <td class="center"><span class="badge badge-bo">C01</span></td>
+        <td><strong>Dossier Google Docs &amp; Rangement</strong></td>
+        <td>Trame Google Docs Classroom complétée avec oscillogrammes légendés, boîtiers DIP et TO-220 triés et rangés avec soin dans le <em>TI myParts Kit</em>.</td>
+        <td class="center"><strong>2 pts</strong></td>
+        <td class="center"></td>
+      </tr>
+      <tr>
+        <td colspan="3" style="text-align:right; font-weight:bold;">TOTAL GÉNÉRAL (Durée : 5h00 — Semestre 2 Option B) :</td>
+        <td class="center"><strong>/ 20</strong></td>
+        <td class="center"></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <label class="step-check no-print">
+    <input type="checkbox" class="tp-step-cb" data-step="6" onchange="updateProgress()">
+    <span>Dossier finalisé : Compte rendu Google Docs remis sur Classroom, alimentations AD3 coupées et boîte TI myParts Kit rangée ! 🎉</span>
+  </label>
+</div>
+
+<!-- ===================================================================== -->
+<!-- SCRIPTS INTERACTIFS : CALCULATEURS + COPIE TRAME GOOGLE DOCS          -->
+<!-- ===================================================================== -->
+<script>
+  // 1. Calculateur LM317 + TLC555CP
+  function calcLm555() {
+    const r1 = parseFloat(document.getElementById('inpR1Lm').value);
+    const r2 = parseFloat(document.getElementById('inpR2Lm').value);
+    const [ra, rb] = document.getElementById('sel555').value.split(',').map(Number);
+    const c = parseFloat(document.getElementById('inpC555').value);
+    const out = document.getElementById('lm555Result');
+
+    if ([r1, r2, ra, rb, c].some(v => isNaN(v) || v <= 0)) {
+      out.textContent = 'Saisissez des valeurs strictement positives.';
+      return;
+    }
+    const vout = 1.25 * (1 + (r2 / r1));
+    const th = 0.693 * (ra + rb) * 1000 * (c * 1e-9);
+    const tl = 0.693 * rb * 1000 * (c * 1e-9);
+    const f = 1.44 / (((ra + 2 * rb) * 1000) * (c * 1e-9));
+    const alpha = (th / (th + tl)) * 100;
+
+    out.textContent = `LM317 : V_OUT = ${vout.toFixed(2).replace('.', ',')} V | TLC555 : f = ${Math.round(f)} Hz, α = ${alpha.toFixed(1).replace('.', ',')} % (t_H = ${(th*1000).toFixed(2)} ms, t_L = ${(tl*1000).toFixed(2)} ms)`;
+  }
+
+  // 2. Simulateur ADS7816P (Quantum & Trame binaire)
+  function calcAds() {
+    const vref = parseFloat(document.getElementById('inpVrefAds').value);
+    const vin = parseFloat(document.getElementById('inpVinAds').value);
+    const out = document.getElementById('adsResult');
+
+    if (isNaN(vref) || isNaN(vin) || vref <= 0 || vin < 0) {
+      out.textContent = 'Saisissez des tensions positives.';
+      return;
+    }
+    const q = (vref / 4096) * 1000;
+    const ratio = Math.max(0, Math.min(1, vin / vref));
+    const code = Math.min(4095, Math.round(ratio * 4096));
+    const binStr = code.toString(2).padStart(12, '0');
+    const binFmt = `${binStr.slice(0, 4)} ${binStr.slice(4, 8)} ${binStr.slice(8, 12)}`;
+    const hexFmt = `0x${code.toString(16).toUpperCase().padStart(3, '0')}`;
+
+    out.textContent = `q = ${q.toFixed(3).replace('.', ',')} mV | Code = ${code} / 4095 (${hexFmt}) | Trame DOUT : [0] ${binFmt}`;
+  }
+
+  // 3. Barre de progression sauvegardée
+  const STORAGE_KEY = 'bts_ciel1_tp8_progress_v1';
+  function updateProgress() {
+    const boxes = document.querySelectorAll('.tp-step-cb');
+    let done = 0;
+    const state = {};
+    boxes.forEach(cb => {
+      state[cb.dataset.step] = cb.checked;
+      if (cb.checked) done++;
+    });
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+    const pct = Math.round((done / boxes.length) * 100);
+    document.getElementById('tpProgressFill').style.width = pct + '%';
+    document.getElementById('tpProgressText').textContent = `${done} / ${boxes.length}`;
+  }
+
+  (function initPage() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+      document.querySelectorAll('.tp-step-cb').forEach(cb => {
+        if (saved[cb.dataset.step]) cb.checked = true;
+      });
+    } catch (e) {}
+    updateProgress();
+    calcLm555();
+    calcAds();
+  })();
+
+  // 4. Copie d'un bloc de code
+  function copierCode(btn) {
+    const codeText = btn.parentElement.querySelector('code').innerText;
+    navigator.clipboard.writeText(codeText).then(() => {
+      const old = btn.textContent;
+      btn.textContent = '✅ Copié !';
+      setTimeout(() => { btn.textContent = old; }, 1800);
+    });
+  }
+
+  // 5. Copie HTML riche de la trame complète TP 8 pour Google Docs (Classroom)
+  async function copierTrameClassroom() {
+    const htmlTemplate = `
+      <div style="font-family: Arial, sans-serif; color: #1e293b; line-height: 1.45;">
+        <h1 style="color:#0b3c5d; border-bottom:2px solid #0f766e;">DOSSIER D'ESSAIS TP 8 (5H) — BTS CIEL Option B (Semestre 2)</h1>
+        <h2 style="color:#0f766e;">TP 8 : PICO-POWERDAC — Régulation LM317/Zener, PWM TLC555CP &amp; CAN SPI 12 bits ADS7816P</h2>
+        <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; width:100%; margin-bottom:14px;">
+          <tr style="background:#f0fdfa;">
+            <td><b>Binôme (NOM Prénom 1 &amp; 2) :</b></td><td>....................................................</td>
+            <td><b>Date :</b></td><td>.... / .... / 202..</td>
+          </tr>
+          <tr>
+            <td><b>Tension étalon LM317 (V_REF) :</b></td><td><b>+........ V</b></td>
+            <td><b>Quantum ADS7816 calculé (q) :</b></td><td><b>........ mV</b></td>
+          </tr>
+        </table>
+
+        <h2 style="color:#0b3c5d;">PARTIE 1 — Stabilisation Zener 1N4735A &amp; Régulateur Ajustable LM317 (2,50 V)</h2>
+        <p><i>[📷 Insérer capture Proteus + photo Breadboard avec multimètre affichant V_REF = 2,50 V]</i></p>
+        <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; width:100%;">
+          <tr style="background:#ccfbf1; font-weight:bold;">
+            <th>Montage</th><th>Modèle Théorique</th><th>Proteus</th><th>Mesure Multimètre / AD3</th>
+          </tr>
+          <tr><td>Zener 1N4735A — À vide</td><td>~6,20 V</td><td></td><td></td></tr>
+          <tr><td>Zener 1N4735A — Chargée (1 kΩ)</td><td>Légère chute</td><td></td><td></td></tr>
+          <tr><td>LM317 — V_ADJ-OUT (sur R1 = 220 Ω)</td><td>1,250 V</td><td></td><td></td></tr>
+          <tr><td>LM317 — Sortie V_REF à vide</td><td>2,500 V</td><td></td><td></td></tr>
+          <tr><td>LM317 — Sortie V_REF en charge (220 Ω)</td><td>2,500 V</td><td></td><td></td></tr>
+        </table>
+
+        <h2 style="color:#0b3c5d;">PARTIE 2 — Oscillateur Astable &amp; PWM Matériel par Timer TLC555CP</h2>
+        <p><i>[📷 Insérer oscillogramme Scope AD3 montrant V_C(t) entre 1,67 V et 3,33 V (Ch2) et OUT [3] (Ch1)]</i></p>
+        <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; width:100%;">
+          <tr style="background:#fef3c7; font-weight:bold;">
+            <th>Grandeur mesurée</th><th>Calcul Théorique</th><th>Proteus</th><th>Mesure Scope AD3</th>
+          </tr>
+          <tr><td>V_C,min / V_C,max</td><td>1,67 V / 3,33 V</td><td></td><td></td></tr>
+          <tr><td>t_H / t_L</td><td>0,76 ms / 0,69 ms</td><td></td><td></td></tr>
+          <tr><td>Fréquence f / Rapport cyclique α</td><td>686 Hz / 52,4 %</td><td></td><td></td></tr>
+          <tr><td>Plage PWM avec potentiomètre + 2 diodes</td><td>~10 % à ~90 %</td><td></td><td></td></tr>
+        </table>
+        <p><b>Réponse Question d'analyse Option B n°1 (TLC555CP CMOS rail-to-rail vs NE555 bipolaire) :</b><br>........................................................................................................</p>
+
+        <h2 style="color:#0b3c5d;">PARTIE 3 &amp; 4 — CAN 12 bits ADS7816P &amp; Décodage Série Synchrone au Logic Analyzer AD3</h2>
+        <p><i>[📷 Insérer capture WaveForms Logic montrant la trame 15 coups (/CS, DCLOCK, DOUT) et le mot 12 bits décodé en hexadécimal]</i></p>
+        <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; width:100%;">
+          <tr style="background:#e0f2fe; font-weight:bold;">
+            <th>Tension d'entrée analogique V_+In</th><th>Code 12b Théorique</th><th>Code lu au Logic AD3</th><th>Tension recalculée (V) &amp; Écart Δ (mV)</th>
+          </tr>
+          <tr><td>0,000 V (GND)</td><td>0 (0x000)</td><td></td><td></td></tr>
+          <tr><td>0,625 V (1/4 échelle)</td><td>1024 (0x400)</td><td></td><td></td></tr>
+          <tr><td>1,250 V (Mi-échelle)</td><td>2048 (0x800)</td><td></td><td></td></tr>
+          <tr><td>2,500 V (Pleine échelle V_REF)</td><td>4095 (0xFFF)</td><td></td><td></td></tr>
+        </table>
+        <p><b>Réponse Question d'analyse Option B n°2 (Rôle du Null Bit sur le 2e coup d'horloge de l'ADS7816P) :</b><br>........................................................................................................</p>
+
+        <h2 style="color:#0b3c5d;">PARTIE 5 — Intégration « PICO-POWERDAC » &amp; Comparaison Métrologique</h2>
+        <p><i>[📷 Insérer photo d'ensemble du banc : LM317 + ADS7816 + Pico + Relais + Moteur CC jaune + Powerbank Varta]</i></p>
+        <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; width:100%;">
+          <tr style="background:#dcfce7; font-weight:bold;">
+            <th>Tension d'entrée mesurée</th><th>CAN interne RP2040 (GP26)</th><th>CAN externe ADS7816P</th><th>Écart ΔV (mV) &amp; Bruit crête constaté</th>
+          </tr>
+          <tr><td>Consigne basse (~0,50 V)</td><td></td><td></td><td></td></tr>
+          <tr><td>Consigne médiane (~1,25 V)</td><td></td><td></td><td></td></tr>
+          <tr><td>Consigne haute (~2,40 V)</td><td></td><td></td><td></td></tr>
+        </table>
+        <p><b>Réponse Question d'analyse Option B n°3 (Intégrité de mesure : référence dédiée LM317 + SAR vs CAN interne RP2040) :</b><br>........................................................................................................</p>
+        <h3>Annexe : Code MicroPython final complété</h3>
+        <pre style="background:#f8fafc; padding:10px; border:1px solid #cbd5e1;">[Coller ici votre code MicroPython fonctionnel]</pre>
+      </div>`;
+
+    const plainFallback = "DOSSIER D'ESSAIS TP 8 BTS CIEL OPTION B — PICO-POWERDAC (5h)\nCollez dans Google Docs (Classroom) pour obtenir les tableaux formatés.";
+
+    try {
+      if (window.ClipboardItem) {
+        const blobHtml = new Blob([htmlTemplate], { type: 'text/html' });
+        const blobText = new Blob([plainFallback], { type: 'text/plain' });
+        await navigator.clipboard.write([new ClipboardItem({ 'text/html': blobHtml, 'text/plain': blobText })]);
+      } else {
+        await navigator.clipboard.writeText(plainFallback);
+      }
+      const toast = document.getElementById('copyToast');
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 7000);
+    } catch (err) {
+      alert("Copie automatique bloquée par le navigateur : ouvrez ce fichier dans Chrome/Edge et réessayez.");
+    }
+  }
+</script>
+
+</body>
+</html>
