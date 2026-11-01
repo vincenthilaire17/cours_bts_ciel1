@@ -1,482 +1,513 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>TP Spécial : Git &amp; GitHub — Maîtriser le Versioning et la Forge Collaborative en BTS CIEL (2h)</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TP : Initiation Git &amp; GitHub avec GitHub Desktop — BTS CIEL 1re Année</title>
   <style>
     :root {
-      --primary: #0b3c5d;
-      --primary-light: #e0f2fe;
-      --git-orange: #f05032; /* Couleur officielle Git */
-      --git-dark: #c0392b;
-      --gh-dark: #24292f;   /* Couleur officielle GitHub */
-      --gh-green: #2da44e;  /* Vert bouton GitHub */
-      --accent: #d97706;
-      --sim-bg: #f5f3ff;
-      --cmd-blue: #0284c7;
-      --cmd-bg: #f0f9ff;
-      --real-green: #15803d;
-      --real-bg: #f0fdf4;
-      --bg-page: #f8fafc;
+      --primary: #0969da;
+      --primary-dark: #054da8;
+      --git-orange: #f05032;
+      --gh-dark: #24292f;
+      --gh-green: #2da44e;
+      --gh-purple: #8250df;
+      --bg-page: #f6f8fa;
       --bg-card: #ffffff;
-      --text-main: #1e293b;
-      --text-muted: #64748b;
-      --border: #cbd5e1;
+      --text-main: #1f2328;
+      --text-muted: #656d76;
+      --border: #d0d7de;
+      --border-subtle: #eaeef2;
     }
 
     * { box-sizing: border-box; }
 
-    html {
-      color: var(--text-main);
-      background-color: var(--bg-page);
-      scroll-behavior: smooth;
-      -webkit-text-size-adjust: 100%;
-    }
-
     body {
-      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
-      line-height: 1.58;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+      background: var(--bg-page);
       color: var(--text-main);
-      max-width: 980px;
-      margin: 0 auto;
-      padding: 18px 20px 70px 20px;
+      line-height: 1.55;
+      font-size: 9.8pt;
+      margin: 0;
+      padding: 0;
     }
 
-    @page {
-      margin: 1.3cm;
-      size: A4;
-    }
-
-    @media print {
-      body {
-        max-width: 100%;
-        padding: 0;
-        font-size: 9.5pt;
-        color: #000;
-        background: #fff;
-      }
-      .no-print { display: none !important; }
-      .card-block {
-        box-shadow: none !important;
-        border: 1px solid #cbd5e1 !important;
-      }
-      pre, blockquote, table, .svg-card, .callout { page-break-inside: avoid; }
-      h1, h2, h3, h4 { page-break-after: avoid; }
-      a { color: #000; text-decoration: underline; }
-    }
-
-    /* Barre supérieure collante */
+    /* BARRE SUPÉRIEURE FLOTTANTE */
     .top-bar {
       position: sticky;
       top: 0;
       z-index: 100;
-      background: rgba(255, 255, 255, 0.96);
-      backdrop-filter: blur(8px);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 10px 16px;
-      margin-bottom: 20px;
+      background: #ffffff;
+      border-bottom: 1px solid var(--border);
+      padding: 8px 18px;
       display: flex;
-      flex-wrap: wrap;
-      align-items: center;
       justify-content: space-between;
-      gap: 12px;
-      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+      align-items: center;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
     }
     .top-bar-left {
       display: flex;
       align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
+      gap: 15px;
     }
     .back-link {
-      font-weight: 700;
       color: var(--primary);
       text-decoration: none;
-      font-size: 9.5pt;
-      padding: 5px 10px;
-      border-radius: 6px;
-      background: #f1f5f9;
-      border: 1px solid #cbd5e1;
+      font-weight: 600;
+      font-size: 8.8pt;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
     }
-    .back-link:hover { background: #e2e8f0; text-decoration: none; }
+    .back-link:hover { text-decoration: underline; }
 
     .progress-wrap {
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 9pt;
-      font-weight: 600;
-      color: #334155;
+      font-size: 8.4pt;
+      color: var(--text-muted);
     }
     .progress-track {
-      width: 150px;
-      height: 10px;
+      width: 130px;
+      height: 8px;
       background: #e2e8f0;
-      border-radius: 999px;
+      border-radius: 4px;
       overflow: hidden;
     }
     .progress-fill {
       height: 100%;
       width: 0%;
-      background: linear-gradient(90deg, #f05032, #2da44e);
-      transition: width 0.25s ease;
+      background: var(--gh-green);
+      transition: width 0.3s ease;
     }
 
     .top-actions {
       display: flex;
       gap: 8px;
-      flex-wrap: wrap;
     }
     .btn {
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 8.5pt;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      cursor: pointer;
-      border: none;
-      border-radius: 6px;
-      padding: 7px 13px;
-      font-size: 9pt;
-      font-weight: 700;
-      font-family: inherit;
-      transition: transform 0.1s ease, opacity 0.15s ease;
       text-decoration: none;
     }
-    .btn:hover { opacity: 0.93; text-decoration: none; }
-    .btn:active { transform: translateY(1px); }
     .btn-docs {
-      background: linear-gradient(135deg, #24292f, #15803d);
-      color: #ffffff;
-      box-shadow: 0 2px 6px rgba(36, 41, 47, 0.25);
+      background: #107c41;
+      color: white;
+      border-color: #0b5c30;
     }
+    .btn-docs:hover { background: #0b5c30; }
     .btn-outline {
       background: #ffffff;
-      color: #1e293b;
-      border: 1px solid #cbd5e1;
+      color: var(--text-main);
+      border-color: var(--border);
+    }
+    .btn-outline:hover { background: #f3f4f6; }
+
+    /* CONTENEUR PRINCIPAL */
+    .container {
+      max-width: 980px;
+      margin: 22px auto 60px auto;
+      padding: 0 20px;
     }
 
-    /* En-tête principal */
+    /* EN-TÊTE DU TP */
     .header-box {
-      background: linear-gradient(135deg, #24292f 0%, #1e293b 45%, #f05032 100%);
-      color: #ffffff;
-      border-radius: 12px;
-      padding: 24px 26px;
-      margin-bottom: 22px;
-      box-shadow: 0 6px 18px rgba(36, 41, 47, 0.25);
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-top: 4px solid var(--git-orange);
+      border-radius: 8px;
+      padding: 22px 26px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
     }
     .header-kicker {
-      display: inline-block;
-      background: rgba(255, 255, 255, 0.18);
-      padding: 4px 12px;
-      border-radius: 999px;
       font-size: 8.5pt;
       font-weight: 700;
-      letter-spacing: 0.5px;
       text-transform: uppercase;
-      margin-bottom: 10px;
+      letter-spacing: 0.6px;
+      color: var(--git-orange);
+      margin-bottom: 6px;
     }
     .header-box h1 {
-      color: #ffffff;
-      font-size: 18pt;
       margin: 0 0 10px 0;
-      border: none;
-      padding: 0;
-      line-height: 1.25;
+      font-size: 1.6rem;
+      color: #1f2328;
+      font-weight: 800;
+      line-height: 1.3;
     }
     .header-subtitle {
-      color: #fed7aa;
-      font-size: 10.2pt;
-      margin: 0 0 14px 0;
+      color: var(--text-muted);
+      font-size: 9.6pt;
+      margin: 0 0 16px 0;
     }
     .header-meta {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
-      font-size: 9pt;
-      padding-top: 12px;
-      border-top: 1px solid rgba(255, 255, 255, 0.22);
     }
     .meta-pill {
-      background: rgba(15, 23, 42, 0.45);
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: #f6f8fa;
+      border: 1px solid var(--border);
       padding: 4px 10px;
-      border-radius: 6px;
-      color: #f8fafc;
+      border-radius: 20px;
+      font-size: 8.3pt;
+      color: var(--text-main);
     }
 
-    /* Titres */
-    h1, h2, h3, h4 {
-      color: var(--primary);
-      font-weight: 700;
-      line-height: 1.28;
+    /* CARTES ET BLOCS */
+    .card-block {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px 24px;
+      margin-bottom: 22px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
     }
+
     h2 {
-      font-size: 14pt;
-      margin-top: 28px;
-      margin-bottom: 12px;
-      color: #1e293b;
-      border-left: 5px solid var(--git-orange);
-      padding: 6px 0 6px 12px;
-      background: linear-gradient(90deg, #fff7ed 0%, transparent 100%);
-      border-radius: 0 6px 6px 0;
+      color: #1f2328;
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-top: 32px;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
     }
     h3 {
-      font-size: 11.5pt;
-      margin-top: 18px;
-      margin-bottom: 8px;
-      border-left: 4px solid var(--git-orange);
-      padding-left: 9px;
-      color: #0b3c5d;
-    }
-    h4 {
-      font-size: 10.2pt;
-      margin-top: 14px;
-      margin-bottom: 6px;
-      color: #1e293b;
-    }
-    p { margin: 0.75em 0; }
-
-    /* Sections cartes */
-    .card-block {
-      background: var(--bg-card);
-      border: 1px solid #e2e8f0;
-      border-radius: 10px;
-      padding: 20px 22px;
-      margin-bottom: 22px;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
-    }
-
-    /* Badges */
-    .badge {
-      display: inline-block;
-      padding: 2px 8px;
-      font-size: 8.2pt;
-      font-weight: 700;
-      border-radius: 4px;
-      background-color: #e0f2fe;
-      color: #0369a1;
-      margin-right: 4px;
-      vertical-align: middle;
-    }
-    .badge-git { background: #ffedd5; color: #c2410c; border: 1px solid #fdba74; }
-    .badge-gh { background: #f1f5f9; color: #0f172a; border: 1px solid #cbd5e1; }
-    .badge-bo { background: #0b3c5d; color: #ffffff; }
-    .badge-time { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
-
-    /* Encadrés */
-    .callout {
-      margin: 14px 0;
-      padding: 13px 16px;
-      border-radius: 8px;
-      border-left: 5px solid #0284c7;
-      background-color: #f0f9ff;
-      font-size: 9.5pt;
-    }
-    .callout-warn { border-left-color: #f59e0b; background-color: #fffbeb; }
-    .callout-danger { border-left-color: #dc2626; background-color: #fef2f2; }
-    .callout-tip { border-left-color: #16a34a; background-color: #f0fdf4; }
-    .callout-git { border-left-color: #f05032; background-color: #fff7ed; }
-    .callout-docs {
-      border-left-color: #24292f;
-      background-color: #f8fafc;
-      border: 1px solid #cbd5e1;
-      border-left-width: 5px;
-    }
-
-    /* Tableaux */
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      margin: 14px 0;
-      font-size: 9.2pt;
-      background: #ffffff;
-    }
-    th, td {
-      border: 1px solid #cbd5e1;
-      padding: 7px 9px;
-      text-align: left;
-      vertical-align: middle;
-    }
-    th {
-      background-color: #f1f5f9;
-      color: var(--primary);
-      font-weight: 700;
-    }
-    tr:nth-child(even) { background-color: #f8fafc; }
-    td.center, th.center { text-align: center; }
-
-    /* Zones réponses & jalons */
-    .student-answer {
-      background-color: #ffffff;
-      border: 1.5px dashed #94a3b8;
-      border-radius: 6px;
-      padding: 10px 14px;
-      margin: 10px 0;
-      color: #334155;
-      font-size: 9.3pt;
-    }
-    .step-check {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: #f8fafc;
-      border: 1px solid #cbd5e1;
-      border-radius: 8px;
-      padding: 10px 14px;
-      margin-top: 14px;
+      color: #24292f;
+      font-size: 1.05rem;
       font-weight: 600;
-      font-size: 9.5pt;
-      color: #0f172a;
-      cursor: pointer;
-    }
-    .step-check input[type="checkbox"] {
-      width: 18px;
-      height: 18px;
-      accent-color: #f05032;
-      cursor: pointer;
+      margin-top: 20px;
+      margin-bottom: 8px;
     }
 
-    /* SVG Cards */
-    .svg-card {
-      background: #ffffff;
-      border: 1px solid #cbd5e1;
-      border-radius: 10px;
-      padding: 14px;
-      margin: 16px 0;
-      text-align: center;
-      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
-      overflow-x: auto;
-    }
-    .svg-card svg {
-      max-width: 100%;
-      height: auto;
-      display: block;
-      margin: 0 auto;
-    }
-    .svg-caption {
-      font-size: 8.8pt;
-      color: var(--text-muted);
-      margin-top: 8px;
-      font-style: italic;
-    }
-
-    /* Code & Terminal */
-    code {
-      background-color: #f1f5f9;
-      color: #0f172a;
-      padding: 2px 5px;
-      border-radius: 4px;
-      font-size: 8.8pt;
-      font-family: Consolas, 'Courier New', monospace;
-    }
-    .code-wrapper {
-      position: relative;
-      margin: 12px 0;
-    }
-    .copy-code-btn {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      background: #334155;
-      color: #f8fafc;
-      border: 1px solid #475569;
-      border-radius: 5px;
-      padding: 4px 9px;
-      font-size: 8pt;
-      cursor: pointer;
-      font-family: inherit;
-    }
-    .copy-code-btn:hover { background: #475569; }
-    pre {
-      background-color: #0f172a;
-      color: #e2e8f0;
-      border: 1px solid #1e293b;
-      border-radius: 8px;
-      padding: 14px 16px;
-      font-size: 8.9pt;
-      line-height: 1.48;
-      overflow-x: auto;
-      font-family: Consolas, 'Courier New', monospace;
-      margin: 0;
-    }
-    pre code { background: transparent; color: inherit; padding: 0; }
-    .cmd-prompt { color: #38bdf8; font-weight: bold; }
-    .cmd-git { color: #f97316; font-weight: bold; }
-    .cmd-arg { color: #fde047; }
-    .cmd-str { color: #86efac; }
-    .cmd-cmt { color: #94a3b8; font-style: italic; }
-
-    /* Outils interactifs */
-    .tools-strip {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-      margin: 14px 0;
-    }
-    @media (max-width: 780px) {
-      .tools-strip { grid-template-columns: 1fr; }
-    }
-    .mini-tool {
-      background: #f8fafc;
-      border: 1px solid #cbd5e1;
-      border-radius: 8px;
-      padding: 12px 14px;
-      font-size: 9pt;
-    }
-    .mini-tool h4 { margin: 0 0 8px 0; color: var(--primary); }
-    .mini-tool select, .mini-tool input[type="text"] {
-      padding: 5px 7px;
-      border: 1px solid #94a3b8;
-      border-radius: 5px;
-      font-size: 8.8pt;
-      font-family: inherit;
-    }
-    .tool-result {
-      margin-top: 8px;
-      padding: 7px 10px;
-      background: #ffffff;
-      border-radius: 5px;
-      border: 1px solid #cbd5e1;
-      font-weight: 700;
-      color: #0b3c5d;
-      font-family: Consolas, monospace;
-      font-size: 8.8pt;
-    }
-
-    /* Timeline 2h */
+    /* TIMELINE */
     .timeline-bar {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 6px;
-      margin: 12px 0;
+      gap: 8px;
+      margin: 14px 0;
     }
     @media (max-width: 760px) {
       .timeline-bar { grid-template-columns: repeat(2, 1fr); }
     }
     .tl-item {
-      background: #f1f5f9;
-      border: 1px solid #cbd5e1;
+      background: #f8fafc;
+      border: 1px solid var(--border);
       border-top: 3px solid var(--git-orange);
       border-radius: 6px;
-      padding: 8px;
+      padding: 9px 10px;
       font-size: 8.3pt;
       text-decoration: none;
       color: var(--text-main);
+      transition: all 0.15s ease;
     }
-    .tl-item:hover { background: #ffedd5; text-decoration: none; }
-    .tl-time { font-weight: 800; color: #c0392b; display: block; }
+    .tl-item:hover {
+      background: #ffedd5;
+      border-color: #fdba74;
+      text-decoration: none;
+    }
+    .tl-time {
+      font-weight: 800;
+      color: #c2410c;
+      display: block;
+      margin-bottom: 3px;
+    }
 
-    .toast-copy {
-      display: none;
-      margin-top: 8px;
-      padding: 8px 12px;
-      border-radius: 6px;
-      background: #dcfce7;
-      color: #166534;
-      border: 1px solid #86efac;
-      font-weight: 600;
+    /* TABLEAUX */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0;
+      font-size: 8.8pt;
+    }
+    th {
+      background: #f6f8fa;
+      color: #1f2328;
+      font-weight: 700;
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    td {
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      vertical-align: top;
+    }
+    tr:nth-child(even) td { background: #fafbfc; }
+
+    /* CALLOUTS */
+    .callout-info {
+      background: #ddf4ff;
+      border-left: 4px solid var(--primary);
+      padding: 12px 16px;
+      border-radius: 0 6px 6px 0;
+      margin: 16px 0;
       font-size: 9pt;
+    }
+    .callout-info h4 { margin: 0 0 6px 0; color: #0969da; font-size: 9.5pt; }
+
+    .callout-warning {
+      background: #fff8c5;
+      border-left: 4px solid #9a6700;
+      padding: 12px 16px;
+      border-radius: 0 6px 6px 0;
+      margin: 16px 0;
+      font-size: 9pt;
+    }
+    .callout-warning h4 { margin: 0 0 6px 0; color: #7d4e00; font-size: 9.5pt; }
+
+    .callout-gui {
+      background: #f5f3ff;
+      border-left: 4px solid #7c3aed;
+      padding: 12px 16px;
+      border-radius: 0 6px 6px 0;
+      margin: 16px 0;
+      font-size: 9pt;
+    }
+    .callout-gui h4 { margin: 0 0 6px 0; color: #6d28d9; font-size: 9.5pt; }
+
+    /* STEPS & BADGES */
+    .workflow-step {
+      display: flex;
+      gap: 14px;
+      margin: 14px 0;
+      padding: 12px 14px;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+    .step-num {
+      width: 28px;
+      height: 28px;
+      background: var(--gh-dark);
+      color: #ffffff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 9.5pt;
+      flex-shrink: 0;
+    }
+    .step-num.gui { background: #6f42c1; }
+    .step-num.cli { background: #0969da; }
+
+    .badge-bo {
+      background: #0969da;
+      color: #ffffff;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-weight: 700;
+      font-size: 8pt;
+    }
+
+    /* CODE & PRE */
+    pre {
+      background: #24292f;
+      color: #f0f6fc;
+      padding: 12px 16px;
+      border-radius: 6px;
+      overflow-x: auto;
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+      font-size: 8.6pt;
+      line-height: 1.45;
+      margin: 12px 0;
+      border: 1px solid #30363d;
+    }
+    code {
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+      font-size: 8.8pt;
+      background: #eff1f3;
+      padding: 2px 5px;
+      border-radius: 4px;
+      color: #24292f;
+    }
+    pre code {
+      background: transparent;
+      padding: 0;
+      color: inherit;
+    }
+
+    /* ÉQUIVALENCE GUI <-> CLI TABLEAU */
+    .equiv-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 8.8pt;
+    }
+    .equiv-table th {
+      background: #f1f5f9;
+      color: #0f172a;
+      border: 1px solid #cbd5e1;
+      padding: 8px 10px;
+    }
+    .equiv-table td {
+      border: 1px solid #cbd5e1;
+      padding: 8px 10px;
+    }
+    .gui-pill {
+      display: inline-block;
+      background: #f3e8ff;
+      color: #6b21a8;
+      border: 1px solid #d8b4fe;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-weight: 700;
+      font-size: 7.8pt;
+    }
+    .cli-pill {
+      display: inline-block;
+      background: #e0f2fe;
+      color: #0369a1;
+      border: 1px solid #7dd3fc;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-weight: 700;
+      font-size: 7.8pt;
+    }
+
+    /* CAPTURE D'ÉCRAN GITHUB DESKTOP & LÉGENDE */
+    .gui-screenshot-container {
+      margin: 18px auto;
+      max-width: 900px;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+    }
+    .gui-screenshot-container img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    .gui-legend-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+      gap: 12px;
+      padding: 14px 18px;
+      background: #f8fafc;
+      border-top: 1px solid #e2e8f0;
+    }
+    .gui-legend-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      font-size: 8.5pt;
+      color: #334155;
+    }
+    .gui-marker {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      background: #6366f1;
+      color: #ffffff;
+      font-weight: 800;
+      border-radius: 50%;
+      font-size: 8pt;
+      flex-shrink: 0;
+    }
+
+    /* MINI-OUTILS */
+    .tools-strip {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin: 18px 0;
+    }
+    @media (max-width: 760px) {
+      .tools-strip { grid-template-columns: 1fr; }
+    }
+    .mini-tool {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+    .mini-tool h4 {
+      margin: 0 0 8px 0;
+      font-size: 9.3pt;
+      color: #1f2328;
+    }
+    .tool-result {
+      margin-top: 8px;
+      padding: 8px 10px;
+      background: #f6f8fa;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      font-family: ui-monospace, SFMono-Regular, monospace;
+      font-size: 8.2pt;
+      color: #0969da;
+    }
+
+    /* QUESTIONS & STUDENT ANSWER */
+    .question-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 14px 16px;
+      margin: 14px 0;
+    }
+    .question-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .q-badge {
+      background: var(--gh-purple);
+      color: white;
+      font-weight: 700;
+      font-size: 7.8pt;
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+    .q-title {
+      font-weight: 700;
+      font-size: 9.3pt;
+      color: #1f2328;
+    }
+    .student-answer {
+      background: #fbfbfc;
+      border: 1px dashed #94a3b8;
+      border-radius: 6px;
+      padding: 10px 14px;
+      margin: 10px 0 6px 0;
+      font-size: 8.8pt;
+    }
+
+    /* GRILLE ÉVALUATION */
+    .eval-table th { background: #24292f; color: #ffffff; }
+    .eval-table td { font-size: 8.6pt; }
+
+    /* SCHÉMA BOX */
+    .schema-box {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      margin: 18px 0;
+      text-align: center;
+    }
+
+    @media print {
+      .no-print { display: none !important; }
+      body { background: white; font-size: 9pt; }
+      .container { max-width: 100%; margin: 0; padding: 0; }
+      .card-block, .header-box { border: 1px solid #999; box-shadow: none; break-inside: avoid; }
+      pre { background: #eee !important; color: #000 !important; border: 1px solid #bbb; }
     }
   </style>
 </head>
@@ -489,7 +520,7 @@
     <div class="progress-wrap" title="Cochez chaque module validé au fil des 2 heures">
       <span>Avancement TP Git (2h) :</span>
       <div class="progress-track"><div class="progress-fill" id="tpProgressFill"></div></div>
-      <span id="tpProgressText">0 / 5</span>
+      <span id="tpProgressText">0 / 5 (0%)</span>
     </div>
   </div>
   <div class="top-actions">
@@ -498,18 +529,21 @@
   </div>
 </div>
 
+<div class="container">
+
 <!-- EN-TÊTE PRINCIPAL -->
 <div class="header-box">
   <div class="header-kicker">BTS CIEL — 1<sup>re</sup> Année (Tronc Commun &amp; Option A/B) | Outils Numériques &amp; Ingénierie Collaborative</div>
-  <h1>TP : Initiation à Git &amp; GitHub — Du Répertoire Local à la Forge Collaborative</h1>
+  <h1>TP : Initiation à Git &amp; GitHub avec GitHub Desktop — De l'Interface Graphique à la Ligne de Commande</h1>
   <p class="header-subtitle">
-    Création de votre compte professionnel GitHub, compréhension des 4 zones fondamentales (<em>Working Tree</em>, <em>Staging Area</em>, <em>Local Repo</em>, <em>Remote</em>), configuration du <code>.gitignore</code> (spécial MicroPython / C Arduino / Proteus), gestion des branches, première <strong>Pull Request (PR)</strong> et publication de votre <strong>dépôt portfolio</strong>.
+    Découverte visuelle des concepts fondamentaux du versionnement moderne (<em>Working Tree</em>, <em>Staging Area</em>, <em>Local Repo</em>, <em>Remote</em>) grâce au client graphique officiel <strong>GitHub Desktop</strong>, configuration du <code>.gitignore</code> (spécial Proteus / MicroPython / C Arduino), gestion visuelle des branches, ouverture de votre première <strong>Pull Request (PR)</strong> et publication de votre <strong>dépôt portfolio</strong> sur GitHub.com.
   </p>
   <div class="header-meta">
     <span class="meta-pill">⏱️ <strong>Durée :</strong> 1h30 à 2h00</span>
-    <span class="meta-pill">🐙 <strong>Outils :</strong> Git Bash / Terminal VS Code + Plateforme GitHub.com</span>
+    <span class="meta-pill">🖥️ <strong>Client Graphique :</strong> GitHub Desktop</span>
+    <span class="meta-pill">⌨️ <strong>Terminal &amp; IDE :</strong> VS Code / PowerShell</span>
+    <span class="meta-pill">☁️ <strong>Plateforme Cloud :</strong> GitHub.com</span>
     <span class="meta-pill">📦 <strong>Livrable :</strong> URL de votre dépôt public GitHub sur Google Classroom</span>
-    <span class="meta-pill">🎯 <strong>Objectif :</strong> Ne plus JAMAIS perdre une ligne de code !</span>
   </div>
 </div>
 
@@ -517,10 +551,10 @@
 <div class="card-block">
   <h3 style="margin-top:0;">⏱️ Découpage Temporel des 2 Heures</h3>
   <div class="timeline-bar">
-    <a class="tl-item" href="#sec-m0"><span class="tl-time">0h00 → 0h20 (20 min)</span><strong>Module 0</strong><br>Pourquoi Git ? Création compte GitHub &amp; 2FA</a>
-    <a class="tl-item" href="#sec-m1"><span class="tl-time">0h20 → 0h55 (35 min)</span><strong>Module 1</strong><br>Git Local : <code>init</code>, <code>add</code>, <code>commit</code> &amp; le <code>.gitignore</code></a>
-    <a class="tl-item" href="#sec-m2"><span class="tl-time">0h55 → 1h25 (30 min)</span><strong>Module 2</strong><br>Liaison Cloud : <code>remote</code>, Authentification &amp; <code>push</code></a>
-    <a class="tl-item" href="#sec-m3"><span class="tl-time">1h25 → 2h00 (35 min)</span><strong>Module 3</strong><br>Branches, Pull Request, <code>README.md</code> &amp; Dépôt</a>
+    <a class="tl-item" href="#sec-m0"><span class="tl-time">0h00 → 0h20 (20 min)</span><strong>Module 0</strong><br>Pourquoi Git ? Création compte GitHub &amp; Connexion Desktop</a>
+    <a class="tl-item" href="#sec-m1"><span class="tl-time">0h20 → 0h55 (35 min)</span><strong>Module 1</strong><br>Le Triptyque Local dans GitHub Desktop &amp; Équivalences CLI</a>
+    <a class="tl-item" href="#sec-m2"><span class="tl-time">0h55 → 1h20 (25 min)</span><strong>Module 2</strong><br>Publication Cloud (Push) &amp; Consultation sur GitHub.com</a>
+    <a class="tl-item" href="#sec-m3"><span class="tl-time">1h20 → 1h55 (35 min)</span><strong>Module 3</strong><br>Branches Visuelles, Pull Request (PR) &amp; Fusion (Merge)</a>
   </div>
 
   <h3>🎯 Compétences Officielles BTS CIEL (Arrêté du 25/01/2023)</h3>
@@ -534,14 +568,14 @@
     </thead>
     <tbody>
       <tr>
-        <td class="center"><span class="badge badge-bo">C08</span></td>
+        <td style="text-align:center;"><span class="badge-bo">C08</span></td>
         <td><strong>Gérer le cycle de vie du code source</strong></td>
-        <td>Utiliser un gestionnaire de versions décentralisé (Git) : suivi d'historique, retours en arrière, exclusion des fichiers compilés / temporaires via <code>.gitignore</code>.</td>
+        <td>Utiliser le gestionnaire de versions (Git) via client graphique et CLI : suivi d'historique, retours en arrière, exclusion des fichiers compilés / temporaires via <code>.gitignore</code>.</td>
       </tr>
       <tr>
-        <td class="center"><span class="badge badge-bo">C01</span></td>
+        <td style="text-align:center;"><span class="badge-bo">C01</span></td>
         <td><strong>Travailler en équipe &amp; Communiquer</strong></td>
-        <td>Partager son travail sur une forge collaborative (GitHub), rédiger des messages de commit explicites, isoler des développements sur des branches et soumettre une Pull Request documentée.</td>
+        <td>Partager son travail sur une forge collaborative (GitHub), rédiger des messages de commit explicites, isoler des développements sur des branches et soumettre une Pull Request avec revue de code.</td>
       </tr>
     </tbody>
   </table>
@@ -571,15 +605,15 @@ Thumbs.db
   </div>
 
   <div class="mini-tool">
-    <h4>🛠️ Générateur de Commandes Git Essentielles</h4>
-    <label>Que souhaitez-vous faire ?<br>
+    <h4>🛠️ Pont Mémoire : Action GitHub Desktop &harr; Commande Git CLI</h4>
+    <label>Que faites-vous dans GitHub Desktop ?<br>
       <select id="selActionGit" style="width:100%;" onchange="genererCmdGit()">
-        <option value="status" selected>1. Vérifier l'état des fichiers modifiés</option>
-        <option value="add_commit">2. Indexer et enregistrer un changement</option>
-        <option value="branch_new">3. Créer et basculer sur une nouvelle branche</option>
-        <option value="push_first">4. Publier une branche vers GitHub</option>
-        <option value="pull">5. Récupérer les nouveautés du dépôt distant</option>
-        <option value="log">6. Visualiser l'arbre des commits en couleur</option>
+        <option value="status" selected>1. Observer les fichiers modifiés ("Changes")</option>
+        <option value="add_commit">2. Cocher un fichier et cliquer "Commit to main"</option>
+        <option value="branch_new">3. Créer une nouvelle branche (Current branch > New branch)</option>
+        <option value="push_first">4. Cliquer sur "Publish repository" ou "Push origin"</option>
+        <option value="pull">5. Cliquer sur "Fetch origin" / "Pull origin"</option>
+        <option value="log">6. Consulter l'onglet "History"</option>
       </select>
     </label>
     <div class="tool-result" id="resCmdGit" style="white-space:pre-wrap;">git status</div>
@@ -587,55 +621,52 @@ Thumbs.db
 </div>
 
 <!-- ======================================================================= -->
-<!-- MODULE 0 : COMPRENDRE GIT & CREER SON COMPTE GITHUB                     -->
+<!-- MODULE 0 : COMPRENDRE GIT & CONNEXION GITHUB DESKTOP                    -->
 <!-- ======================================================================= -->
-<h2 id="sec-m0" style="display:flex; justify-content:space-between; align-items:center;"><span>Module 0 : Pourquoi Git ? &amp; Création du Compte GitHub (20 min)</span> <label style="font-size:0.85rem; font-weight:normal; background:#f1f5f9; padding:4px 10px; border-radius:6px; border:1px solid #cbd5e1; cursor:pointer;"><input type="checkbox" id="chk-m0" onchange="updateProgress()"> Module validé ✓</label></h2>
+<h2 id="sec-m0" style="display:flex; justify-content:space-between; align-items:center;">
+  <span>Module 0 : Pourquoi Git ? Compte GitHub &amp; Connexion Desktop (20 min)</span>
+  <label style="font-size:0.85rem; font-weight:normal; background:#f1f5f9; padding:4px 10px; border-radius:6px; border:1px solid #cbd5e1; cursor:pointer;"><input type="checkbox" id="chk-m0" onchange="updateProgress()"> Module validé ✓</label>
+</h2>
 
 <div class="callout-info">
   <h4>🎯 Objectifs du Module 0</h4>
   <ul>
-    <li>Comprendre la différence fondamentale entre <strong>Git</strong> (logiciel libre de gestion de versions décentralisé en local) et <strong>GitHub</strong> (plateforme cloud de forge logicielle collaborative).</li>
-    <li>Mettre fin définitivement au syndrome du fichier <code>projet_final_v2_modifie_ok.zip</code>.</li>
-    <li>Créer son compte professionnel d'étudiant sur GitHub, configurer son identité publique et sécuriser son accès avec l'authentification à deux facteurs (2FA).</li>
+    <li>Comprendre la différence fondamentale entre <strong>Git</strong> (moteur de versionnement décentralisé), <strong>GitHub</strong> (forge collaborative cloud) et <strong>GitHub Desktop</strong> (interface graphique officielle intuitive).</li>
+    <li>Mettre fin définitivement au syndrome du fichier <code>projet_final_v2_modifie_paul.zip</code>.</li>
+    <li>Créer son compte professionnel sur GitHub.com, sécuriser l'accès avec le 2FA, et s'authentifier en un clic dans GitHub Desktop.</li>
   </ul>
 </div>
 
 <h3>0.1 La Problématique du Projet en Équipe sans Gestionnaire de Versions</h3>
 <p>
-  En BTS CIEL, vous concevez des systèmes embarqués associant électronique (schémas Proteus, routages PCB) et informatique (firmware C/C++, scripts Python, pages web embarquées). Très rapidement, un projet traverse plusieurs étapes de tests, de corrections et de collaboration à plusieurs étudiants.
+  En BTS CIEL, vos projets mêlent électronique (schémas Proteus, routages PCB) et informatique (firmwares C/C++, scripts Python, HTML/CSS). Sans outil adapté, on observe classiquement l'écrasement involontaire du code du binôme, l'incapacité de savoir qui a modifié quelle ligne, et la perte définitive des fichiers en cas de crash système.
+</p>
+<p>
+  <strong>La solution universelle : Git &amp; GitHub Desktop :</strong><br>
+  Git prend des « instantanés » (<strong>commits</strong>) horodatés et signés de votre projet. Avec <strong>GitHub Desktop</strong>, chaque changement de ligne apparaît sous vos yeux en vert (+) ou rouge (-), chaque branche est visualisable d'un clic, et la publication sur le cloud se fait sans taper de lignes de commande opaques.
 </p>
 
-<div class="workflow-step">
-  <div class="step-num">!</div>
-  <div>
-    <strong>L'anti-modèle à bannir : le partage par clé USB ou dossier partagé :</strong><br>
-    Sans outil adapté, on observe classiquement :
-    <code>code_v1.ino</code> &rarr; <code>code_v2_test.ino</code> &rarr; <code>code_v2_corrige_paul.ino</code> &rarr; <code>code_final_vrai.ino</code> &rarr; <code>code_final_qui_marche_enfin.ino</code>.<br>
-    <em>Conséquences dramatiques :</em> écrasement involontaire du travail du binôme, impossibilité de savoir qui a modifié quelle ligne, incapacité à revenir en arrière après un bug fatal, et perte définitive des sources en cas de panne machine.
-  </div>
-</div>
-
-<div class="workflow-step">
-  <div class="step-num">✓</div>
-  <div>
-    <strong>La solution universelle des industriels : Git &amp; GitHub :</strong><br>
-    Git prend des « instantanés » (<strong>commits</strong>) horodatés et signés de votre projet. Chaque version possède un identifiant unique (empreinte cryptographique SHA-1/SHA-256). Vous pouvez remonter dans le temps, comparer n'importe quelle ligne modifiée, expérimenter sans risque sur des <strong>branches isolées</strong>, et fusionner vos travaux avec validation par les pairs (<strong>Pull Requests</strong>).
-  </div>
-</div>
-
-<h3>0.2 Création et Paramétrage du Compte GitHub</h3>
+<h3>0.2 Création du Compte GitHub &amp; Activation du 2FA</h3>
 <ol>
   <li>Rendez-vous sur <strong><a href="https://github.com" target="_blank" rel="noopener">https://github.com</a></strong> et cliquez sur <strong>Sign up</strong>.</li>
-  <li>
-    Renseignez une adresse email valide (privilégiez votre adresse académique ou une adresse personnelle professionnelle que vous conserverez après votre BTS).
-  </li>
-  <li>
-    Choisissez un <strong>Username professionnel</strong> (ex: <code>prenom-nom</code>, <code>vdupont-ciel</code>). <em>Évitez les pseudonymes de jeux vidéo : votre GitHub constituera l'annexe de votre CV auprès des recruteurs !</em>
-  </li>
-  <li>Validez le captcha de sécurité et saisissez le code de validation reçu par email.</li>
-  <li>
-    <strong>Activation du 2FA (Double Authentification) :</strong> GitHub impose l'authentification à deux facteurs. Allez dans <em>Settings &gt; Password and authentication &gt; Two-factor authentication</em> et scannez le QR code avec une application d'authentification (Google Authenticator, Microsoft Authenticator ou Bitwarden). <strong>Sauvegardez impérativement vos Recovery Codes en lieu sûr !</strong>
-  </li>
+  <li>Renseignez une adresse email valide (privilégiez votre adresse académique ou professionnelle).</li>
+  <li>Choisissez un <strong>Username professionnel</strong> (ex: <code>prenom-nom</code>, <code>vdupont-ciel</code>). Évitez les pseudonymes de jeux vidéo !</li>
+  <li>Activez obligatoirement l'authentification à deux facteurs (2FA) dans <em>Settings &gt; Password and authentication</em> et conservez vos codes de récupération.</li>
+</ol>
+
+<h3>0.3 Lancement et Connexion à GitHub Desktop</h3>
+<div class="callout-gui">
+  <h4>🖥️ Pourquoi débuter avec GitHub Desktop ?</h4>
+  <p>
+    GitHub Desktop élimine le principal obstacle des débutants : le rejet des mots de passe en ligne de commande depuis août 2021. Grâce à GitHub Desktop, la connexion se fait automatiquement via votre navigateur web en un seul clic !
+  </p>
+</div>
+<ol>
+  <li>Lancez <strong>GitHub Desktop</strong> sur votre poste de travail (présent dans le menu Démarrer).</li>
+  <li>Allez dans le menu : <strong>File &gt; Options...</strong> (ou <code>Ctrl + ,</code>).</li>
+  <li>Dans l'onglet <strong>Accounts</strong>, en face de <em>GitHub.com</em>, cliquez sur <strong>Sign in</strong>.</li>
+  <li>Choisissez <strong>Continue with Browser</strong> : votre navigateur par défaut s'ouvre, cliquez sur <strong>Authorize desktop</strong>.</li>
+  <li>Dans l'onglet <strong>Git</strong> des options, vérifiez que votre <strong>Name</strong> et votre <strong>Email</strong> sont bien renseignés.</li>
 </ol>
 
 <div class="student-answer">
@@ -646,30 +677,87 @@ Thumbs.db
 </div>
 
 <!-- ======================================================================= -->
-<!-- MODULE 1 : LE TRIPTYQUE LOCAL & LE VERSIONNEMENT PROPRE                 -->
+<!-- MODULE 1 : LE TRIPTYQUE LOCAL & GITHUB DESKTOP                          -->
 <!-- ======================================================================= -->
-<h2 id="sec-m1" style="display:flex; justify-content:space-between; align-items:center;"><span>Module 1 : Le Triptyque Local Git &amp; Le Versionnement Propre (35 min)</span> <label style="font-size:0.85rem; font-weight:normal; background:#f1f5f9; padding:4px 10px; border-radius:6px; border:1px solid #cbd5e1; cursor:pointer;"><input type="checkbox" id="chk-m1" onchange="updateProgress()"> Module validé ✓</label></h2>
+<h2 id="sec-m1" style="display:flex; justify-content:space-between; align-items:center;">
+  <span>Module 1 : Le Triptyque Local Visualisé dans GitHub Desktop (35 min)</span>
+  <label style="font-size:0.85rem; font-weight:normal; background:#f1f5f9; padding:4px 10px; border-radius:6px; border:1px solid #cbd5e1; cursor:pointer;"><input type="checkbox" id="chk-m1" onchange="updateProgress()"> Module validé ✓</label>
+</h2>
 
 <div class="callout-info">
   <h4>🎯 Objectifs du Module 1</h4>
   <ul>
-    <li>Maîtriser les 3 zones de Git en local : <strong>Working Directory</strong>, <strong>Staging Area</strong> (Index), et <strong>Local Repository</strong>.</li>
-    <li>Configurer son identité Git globale sur le poste de TP.</li>
-    <li>Initialiser un dépôt local avec <code>git init</code>.</li>
-    <li>Comprendre et configurer le fichier critique <strong><code>.gitignore</code></strong> pour les projets BTS CIEL (exclusion Proteus, Arduino, Python).</li>
-    <li>Effectuer des commits atomiques respectant la convention <strong>Conventional Commits</strong>.</li>
+    <li>Identifier visuellement les 3 zones locales de Git grâce à l'interface de GitHub Desktop.</li>
+    <li>Créer son dépôt local de portfolio en quelques secondes.</li>
+    <li>Comprendre et configurer le fichier critique <strong><code>.gitignore</code></strong> (spécial BTS CIEL).</li>
+    <li>Effectuer son premier commit atomique avec prévisualisation du <em>Diff</em>.</li>
+    <li>Comprendre la correspondance exacte entre les clics dans GitHub Desktop et les commandes Git CLI.</li>
   </ul>
 </div>
 
-<h3>1.1 Les 4 Zones de Git : De votre Disque Dur au Cloud</h3>
+<h3>1.1 Création du Dépôt Local dans GitHub Desktop</h3>
+<div class="workflow-step">
+  <div class="step-num gui">1</div>
+  <div>
+    <strong>Créer un nouveau dépôt local :</strong><br>
+    Dans GitHub Desktop, cliquez sur <strong>File &gt; New repository...</strong> (ou raccourci <code>Ctrl + N</code>).<br>
+    Renseignez :
+    <ul>
+      <li><strong>Name :</strong> <code>bts-ciel-portfolio</code></li>
+      <li><strong>Description :</strong> <code>Portfolio de projets techniques BTS CIEL 1ère Année</code></li>
+      <li><strong>Local path :</strong> <code>C:ts_ciel</code> (ou votre dossier de travail habituel)</li>
+      <li><strong>Initialize this repository with a README :</strong> <strong style="color:#0969da;">Cochez cette case !</strong></li>
+      <li><strong>Git ignore :</strong> laissez sur <em>None</em> (nous allons le personnaliser nous-mêmes).</li>
+    </ul>
+    Cliquez sur le bouton bleu <strong>Create repository</strong>.
+  </div>
+</div>
+
+<h3>1.2 Anatomie Détaillée de l'Interface GitHub Desktop</h3>
 <p>
-  Git fonctionne selon un modèle précis à 4 états. Pour qu'un fichier soit archivé dans l'historique puis partagé avec l'équipe, il traverse ces différentes zones :
+  Prenez le temps d'observer attentivement la fenêtre de GitHub Desktop. Elle concrétise visuellement toute l'architecture de Git :
 </p>
 
-<!-- SVG 1 : Cycle de vie des 4 zones Git -->
+<!-- CAPTURE D'ÉCRAN GITHUB DESKTOP -->
+<div class="gui-screenshot-container">
+  <img src="github_desktop_interface.png" alt="Interface Principale GitHub Desktop">
+  <div class="gui-legend-grid">
+    <div class="gui-legend-item">
+      <span class="gui-marker">1</span>
+      <div><strong>Barre Supérieure :</strong> Affiche le dépôt actif (<code>Current repository</code>), la branche de travail (<code>Current branch : main</code>), et le bouton de synchronisation (<code>Fetch / Push origin</code>).</div>
+    </div>
+    <div class="gui-legend-item">
+      <span class="gui-marker">2</span>
+      <div><strong>Onglet "Changes" (Staging Area) :</strong> Liste tous les fichiers créés ou modifiés. Cocher/décocher une case équivaut exactement à <code>git add</code> !</div>
+    </div>
+    <div class="gui-legend-item">
+      <span class="gui-marker">3</span>
+      <div><strong>Panneau Central (Visualiseur de Diff) :</strong> Affiche l'état des fichiers. Lorsqu'un fichier est modifié, chaque ligne ajoutée apparaît en <span style="color:#1a7f37; font-weight:bold;">vert (+)</span> et chaque ligne supprimée en <span style="color:#cf222e; font-weight:bold;">rouge (-)</span>.</div>
+    </div>
+    <div class="gui-legend-item">
+      <span class="gui-marker">4</span>
+      <div><strong>Boîte de Commit (Local Repo) :</strong> Saisissez le <code>Summary (required)</code> (titre de la modification) et cliquez sur <strong>Commit to main</strong> pour figer l'instantané dans l'historique local.</div>
+    </div>
+    <div class="gui-legend-item">
+      <span class="gui-marker">5</span>
+      <div><strong>Raccourcis d'Atelier :</strong> 3 boutons ultra-pratiques : <em>Open in Visual Studio Code</em> (<code>Ctrl+Shift+A</code>), <em>Show in Explorer</em> (<code>Ctrl+Shift+F</code>), <em>View on GitHub</em> (<code>Ctrl+Shift+G</code>).</div>
+    </div>
+    <div class="gui-legend-item">
+      <span class="gui-marker">6</span>
+      <div><strong>Onglet "History" :</strong> L'équivalent visuel de <code>git log</code>. Vous y retrouvez l'arbre complet des versions, leurs auteurs et leurs empreintes SHA-1.</div>
+    </div>
+  </div>
+</div>
+
+<h3>1.3 Les 4 Zones de Git : Correspondance GUI &harr; CLI</h3>
+<p>
+  Ce schéma vectoriel montre comment les composants graphiques de GitHub Desktop correspondent aux zones internes de Git :
+</p>
+
+<!-- SVG 1 : Architecture des 4 zones Git -->
 <div class="schema-box">
   <div style="font-weight:700; color:#1f2328; margin-bottom:12px; font-size:1.05rem;">
-    Figure 1 : Architecture des 4 Zones Git &mdash; Du Fichier Local au Dépôt GitHub
+    Figure 1 : Les 4 Zones de Git &mdash; Correspondance GitHub Desktop et Git CLI
   </div>
   <svg viewBox="0 0 880 270" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" style="max-width:880px; display:block; margin:0 auto; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
     <defs>
@@ -695,13 +783,14 @@ Thumbs.db
       <rect width="185" height="200" rx="8" fill="#ffffff" stroke="#d0d7de" stroke-width="2" filter="url(#shadow1)"/>
       <rect width="185" height="36" rx="8" fill="#f6f8fa" stroke="#d0d7de" stroke-width="1"/>
       <text x="92" y="23" text-anchor="middle" font-weight="bold" font-size="12" fill="#1f2328">1. Working Directory</text>
-      <text x="92" y="65" text-anchor="middle" font-size="11" fill="#57606a">Dossier de travail</text>
-      <text x="92" y="82" text-anchor="middle" font-size="10" fill="#57606a">(Fichiers sur votre disque)</text>
-      <rect x="15" y="100" width="155" height="26" rx="4" fill="#ffebe9" stroke="#ff8182" stroke-width="1"/>
-      <text x="25" y="117" font-size="11" fill="#cf222e" font-family="Courier New, monospace">Fichiers Untracked</text>
-      <rect x="15" y="135" width="155" height="26" rx="4" fill="#fff8c5" stroke="#d4a72c" stroke-width="1"/>
-      <text x="25" y="152" font-size="11" fill="#9a6700" font-family="Courier New, monospace">Fichiers Modifiés</text>
-      <text x="92" y="190" text-anchor="middle" font-size="10" fill="#6e7781">Édition VS Code / IDE</text>
+      <text x="92" y="60" text-anchor="middle" font-size="11" fill="#57606a">Dossier de travail</text>
+      <text x="92" y="75" text-anchor="middle" font-size="9" fill="#0969da">Édition VS Code / IDE</text>
+      <rect x="15" y="95" width="155" height="26" rx="4" fill="#ffebe9" stroke="#ff8182" stroke-width="1"/>
+      <text x="25" y="112" font-size="10" fill="#cf222e" font-family="Courier New, monospace">Fichiers non indexés</text>
+      <rect x="15" y="130" width="155" height="26" rx="4" fill="#fff8c5" stroke="#d4a72c" stroke-width="1"/>
+      <text x="25" y="147" font-size="10" fill="#9a6700" font-family="Courier New, monospace">Fichiers modifiés</text>
+      <text x="92" y="185" text-anchor="middle" font-size="9" fill="#6e7781">Bouton "Show in Explorer"</text>
+      <text x="92" y="200" text-anchor="middle" font-size="9" fill="#6e7781">de GitHub Desktop</text>
     </g>
 
     <!-- Zone 2 : Staging Area (Index) -->
@@ -709,12 +798,13 @@ Thumbs.db
       <rect width="185" height="200" rx="8" fill="#ffffff" stroke="#0969da" stroke-width="2" filter="url(#shadow1)"/>
       <rect width="185" height="36" rx="8" fill="#ddf4ff" stroke="#54aeff" stroke-width="1"/>
       <text x="92" y="23" text-anchor="middle" font-weight="bold" font-size="12" fill="#0969da">2. Staging Area (Index)</text>
-      <text x="92" y="65" text-anchor="middle" font-size="11" fill="#57606a">Sas de préparation</text>
-      <text x="92" y="82" text-anchor="middle" font-size="10" fill="#57606a">(Panier avant encaissement)</text>
-      <rect x="15" y="110" width="155" height="32" rx="4" fill="#ddf4ff" stroke="#0969da" stroke-width="1"/>
-      <text x="92" y="130" text-anchor="middle" font-size="11" fill="#0969da" font-family="Courier New, monospace" font-weight="bold">Staged / Indexed</text>
-      <text x="92" y="180" text-anchor="middle" font-size="10" fill="#6e7781">Sélection chirurgicale</text>
-      <text x="92" y="195" text-anchor="middle" font-size="10" fill="#6e7781">des fichiers prêts</text>
+      <text x="92" y="60" text-anchor="middle" font-size="11" fill="#57606a">Sas de préparation</text>
+      <text x="92" y="75" text-anchor="middle" font-size="9" fill="#0969da">Onglet "Changes" Desktop</text>
+      <rect x="15" y="105" width="155" height="36" rx="4" fill="#ddf4ff" stroke="#0969da" stroke-width="1"/>
+      <text x="92" y="123" text-anchor="middle" font-size="10" fill="#0969da" font-family="Courier New, monospace" font-weight="bold">☑ Cases cochées</text>
+      <text x="92" y="135" text-anchor="middle" font-size="9" fill="#0969da">Prêt pour le commit</text>
+      <text x="92" y="185" text-anchor="middle" font-size="9" fill="#6e7781">Sélection chirurgicale</text>
+      <text x="92" y="200" text-anchor="middle" font-size="9" fill="#6e7781">des fichiers à valider</text>
     </g>
 
     <!-- Zone 3 : Local Repository -->
@@ -722,13 +812,13 @@ Thumbs.db
       <rect width="185" height="200" rx="8" fill="#ffffff" stroke="#1a7f37" stroke-width="2" filter="url(#shadow1)"/>
       <rect width="185" height="36" rx="8" fill="#dafbe1" stroke="#4ac26b" stroke-width="1"/>
       <text x="92" y="23" text-anchor="middle" font-weight="bold" font-size="12" fill="#1a7f37">3. Local Repository</text>
-      <text x="92" y="65" text-anchor="middle" font-size="11" fill="#57606a">Dépôt Local (.git)</text>
-      <text x="92" y="82" text-anchor="middle" font-size="10" fill="#57606a">(Base de données interne)</text>
-      <rect x="15" y="105" width="155" height="40" rx="4" fill="#dafbe1" stroke="#1a7f37" stroke-width="1"/>
-      <text x="92" y="123" text-anchor="middle" font-size="10" fill="#1a7f37" font-family="Courier New, monospace" font-weight="bold">Commits Immuables</text>
-      <text x="92" y="137" text-anchor="middle" font-size="9" fill="#1a7f37" font-family="Courier New, monospace">SHA: e4b29a1...</text>
-      <text x="92" y="180" text-anchor="middle" font-size="10" fill="#6e7781">Historique officiel</text>
-      <text x="92" y="195" text-anchor="middle" font-size="10" fill="#6e7781">stocké en local</text>
+      <text x="92" y="60" text-anchor="middle" font-size="11" fill="#57606a">Dépôt Local (.git)</text>
+      <text x="92" y="75" text-anchor="middle" font-size="9" fill="#1a7f37">Onglet "History" Desktop</text>
+      <rect x="15" y="100" width="155" height="42" rx="4" fill="#dafbe1" stroke="#1a7f37" stroke-width="1"/>
+      <text x="92" y="118" text-anchor="middle" font-size="10" fill="#1a7f37" font-family="Courier New, monospace" font-weight="bold">Commits Immuables</text>
+      <text x="92" y="133" text-anchor="middle" font-size="9" fill="#1a7f37" font-family="Courier New, monospace">SHA: a1b2c3d...</text>
+      <text x="92" y="185" text-anchor="middle" font-size="9" fill="#6e7781">Historique figé localement</text>
+      <text x="92" y="200" text-anchor="middle" font-size="9" fill="#6e7781">après "Commit to main"</text>
     </g>
 
     <!-- Zone 4 : Remote Repository (GitHub) -->
@@ -736,88 +826,60 @@ Thumbs.db
       <rect width="170" height="200" rx="8" fill="#ffffff" stroke="#8250df" stroke-width="2" stroke-dasharray="4,3" filter="url(#shadow1)"/>
       <rect width="170" height="36" rx="8" fill="#fbefff" stroke="#c297ff" stroke-width="1"/>
       <text x="85" y="23" text-anchor="middle" font-weight="bold" font-size="12" fill="#8250df">4. Remote (GitHub)</text>
-      <text x="85" y="65" text-anchor="middle" font-size="11" fill="#57606a">Serveur Distant Cloud</text>
-      <text x="85" y="82" text-anchor="middle" font-size="10" fill="#57606a">(Forge collaborative)</text>
-      <rect x="15" y="105" width="140" height="40" rx="4" fill="#fbefff" stroke="#8250df" stroke-width="1"/>
-      <text x="75" y="123" text-anchor="middle" font-size="10" fill="#8250df" font-family="Courier New, monospace" font-weight="bold">github.com/...</text>
-      <text x="75" y="137" text-anchor="middle" font-size="9" fill="#8250df" font-family="Courier New, monospace">origin/main</text>
-      <text x="85" y="180" text-anchor="middle" font-size="10" fill="#6e7781">Sauvegarde cloud</text>
-      <text x="85" y="195" text-anchor="middle" font-size="10" fill="#6e7781">&amp; Travail d'équipe</text>
+      <text x="85" y="60" text-anchor="middle" font-size="11" fill="#57606a">Serveur Cloud</text>
+      <text x="85" y="75" text-anchor="middle" font-size="9" fill="#8250df">github.com/votre-nom</text>
+      <rect x="15" y="100" width="140" height="42" rx="4" fill="#fbefff" stroke="#8250df" stroke-width="1"/>
+      <text x="75" y="118" text-anchor="middle" font-size="10" fill="#8250df" font-family="Courier New, monospace" font-weight="bold">origin/main</text>
+      <text x="75" y="133" text-anchor="middle" font-size="9" fill="#8250df">Bouton "View on GitHub"</text>
+      <text x="85" y="185" text-anchor="middle" font-size="9" fill="#6e7781">Sauvegarde distante</text>
+      <text x="85" y="200" text-anchor="middle" font-size="9" fill="#6e7781">&amp; Partage d'équipe</text>
     </g>
 
     <!-- Transition 1 -> 2 : git add -->
     <path d="M205,95 L242,95" fill="none" stroke="#0969da" stroke-width="2.5" marker-end="url(#arrowBlue1)"/>
-    <text x="225" y="88" text-anchor="middle" font-size="9" font-weight="bold" fill="#0969da" font-family="Courier New, monospace">git add</text>
+    <text x="225" y="88" text-anchor="middle" font-size="9" font-weight="bold" fill="#0969da" font-family="Courier New, monospace">git add (☑)</text>
 
     <!-- Transition 2 -> 1 : git restore staged -->
     <path d="M245,155 L208,155" fill="none" stroke="#cf222e" stroke-width="1.8" stroke-dasharray="3,2" marker-end="url(#arrowRed1)"/>
-    <text x="225" y="170" text-anchor="middle" font-size="8" fill="#cf222e" font-family="Courier New, monospace">git restore</text>
+    <text x="225" y="170" text-anchor="middle" font-size="8" fill="#cf222e" font-family="Courier New, monospace">décocher (☐)</text>
 
     <!-- Transition 2 -> 3 : git commit -->
     <path d="M430,125 L467,125" fill="none" stroke="#1a7f37" stroke-width="2.5" marker-end="url(#arrowGreen1)"/>
-    <text x="450" y="116" text-anchor="middle" font-size="9" font-weight="bold" fill="#1a7f37" font-family="Courier New, monospace">git commit</text>
+    <text x="450" y="116" text-anchor="middle" font-size="9" font-weight="bold" fill="#1a7f37" font-family="Courier New, monospace">Commit</text>
 
     <!-- Transition 3 -> 4 : git push -->
     <path d="M655,95 L692,95" fill="none" stroke="#8250df" stroke-width="2.5" marker-end="url(#arrowPurple1)"/>
-    <text x="675" y="88" text-anchor="middle" font-size="9" font-weight="bold" fill="#8250df" font-family="Courier New, monospace">git push</text>
+    <text x="675" y="88" text-anchor="middle" font-size="9" font-weight="bold" fill="#8250df" font-family="Courier New, monospace">Push</text>
 
     <!-- Transition 4 -> 1/3 : git pull -->
     <path d="M695,155 L658,155" fill="none" stroke="#0969da" stroke-width="2" marker-end="url(#arrowBlue1)"/>
-    <text x="675" y="170" text-anchor="middle" font-size="8" fill="#0969da" font-family="Courier New, monospace">git pull</text>
+    <text x="675" y="170" text-anchor="middle" font-size="8" fill="#0969da" font-family="Courier New, monospace">Pull</text>
   </svg>
 </div>
 
-<h3>1.2 Configuration Initiale de l'Environnement de Développement</h3>
-<p>
-  Ouvrez un terminal (<strong>PowerShell</strong> sous Windows ou le terminal intégré de <strong>VS Code</strong>). Git a besoin de savoir qui signe chaque ligne de code écrite.
-</p>
-<pre><code class="language-bash"># 1. Configurer votre nom complet (affiché sur les commits)
-git config --global user.name "Vincent DUPONT"
-
-# 2. Configurer l'adresse email associée à votre compte GitHub
-git config --global user.email "votre.email@exemple.com"
-
-# 3. Définir le nom par défaut de la branche principale (standard mondial : main)
-git config --global init.defaultBranch main
-
-# 4. Vérifier la configuration enregistrée
-git config --list</code></pre>
-
-<h3>1.3 Initialisation du Dépôt et Règle d'Or du <code>.gitignore</code> en BTS CIEL</h3>
-<p>
-  Créez un nouveau dossier de TP sur votre session et initialisez-y un dépôt Git :
-</p>
-<pre><code class="language-bash"># Création du dossier et déplacement
-mkdir C:\bts_ciel\tp_git_portfolio
-cd C:\bts_ciel\tp_git_portfolio
-
-# Initialisation du dépôt Git local
-git init</code></pre>
-<p>
-  <em>Que s'est-il passé ?</em> Git a créé un sous-dossier masqué <code>.git/</code>. C'est ici que réside l'intégralité de la base de données de versionnement. <strong>Ne supprimez ni ne modifiez jamais manuellement le contenu de <code>.git/</code> !</strong>
-</p>
-
+<h3>1.4 Règle d'Or du <code>.gitignore</code> en BTS CIEL</h3>
 <div class="callout-warning">
-  <h4>⚠️ Pourquoi le fichier <code>.gitignore</code> est-il VITAL en BTS CIEL ?</h4>
+  <h4>⚠️ Pourquoi le fichier <code>.gitignore</code> est VITAL en électronique et informatique ?</h4>
   <p>
-    En électronique et informatique embarquée, les compilateurs et logiciels de simulation génèrent des dizaines de mégaoctets de fichiers temporaires ou compilés à chaque exécution :
+    Lorsque vous compilez du code en C (Arduino) ou simulez un schéma (Proteus 8), les logiciels créent des fichiers temporaires volumineux :
   </p>
   <ul>
-    <li><strong>Proteus Design Suite :</strong> génère des fichiers de sauvegarde volumineux <code>*.pdsbak</code>, <code>*.tmp</code> et des caches de simulation qui changent à chaque sauvegarde et polluent inutilement les dépôts.</li>
-    <li><strong>Arduino IDE / PlatformIO :</strong> génère des dossiers de compilation <code>build/</code> contenant les exécutables machine binaires <code>*.hex</code>, <code>*.elf</code>, <code>*.bin</code> qui dépendent du PC et ne doivent <em>jamais</em> être versionnés (seul le code source <code>.ino</code> / <code>.c</code> / <code>.cpp</code> doit être conservé).</li>
-    <li><strong>Python (Raspberry Pi Pico / MicroPython) :</strong> génère des dossiers <code>__pycache__/</code> et des fichiers bytecode <code>*.pyc</code>.</li>
-    <li><strong>Système d'exploitation :</strong> fichiers de vignettes masqués <code>Thumbs.db</code> (Windows) ou <code>.DS_Store</code> (macOS).</li>
+    <li><strong>Proteus 8 :</strong> génère des fichiers de sauvegarde <code>*.pdsbak</code>, <code>*.tmp</code> et des caches de simulation qui polluent inutilement le dépôt.</li>
+    <li><strong>Arduino / PlatformIO :</strong> génère des dossiers <code>build/</code> contenant les exécutables machine <code>*.hex</code>, <code>*.elf</code>, <code>*.bin</code> qui ne doivent jamais être versionnés.</li>
+    <li><strong>Python (Pico / MicroPython) :</strong> génère des dossiers de bytecode <code>__pycache__/</code>.</li>
   </ul>
-  <p>
-    <strong>Règle d'or :</strong> On ne commit que le <em>code source</em> et les <em>schémas de conception éditables</em>, <strong>JAMAIS</strong> les binaires générés automatiquement par compilation !
-  </p>
 </div>
 
 <p>
-  Créez immédiatement à la racine de votre dossier un fichier nommé exactement <code>.gitignore</code> (avec le point initial, sans extension) et collez-y les règles suivantes :
+  <strong>Comment créer et configurer le <code>.gitignore</code> :</strong>
 </p>
+<ol>
+  <li>Dans GitHub Desktop, cliquez sur le bouton <strong>Open in Visual Studio Code</strong> (ou appuyez sur <code>Ctrl + Shift + A</code>).</li>
+  <li>Dans VS Code, créez un nouveau fichier à la racine nommé exactement <code>.gitignore</code> (avec le point au début).</li>
+  <li>Collez-y les règles suivantes et enregistrez (<code>Ctrl + S</code>) :</li>
+</ol>
 <pre><code class="language-gitignore"># ==========================================
-# Fichier .gitignore pour Projets BTS CIEL
+# Fichier .gitignore pour BTS CIEL
 # ==========================================
 
 # 1. Proteus ISIS / ARES (Fichiers de sauvegarde et temporaires)
@@ -826,7 +888,7 @@ git init</code></pre>
 *.bak
 *.workspace.user
 
-# 2. Arduino &amp; Compilateurs Embarqués (Fichiers binaires compilés)
+# 2. Arduino &amp; Compilateurs Embarqués (Binaires de compilation)
 build/
 *.hex
 *.elf
@@ -838,8 +900,8 @@ build/
 __pycache__/
 *.pyc
 *.pyo
-.env
 venv/
+.env
 
 # 4. Fichiers système &amp; Éditeurs
 Thumbs.db
@@ -847,9 +909,14 @@ Desktop.ini
 .DS_Store
 .vscode/.history/</code></pre>
 
-<h3>1.4 Premier Commit Atomique : Le Cycle <code>status</code> &rarr; <code>add</code> &rarr; <code>commit</code></h3>
 <p>
-  Créez un premier fichier de présentation du projet, nommé <code>README.md</code> :
+  <strong>Observez immédiatement le résultat dans GitHub Desktop :</strong><br>
+  Revenez sur la fenêtre de GitHub Desktop. Dans l'onglet <strong>Changes</strong>, le fichier <code>.gitignore</code> est apparu automatiquement avec un carré vert <code>+</code>. GitHub Desktop surveille en temps réel les fichiers sur votre disque dur !
+</p>
+
+<h3>1.5 Premier Commit : La Sélection et l'Instantané</h3>
+<p>
+  Dans VS Code, ouvrez le fichier <code>README.md</code> et complétez-le :
 </p>
 <pre><code class="language-markdown"># Mon Portfolio BTS CIEL 1ère Année
 
@@ -857,115 +924,138 @@ Bienvenue sur le dépôt de mes réalisations techniques en BTS CIEL (Cybersécu
 
 ## Projets Réalisés :
 - TP 7 : Système de Sécurité Logique Câblée (Analog Discovery 3 &amp; MicroPython)
-- TP 8 : Régulation PWM 555 &amp; Surveillance Bus SPI (AD3 &amp; Pico)
-- TP 9 : Transition Firmware C Arduino Nano (FSM, Pointeurs, Registres)</code></pre>
+- TP 8 : Régulation PWM 555 &amp; Surveillance Bus SPI (AD3 &amp; Raspberry Pi Pico)
+- TP 9 : Transition Firmware C Arduino Nano (FSM, Pointeurs, Registres ATmega328P)</code></pre>
 
-<p>Suivez pas à pas les 3 commandes fondamentales du cycle local :</p>
-<pre><code class="language-bash"># 1. Observer l'état des fichiers
-git status
-# -> Vous devez voir .gitignore et README.md en ROUGE (Untracked files)
+<p>
+  Sauvegardez dans VS Code et retournez dans GitHub Desktop :
+</p>
+<ol>
+  <li>Sur la gauche dans <strong>Changes</strong>, vous voyez 2 fichiers cochés : <code>.gitignore</code> et <code>README.md</code>.</li>
+  <li>Cliquez sur <code>README.md</code> : le panneau de droite affiche le <strong>Diff</strong> avec les lignes ajoutées en vert.</li>
+  <li>En bas à gauche, dans le champ <strong>Summary (required)</strong>, tapez :<br>
+      <code>feat: initialisation du portfolio et configuration du gitignore</code></li>
+  <li>Cliquez sur le bouton bleu <strong>Commit to main</strong> !</li>
+  <li>Cliquez sur l'onglet <strong>History</strong> en haut à gauche : vous voyez votre commit apparaître avec son titre, sa date, votre nom d'auteur et l'identifiant SHA-1.</li>
+</ol>
 
-# 2. Ajouter les fichiers au sas de préparation (Staging Area)
-git add .gitignore README.md
-git status
-# -> Les fichiers sont maintenant en VERT (Changes to be committed)
-
-# 3. Figer l'instantané dans le dépôt local (Commit avec message explicite)
-git commit -m "feat: initialisation du portfolio et configuration du gitignore"
-
-# 4. Vérifier l'historique enregistré
-git log --oneline --graph --decorate</code></pre>
+<table class="equiv-table">
+  <thead>
+    <tr>
+      <th style="width:35%;">Action dans GitHub Desktop</th>
+      <th style="width:30%;">Commande Git CLI équivalente</th>
+      <th style="width:35%;">Ce qui se passe sous le capot</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><span class="gui-pill">GUI</span> Détection automatique dans "Changes"</td>
+      <td><span class="cli-pill">CLI</span> <code>git status</code></td>
+      <td>Git compare les fichiers du disque avec le dernier instantané.</td>
+    </tr>
+    <tr>
+      <td><span class="gui-pill">GUI</span> Cocher la case en face du fichier</td>
+      <td><span class="cli-pill">CLI</span> <code>git add .gitignore README.md</code></td>
+      <td>Les fichiers passent du Working Tree vers la Staging Area (Index).</td>
+    </tr>
+    <tr>
+      <td><span class="gui-pill">GUI</span> Saisir le Summary &amp; cliquer "Commit to main"</td>
+      <td><span class="cli-pill">CLI</span> <code>git commit -m "feat: ..."</code></td>
+      <td>Un instantané immuable est enregistré dans le dépôt local (<code>.git</code>).</td>
+    </tr>
+    <tr>
+      <td><span class="gui-pill">GUI</span> Consulter l'onglet "History"</td>
+      <td><span class="cli-pill">CLI</span> <code>git log --oneline --graph</code></td>
+      <td>Lecture de la chaîne cryptographique des commits.</td>
+    </tr>
+  </tbody>
+</table>
 
 <div class="student-answer">
   <strong>Action Élève 1.1 &mdash; Validation du Commit Local :</strong><br>
-  Recopiez ci-dessous le résultat de votre commande <code>git log --oneline</code> (notez le hash à 7 caractères et le message) :<br>
+  Dans l'onglet History de GitHub Desktop, faites un clic droit sur votre commit &gt; <em>Copy SHA</em> :<br>
   <code>Hash SHA-1 : [________]  Message : __________________________________________________</code>
 </div>
 
 <!-- ======================================================================= -->
-<!-- MODULE 2 : CONNEXION AU CLOUD GITHUB & PREMIER PUSH                     -->
+<!-- MODULE 2 : PUBLICATION CLOUD SUR GITHUB.COM                             -->
 <!-- ======================================================================= -->
-<h2 id="sec-m2" style="display:flex; justify-content:space-between; align-items:center;"><span>Module 2 : Connexion au Cloud GitHub &amp; Premier Push (30 min)</span> <label style="font-size:0.85rem; font-weight:normal; background:#f1f5f9; padding:4px 10px; border-radius:6px; border:1px solid #cbd5e1; cursor:pointer;"><input type="checkbox" id="chk-m2" onchange="updateProgress()"> Module validé ✓</label></h2>
+<h2 id="sec-m2" style="display:flex; justify-content:space-between; align-items:center;">
+  <span>Module 2 : Publication sur GitHub Cloud &amp; Visualisation Web (25 min)</span>
+  <label style="font-size:0.85rem; font-weight:normal; background:#f1f5f9; padding:4px 10px; border-radius:6px; border:1px solid #cbd5e1; cursor:pointer;"><input type="checkbox" id="chk-m2" onchange="updateProgress()"> Module validé ✓</label>
+</h2>
 
 <div class="callout-info">
   <h4>🎯 Objectifs du Module 2</h4>
   <ul>
-    <li>Créer un dépôt distant vierge sur GitHub sans créer de conflit initial.</li>
-    <li>Comprendre l'authentification moderne GitHub (suppression des mots de passe HTTPS au profit des Personal Access Tokens - PAT ou GitHub CLI).</li>
-    <li>Lier le dépôt local au dépôt distant (<code>git remote add origin ...</code>).</li>
-    <li>Publier sa branche principale avec <code>git push -u origin main</code>.</li>
+    <li>Publier son dépôt local vers le cloud GitHub en 1 clic grâce à GitHub Desktop.</li>
+    <li>Comprendre la notion d'amont distant (<code>origin</code>) et de synchronisation (<code>push</code> / <code>pull</code>).</li>
+    <li>Visualiser son portfolio en ligne sur GitHub.com avec rendu HTML automatique du <code>README.md</code>.</li>
   </ul>
 </div>
 
-<h3>2.1 Création du Dépôt Distant sur GitHub</h3>
-<ol>
-  <li>Sur GitHub, cliquez sur le bouton vert <strong>New</strong> (ou sur le <code>+</code> en haut à droite &gt; <em>New repository</em>).</li>
-  <li>Nommez le dépôt : <code>bts-ciel-portfolio</code>.</li>
-  <li>Choisissez la visibilité : <strong>Public</strong> (pour pouvoir le partager en évaluation ou sur LinkedIn).</li>
-  <li>
-    <strong>ATTENTION CRITIQUE :</strong> Laissez décochées les options <em>"Add a README file"</em>, <em>"Add .gitignore"</em> et <em>"Choose a license"</em> !<br>
-    <em>Pourquoi ?</em> Parce que vous avez déjà initialisé ces fichiers sur votre machine locale au Module 1. Si GitHub crée un premier commit distant avec un autre README, vous provoquerez un conflit d'historiques divergents (erreur <code>refusing to merge unrelated histories</code>).
-  </li>
-  <li>Cliquez sur <strong>Create repository</strong>. GitHub affiche une page d'instructions avec l'URL de votre dépôt.</li>
-</ol>
-
-<h3>2.2 Sécurité &amp; Authentification : Pourquoi les Mots de Passe sont Morts</h3>
-<div class="callout-warning">
-  <h4>🔒 Le Défi du "Support for password authentication was removed"</h4>
-  <p>
-    Depuis août 2021, GitHub <strong>interdit formellement</strong> l'utilisation du mot de passe de votre compte pour les opérations Git en ligne de commande (<code>git push</code>, <code>git clone</code>). Cette mesure de cybersécurité protège votre compte contre le vol d'identifiants et le credential stuffing.<br>
-    Pour vous authentifier, vous devez générer un <strong>Personal Access Token (PAT)</strong> ou utiliser la <strong>GitHub CLI</strong>.
-  </p>
-</div>
-
-<h4>Méthode Recommandée en Salle de TP : Le Personal Access Token (Classic)</h4>
-<ol>
-  <li>Sur GitHub, cliquez sur votre photo de profil en haut à droite &gt; <strong>Settings</strong>.</li>
-  <li>Tout en bas du menu latéral gauche, cliquez sur <strong>Developer Settings</strong>.</li>
-  <li>Sélectionnez <strong>Personal access tokens</strong> &gt; <strong>Tokens (classic)</strong>.</li>
-  <li>Cliquez sur <strong>Generate new token</strong> &gt; <strong>Generate new token (classic)</strong>.</li>
-  <li><strong>Note :</strong> Saisissez <code>TP BTS CIEL - Poste Labo</code>.</li>
-  <li><strong>Expiration :</strong> Choisissez <code>30 days</code> (ou <code>90 days</code>).</li>
-  <li><strong>Select scopes :</strong> Cochez impérativement la case <code>repo</code> (Full control of private repositories - englobe la lecture, l'écriture et les commits).</li>
-  <li>Cliquez sur le bouton vert <strong>Generate token</strong> en bas.</li>
-  <li>
-    <strong style="color:#cf222e;">COPIEZ IMMÉDIATEMENT LE TOKEN AFFICHÉ (commençant par <code>ghp_...</code>) DANS VOTRE BLOC-NOTES !</strong><br>
-    <em>GitHub ne réaffichera JAMAIS ce token une fois la page quittée. Ce token sera votre "mot de passe" lors du premier push Git.</em>
-  </li>
-</ol>
-
-<h3>2.3 Liaison Locale-Distante et Publication (<code>git push</code>)</h3>
+<h3>2.1 Publication en 1 Clic depuis GitHub Desktop</h3>
 <p>
-  Retournez dans votre terminal dans le dossier <code>C:\bts_ciel\tp_git_portfolio</code> et exécutez les 3 commandes de liaison :
+  Actuellement, votre dépôt n'existe que sur le disque dur de votre PC de TP. Si le disque tombe en panne, tout est perdu ! Nous allons le sauvegarder sur le cloud GitHub :
 </p>
-<pre><code class="language-bash"># 1. Vérifier que la branche s'appelle bien 'main'
-git branch -M main
 
-# 2. Déclarer l'URL du serveur distant sous l'alias universel 'origin'
-# (Remplacez VOTRE_USERNAME par votre nom de compte GitHub exact)
-git remote add origin https://github.com/VOTRE_USERNAME/bts-ciel-portfolio.git
-
-# 3. Vérifier que le lien est bien enregistré
-git remote -v
-# -> Doit afficher l'URL pour (fetch) et (push)
-
-# 4. Envoyer les commits locaux vers GitHub et associer la branche (-u / --set-upstream)
-git push -u origin main</code></pre>
-
-<div class="callout-info">
-  <h4>🔑 Authentification lors du Push</h4>
-  <p>
-    Lorsque Windows vous demande vos identifiants :
-  </p>
-  <ul>
-    <li>Si une fenêtre <em>GitHub Credential Manager</em> apparaît : cliquez sur <strong>Sign in with your browser</strong> et autorisez la connexion.</li>
-    <li>Si le terminal demande un <em>Username</em> et un <em>Password</em> : saisissez votre Username GitHub, et pour le Password, <strong>collez votre Token PAT (<code>ghp_...</code>)</strong> !</li>
-  </ul>
+<div class="workflow-step">
+  <div class="step-num gui">2</div>
+  <div>
+    <strong>Publier le dépôt vers GitHub.com :</strong><br>
+    Dans la barre supérieure de GitHub Desktop, observez le bouton bleu : <strong>Publish repository</strong>.<br>
+    Cliquez dessus. Une fenêtre de confirmation s'affiche :
+    <ul>
+      <li><strong>Name :</strong> <code>bts-ciel-portfolio</code></li>
+      <li><strong>Description :</strong> <code>Portfolio de projets techniques BTS CIEL 1ère Année</code></li>
+      <li><strong>Keep this code private :</strong> <strong style="color:#cf222e;">DÉCOCHEZ cette case !</strong> (Votre dépôt doit être public pour que votre enseignant et de futurs recruteurs puissent le consulter).</li>
+      <li><strong>Organization :</strong> <em>None</em></li>
+    </ul>
+    Cliquez sur le bouton bleu <strong>Publish repository</strong>.
+  </div>
 </div>
 
 <p>
-  Dès que le message <code>To https://github.com/... [new branch] main -> main</code> s'affiche, actualisez votre page web GitHub : votre <code>README.md</code> s'affiche instantanément en HTML mis en page, et le <code>.gitignore</code> est en place !
+  <em>Que s'est-il passé en quelques secondes ?</em><br>
+  GitHub Desktop a communiqué avec l'API GitHub, créé le dépôt distant vierge, configuré l'alias <code>origin</code>, et exécuté <code>git push -u origin main</code> de manière totalement sécurisée via votre session connectée !
 </p>
+
+<h3>2.2 Consultation du Portfolio sur GitHub.com</h3>
+<p>
+  Utilisez le raccourci intégré de GitHub Desktop :
+</p>
+<ol>
+  <li>Allez dans le menu : <strong>Repository &gt; View on GitHub</strong> (ou utilisez le raccourci magique <code>Ctrl + Shift + G</code>).</li>
+  <li>Votre navigateur s'ouvre directement sur l'adresse : <code>https://github.com/VOTRE_USERNAME/bts-ciel-portfolio</code>.</li>
+  <li>Admirez le résultat : votre <code>README.md</code> est automatiquement converti en page web HTML élégante, votre <code>.gitignore</code> est en place, et l'historique affiche "2 commits" !</li>
+</ol>
+
+<table class="equiv-table">
+  <thead>
+    <tr>
+      <th style="width:35%;">Action dans GitHub Desktop</th>
+      <th style="width:30%;">Commande Git CLI équivalente</th>
+      <th style="width:35%;">Ce qui se passe sous le capot</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><span class="gui-pill">GUI</span> Cliquer sur "Publish repository"</td>
+      <td><span class="cli-pill">CLI</span> <code>git remote add origin https://...</code><br><code>git push -u origin main</code></td>
+      <td>Liaison du dépôt local à l'URL distante et transfert des commits vers le serveur cloud.</td>
+    </tr>
+    <tr>
+      <td><span class="gui-pill">GUI</span> Raccourci <code>Ctrl + Shift + G</code></td>
+      <td><span class="cli-pill">CLI</span> <em>(Navigateur web)</em></td>
+      <td>Ouvre la page du dépôt distant sur la forge GitHub.com.</td>
+    </tr>
+    <tr>
+      <td><span class="gui-pill">GUI</span> Bouton "Fetch origin"</td>
+      <td><span class="cli-pill">CLI</span> <code>git fetch origin</code></td>
+      <td>Interroge le cloud pour savoir si un collègue a poussé des nouveautés.</td>
+    </tr>
+  </tbody>
+</table>
 
 <div class="student-answer">
   <strong>Action Élève 2.1 &mdash; Validation du Dépôt Cloud :</strong><br>
@@ -976,22 +1066,25 @@ git push -u origin main</code></pre>
 <!-- ======================================================================= -->
 <!-- MODULE 3 : BRANCHES, PULL REQUESTS & COLLABORATION                      -->
 <!-- ======================================================================= -->
-<h2 id="sec-m3" style="display:flex; justify-content:space-between; align-items:center;"><span>Module 3 : Branches, Pull Requests (PR) &amp; Collaboration (35 min)</span> <label style="font-size:0.85rem; font-weight:normal; background:#f1f5f9; padding:4px 10px; border-radius:6px; border:1px solid #cbd5e1; cursor:pointer;"><input type="checkbox" id="chk-m3" onchange="updateProgress()"> Module validé ✓</label></h2>
+<h2 id="sec-m3" style="display:flex; justify-content:space-between; align-items:center;">
+  <span>Module 3 : Branches, Pull Requests (PR) &amp; Collaboration Visuelle (35 min)</span>
+  <label style="font-size:0.85rem; font-weight:normal; background:#f1f5f9; padding:4px 10px; border-radius:6px; border:1px solid #cbd5e1; cursor:pointer;"><input type="checkbox" id="chk-m3" onchange="updateProgress()"> Module validé ✓</label>
+</h2>
 
 <div class="callout-info">
   <h4>🎯 Objectifs du Module 3</h4>
   <ul>
     <li>Comprendre l'interdiction industrielle de pousser directement sur la branche principale <code>main</code>.</li>
-    <li>Créer et basculer sur une <strong>Feature Branch</strong> avec <code>git switch -c</code>.</li>
-    <li>Ajouter une réalisation technique réelle (code source C/Python BTS CIEL) et documenter le portfolio.</li>
-    <li>Pousser la branche et ouvrir une <strong>Pull Request (PR)</strong> sur GitHub.</li>
-    <li>Examiner le <em>Diff</em> (comparaison ligne par ligne), approuver et fusionner la PR (<strong>Merge</strong>).</li>
+    <li>Créer et basculer sur une <strong>Feature Branch</strong> visuellement dans GitHub Desktop.</li>
+    <li>Ajouter une réalisation technique réelle (code source C/MicroPython) et documenter le portfolio.</li>
+    <li>Publier la branche et ouvrir une <strong>Pull Request (PR)</strong> directement depuis GitHub Desktop.</li>
+    <li>Examiner le <em>Diff</em> (revue de code), approuver et fusionner la PR (<strong>Merge</strong>), puis synchroniser en local.</li>
   </ul>
 </div>
 
 <h3>3.1 Pourquoi Travailler sur des Branches ?</h3>
 <p>
-  En entreprise, la branche <code>main</code> représente le <strong>code de production</strong> : le firmware déployé sur les cartes électroniques chez les clients ou le code serveur en fonctionnement. Si un développeur pousse directement une modification contenant un bug de syntaxe ou une erreur de registre sur <code>main</code>, c'est l'ensemble de la chaîne de production qui s'arrête !<br>
+  En entreprise, la branche <code>main</code> représente le <strong>code de production</strong> : le firmware déployé sur les cartes électroniques chez les clients. Si un développeur pousse directement une modification contenant un bug de syntaxe sur <code>main</code>, c'est l'ensemble de l'équipe et des systèmes déployés qui sont bloqués !<br>
   La règle fondamentale de l'ingénierie collaborative est donc : <strong>toute nouvelle fonctionnalité ou correction se fait dans une branche isolée, puis est relue via une Pull Request avant d'intégrer <code>main</code></strong>.
 </p>
 
@@ -1022,32 +1115,28 @@ git push -u origin main</code></pre>
     <text x="47" y="75" text-anchor="middle" font-size="12" font-weight="bold" fill="#0969da" font-family="Courier New, monospace">main</text>
 
     <!-- Commits sur MAIN -->
-    <!-- C1 : Init -->
     <circle cx="140" cy="70" r="14" fill="#ffffff" stroke="#0969da" stroke-width="3" filter="url(#shadow2)"/>
     <text x="140" y="74" text-anchor="middle" font-size="10" font-weight="bold" fill="#0969da">C1</text>
     <text x="140" y="42" text-anchor="middle" font-size="10" fill="#57606a">Initial commit</text>
 
-    <!-- C2 : Config -->
     <circle cx="280" cy="70" r="14" fill="#ffffff" stroke="#0969da" stroke-width="3" filter="url(#shadow2)"/>
     <text x="280" y="74" text-anchor="middle" font-size="10" font-weight="bold" fill="#0969da">C2</text>
     <text x="280" y="42" text-anchor="middle" font-size="10" fill="#57606a">feat: gitignore</text>
 
     <!-- Bifurcation vers FEATURE -->
     <path d="M280,70 C 330,70 330,170 380,170" fill="none" stroke="#1a7f37" stroke-width="3" stroke-dasharray="4,3"/>
-    <text x="325" y="115" font-size="9" font-weight="bold" fill="#1a7f37" font-family="Courier New, monospace">git switch -c</text>
+    <text x="325" y="115" font-size="9" font-weight="bold" fill="#1a7f37" font-family="Courier New, monospace">New branch</text>
 
     <!-- Axe Branche FEATURE -->
     <line x1="380" y1="170" x2="620" y2="170" stroke="#1a7f37" stroke-width="4" stroke-linecap="round"/>
-    <rect x="250" y="155" width="120" height="30" rx="4" fill="#dafbe1" stroke="#1a7f37" stroke-width="1.5"/>
-    <text x="310" y="175" text-anchor="middle" font-size="11" font-weight="bold" fill="#1a7f37" font-family="Courier New, monospace">feature/tp-code</text>
+    <rect x="240" y="155" width="130" height="30" rx="4" fill="#dafbe1" stroke="#1a7f37" stroke-width="1.5"/>
+    <text x="305" y="175" text-anchor="middle" font-size="10" font-weight="bold" fill="#1a7f37" font-family="Courier New, monospace">feature/projet-ciel</text>
 
     <!-- Commits sur FEATURE -->
-    <!-- C3 -->
     <circle cx="430" cy="170" r="14" fill="#ffffff" stroke="#1a7f37" stroke-width="3" filter="url(#shadow2)"/>
     <text x="430" y="174" text-anchor="middle" font-size="10" font-weight="bold" fill="#1a7f37">C3</text>
-    <text x="430" y="205" text-anchor="middle" font-size="10" fill="#57606a">add: firmware.ino</text>
+    <text x="430" y="205" text-anchor="middle" font-size="10" fill="#57606a">add: firmware.c</text>
 
-    <!-- C4 -->
     <circle cx="560" cy="170" r="14" fill="#ffffff" stroke="#1a7f37" stroke-width="3" filter="url(#shadow2)"/>
     <text x="560" y="174" text-anchor="middle" font-size="10" font-weight="bold" fill="#1a7f37">C4</text>
     <text x="560" y="205" text-anchor="middle" font-size="10" fill="#57606a">docs: update readme</text>
@@ -1058,7 +1147,7 @@ git push -u origin main</code></pre>
     <!-- Boîte PR -->
     <rect x="580" y="105" width="130" height="38" rx="6" fill="#fbefff" stroke="#8250df" stroke-width="1.5" filter="url(#shadow2)"/>
     <text x="645" y="122" text-anchor="middle" font-size="11" font-weight="bold" fill="#8250df">Pull Request (PR)</text>
-    <text x="645" y="136" text-anchor="middle" font-size="9" fill="#57606a">Revue de Code &amp; CI</text>
+    <text x="645" y="136" text-anchor="middle" font-size="9" fill="#57606a">Revue de Code Web</text>
 
     <!-- C5 : Merge Commit -->
     <circle cx="700" cy="70" r="15" fill="#8250df" stroke="#5a2ca0" stroke-width="2" filter="url(#shadow2)"/>
@@ -1067,23 +1156,25 @@ git push -u origin main</code></pre>
   </svg>
 </div>
 
-<h3>3.2 Création de la Branche Fonctionnelle</h3>
-<p>
-  Nous allons créer une branche pour intégrer l'un de vos travaux pratiques d'électronique ou d'embarqué :
-</p>
-<pre><code class="language-bash"># 1. Créer et basculer instantanément sur la nouvelle branche
-git switch -c feature/ajout-tp-arduino
-# (Équivalent à l'ancienne commande : git checkout -b feature/ajout-tp-arduino)
+<h3>3.2 Création Visuelle de la Branche dans GitHub Desktop</h3>
+<ol>
+  <li>Dans GitHub Desktop, en haut au centre, cliquez sur le bouton <strong>Current branch : main</strong>.</li>
+  <li>Cliquez sur le bouton <strong>New branch</strong>.</li>
+  <li>Nommez la branche : <code>feature/ajout-projet-tp</code>.</li>
+  <li>Vérifiez qu'elle est bien basée sur <code>main</code>, puis cliquez sur <strong>Create branch</strong>.</li>
+  <li><em>Constat immédiat :</em> Le bouton supérieur affiche désormais <code>Current branch : feature/ajout-projet-tp</code> !</li>
+</ol>
 
-# 2. Vérifier que vous êtes bien sur la nouvelle branche (astérisque verte)
-git branch</code></pre>
-
-<h3>3.3 Ajout de Ressources Techniques &amp; Mise à Jour de la Documentation</h3>
+<h3>3.3 Ajout de Ressources Techniques &amp; Modification dans VS Code</h3>
 <p>
-  1. Créez un sous-dossier <code>firmware_tp9/</code> dans votre projet et ajoutez-y un fichier de code source réel (par exemple <code>main_tp9.c</code> ou <code>sketch_nano.ino</code>) :
+  Cliquez sur <strong>Open in Visual Studio Code</strong> dans GitHub Desktop (ou <code>Ctrl + Shift + A</code>) :
 </p>
+<ol>
+  <li>Créez un nouveau sous-dossier <code>firmware_tp9/</code> dans votre projet.</li>
+  <li>Créez-y un fichier de code source réel <code>main_tp9.c</code> :</li>
+</ol>
 <pre><code class="language-c">// ==========================================================
-// BTS CIEL 1ère Année - TP 9 : Machine à États &amp; Registres
+// BTS CIEL 1ère Année - TP 9 : Machine à États &amp; Registres AVR
 // Auteur : Vincent DUPONT
 // Date   : Novembre 2026
 // ==========================================================
@@ -1099,7 +1190,8 @@ EtatSysteme_t etatCourant = ETAT_VEILLE;
 
 void initialiserSysteme(void) {
     // Configuration directe des registres AVR ATmega328P
-    DDRB |= (1 &lt;&lt; PB5);  // PB5 (LED D13) en sortie
+    // PB5 (LED D13) configurée en sortie numérique
+    DDRB |= (1 &lt;&lt; PB5);
 }
 
 int main(void) {
@@ -1111,69 +1203,88 @@ int main(void) {
 }</code></pre>
 
 <p>
-  2. Modifiez également votre fichier <code>README.md</code> pour documenter ce nouveau module technique :
+  3. Modifiez également votre <code>README.md</code> pour documenter cette nouvelle réalisation :
 </p>
-<pre><code class="language-markdown">## Détail des Projets Intégrés :
-
-### 📁 TP 9 : Transition Firmware C &amp; Registres AVR
-- **Objectif :** Implémentation d'une machine à états finis (FSM) et manipulation directe des registres DDRB / PORTB.
+<pre><code class="language-markdown">### 📁 Module Ajouté : TP 9 - Firmware C &amp; Machine à États (FSM)
+- **Objectif :** Implémentation d'une machine à états et manipulation directe des registres DDRB / PORTB sur ATmega328P.
 - **Fichier source :** `firmware_tp9/main_tp9.c`
-- **Statut de validation :** Conforme aux spécifications du bureau d'études.</code></pre>
+- **Validation :** Conforme aux spécifications du bureau d'études.</code></pre>
 
-<h3>3.4 Indexation, Commit et Publication de la Branche</h3>
-<pre><code class="language-bash"># 1. Vérifier les changements détectés
-git status
-
-# 2. Indexer le nouveau sous-dossier et le README modifié
-git add firmware_tp9/ README.md
-
-# 3. Effectuer le commit sur la branche de feature
-git commit -m "feat(firmware): ajout du code source C du TP9 et documentation"
-
-# 4. Publier la branche locale vers GitHub
-git push origin feature/ajout-tp-arduino</code></pre>
-
-<h3>3.5 Ouverture et Fusion de la Pull Request (PR) sur GitHub</h3>
+<h3>3.4 Commit sur la Branche &amp; Publication</h3>
 <ol>
-  <li>Revenez sur votre navigateur web sur votre dépôt GitHub.</li>
-  <li>
-    Un bandeau jaune apparaît automatiquement en haut de la page :<br>
-    <strong>"feature/ajout-tp-arduino had recent pushes less than a minute ago"</strong> avec un bouton vert <strong>Compare &amp; pull request</strong>. Cliquez dessus !
-  </li>
-  <li>
-    <strong>Remplir la fiche de Pull Request :</strong>
-    <ul>
-      <li><strong>Titre :</strong> <code>feat: intégration du firmware C du TP9</code></li>
-      <li><strong>Description :</strong> Expliquez ce que vous apportez au projet (ajout de la FSM, mise à jour de la documentation).</li>
-    </ul>
-  </li>
-  <li>
-    Descendez dans la page : observez le <strong>Diff</strong> !
-    Les lignes ajoutées apparaissent en <strong>vert (+)</strong> et les lignes supprimées en <strong>rouge (-)</strong>. C'est l'essence même de la revue de code industrielle.
-  </li>
-  <li>Cliquez sur <strong>Create pull request</strong>.</li>
-  <li>
-    <strong>Validation et Fusion (Merge) :</strong>
-    En tant que responsable de votre dépôt (ou après relecture par votre binôme/professeur), cliquez sur le bouton vert <strong>Merge pull request</strong> puis sur <strong>Confirm merge</strong>.
-  </li>
-  <li>Supprimez la branche distante désormais inutile en cliquant sur <strong>Delete branch</strong>.</li>
+  <li>Revenez dans GitHub Desktop : les deux modifications apparaissent automatiquement dans l'onglet <strong>Changes</strong>.</li>
+  <li>Dans le champ <strong>Summary (required)</strong>, tapez :<br>
+      <code>feat(firmware): ajout du code source C du TP9 et documentation</code></li>
+  <li>Le bouton bleu indique : <strong>Commit to feature/ajout-projet-tp</strong>. Cliquez dessus !</li>
+  <li>Dans la barre supérieure, observez le nouveau bouton : <strong>Publish branch</strong>. Cliquez dessus pour envoyer votre nouvelle branche vers GitHub Cloud !</li>
 </ol>
 
-<h3>3.6 Synchronisation Locale Post-Merge</h3>
+<h3>3.5 Le Bouton Magique "Create Pull Request" &amp; Revue sur le Web</h3>
+<div class="callout-gui">
+  <h4>🎉 La magie de l'intégration GitHub Desktop</h4>
+  <p>
+    Dès que votre branche est publiée, GitHub Desktop affiche un grand bouton bleu au centre de la fenêtre :<br>
+    <strong style="color:#0969da; font-size:1.05rem;">Create Pull Request</strong> !
+  </p>
+</div>
+<ol>
+  <li>Cliquez sur <strong>Create Pull Request</strong> dans GitHub Desktop.</li>
+  <li>Votre navigateur web s'ouvre automatiquement sur GitHub.com directement sur la page d'ouverture de la Pull Request !</li>
+  <li>Vérifiez les branches : <code>base: main</code> &larr; <code>compare: feature/ajout-projet-tp</code>.</li>
+  <li>Titre : <code>feat: intégration du firmware C du TP9</code>.</li>
+  <li>Descendez dans la page : observez le <strong>Diff</strong> complet avec les lignes vertes (+) et rouges (-). C'est l'écran de revue de code utilisé par tous les ingénieurs !</li>
+  <li>Cliquez sur le bouton vert <strong>Create pull request</strong>.</li>
+  <li>
+    <strong>Validation et Fusion (Merge) :</strong><br>
+    Cliquez sur <strong>Merge pull request</strong> puis sur <strong>Confirm merge</strong>.<br>
+    La PR passe en violet avec la mention <strong>Merged</strong> !
+  </li>
+  <li>Cliquez sur <strong>Delete branch</strong> sur le site web pour supprimer la branche distante devenue inutile.</li>
+</ol>
+
+<h3>3.6 Synchronisation Locale Post-Merge dans GitHub Desktop</h3>
 <p>
-  Votre branche <code>main</code> sur GitHub contient maintenant les modifications fusionnées. Il faut mettre à jour votre machine locale :
+  Votre code est maintenant fusionné dans <code>main</code> sur GitHub Cloud. Il ne reste plus qu'à synchroniser votre machine locale :
 </p>
-<pre><code class="language-bash"># 1. Revenir sur la branche principale locale
-git switch main
+<ol>
+  <li>Revenez sur <strong>GitHub Desktop</strong>.</li>
+  <li>Cliquez sur <strong>Current branch</strong> et re-sélectionnez la branche <strong>main</strong>.</li>
+  <li>Dans la barre supérieure, le bouton indique désormais : <strong>Pull origin (1 commit)</strong> !</li>
+  <li>Cliquez sur <strong>Pull origin</strong>. Vos modifications fusionnées sont rapatriées en local en 1 seconde.</li>
+  <li>Vous pouvez supprimer la branche locale devenue inutile : menu <strong>Branch &gt; Delete...</strong>.</li>
+</ol>
 
-# 2. Rapatrier les modifications fusionnées depuis le cloud
-git pull origin main
-
-# 3. Supprimer la branche locale qui a été fusionnée
-git branch -d feature/ajout-tp-arduino
-
-# 4. Admirer votre arbre de commits propre et complet
-git log --oneline --graph</code></pre>
+<table class="equiv-table">
+  <thead>
+    <tr>
+      <th style="width:35%;">Action dans GitHub Desktop</th>
+      <th style="width:30%;">Commande Git CLI équivalente</th>
+      <th style="width:35%;">Ce qui se passe sous le capot</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><span class="gui-pill">GUI</span> Current branch &gt; New branch</td>
+      <td><span class="cli-pill">CLI</span> <code>git switch -c feature/ajout-projet-tp</code></td>
+      <td>Crée un nouveau pointeur de branche et déplace <code>HEAD</code>.</td>
+    </tr>
+    <tr>
+      <td><span class="gui-pill">GUI</span> Bouton "Publish branch"</td>
+      <td><span class="cli-pill">CLI</span> <code>git push -u origin feature/...</code></td>
+      <td>Publie la branche isolée sur GitHub Cloud sans toucher à main.</td>
+    </tr>
+    <tr>
+      <td><span class="gui-pill">GUI</span> Bouton "Create Pull Request"</td>
+      <td><span class="cli-pill">CLI</span> <code>gh pr create</code> <em>(via GitHub CLI)</em></td>
+      <td>Ouvre la demande formelle de fusion et de revue de code par les pairs.</td>
+    </tr>
+    <tr>
+      <td><span class="gui-pill">GUI</span> Revenir sur main &amp; cliquer "Pull origin"</td>
+      <td><span class="cli-pill">CLI</span> <code>git switch main</code><br><code>git pull origin main</code></td>
+      <td>Met à jour la branche main locale avec les commits fusionnés.</td>
+    </tr>
+  </tbody>
+</table>
 
 <div class="student-answer">
   <strong>Action Élève 3.1 &mdash; Validation de la Pull Request :</strong><br>
@@ -1183,26 +1294,29 @@ git log --oneline --graph</code></pre>
 </div>
 
 <!-- ======================================================================= -->
-<!-- MODULE 4 : QUESTIONS D'ANALYSE & EXPLICATION DES MECANISMES            -->
+<!-- MODULE 4 : QUESTIONS D'ANALYSE TECHNIQUE & COMPREHENSION                -->
 <!-- ======================================================================= -->
-<h2 id="sec-m4" style="display:flex; justify-content:space-between; align-items:center;"><span>Module 4 : Questions d'Analyse Technique &amp; Compréhension (Explications Détaillées)</span> <label style="font-size:0.85rem; font-weight:normal; background:#f1f5f9; padding:4px 10px; border-radius:6px; border:1px solid #cbd5e1; cursor:pointer;"><input type="checkbox" id="chk-m4" onchange="updateProgress()"> Module validé ✓</label></h2>
+<h2 id="sec-m4" style="display:flex; justify-content:space-between; align-items:center;">
+  <span>Module 4 : Questions d'Analyse Technique &amp; Compréhension (Explications Détaillées)</span>
+  <label style="font-size:0.85rem; font-weight:normal; background:#f1f5f9; padding:4px 10px; border-radius:6px; border:1px solid #cbd5e1; cursor:pointer;"><input type="checkbox" id="chk-m4" onchange="updateProgress()"> Module validé ✓</label>
+</h2>
 
 <p>
-  Répondez avec précision et rigueur technique aux questions suivantes. Ces questions évaluent votre compréhension des concepts fondamentaux de la gestion de configuration logicielle en BTS CIEL.
+  Répondez avec rigueur aux questions suivantes. Elles mettent en lumière la correspondance directe entre les mécanismes visuels de GitHub Desktop et les principes de Git en entreprise.
 </p>
 
 <div class="question-card">
   <div class="question-header">
     <div class="q-badge">Question 1</div>
-    <div class="q-title">Différence Fondamentale entre <code>git add</code> et <code>git commit</code></div>
+    <div class="q-title">Correspondance entre l'Onglet "Changes" et la Staging Area (<code>git add</code>)</div>
   </div>
   <p>
-    Pourquoi Git sépare-t-il obligatoirement l'étape d'indexation (<code>git add</code>) de l'étape d'enregistrement définitif (<code>git commit</code>) ? Pourquoi n'y a-t-il pas une seule commande directe qui enregistrerait immédiatement tous les fichiers modifiés ? Donnez un exemple concret rencontré lors d'un TP d'embarqué.
+    Dans GitHub Desktop, l'onglet <strong>Changes</strong> permet de cocher ou décocher chaque fichier individuellement avant de cliquer sur "Commit". À quelle zone fondamentale de Git correspond cette liste cochée ? Pourquoi est-il capital de ne PAS tout cocher aveuglément lorsqu'on travaille sur plusieurs fichiers à la fois ?
   </p>
   <div class="student-answer">
     <em>Réponse attendue de l'étudiant :</em><br>
-    <div style="min-height:90px; color:#57606a;">
-      [Expliquez le rôle de la Staging Area / Index comme zone de sélection fine pour créer des commits atomiques cohérents sans mélanger des modifications non testées...]
+    <div style="min-height:85px; color:#57606a;">
+      [Expliquez la Staging Area / Index comme sas de sélection fine, permettant de créer des commits atomiques cohérents...]
     </div>
   </div>
 </div>
@@ -1210,15 +1324,15 @@ git log --oneline --graph</code></pre>
 <div class="question-card">
   <div class="question-header">
     <div class="q-badge">Question 2</div>
-    <div class="q-title">Cybersécurité &amp; Authentification par Token (PAT)</div>
+    <div class="q-title">Différence entre "Commit to main" et "Push origin"</div>
   </div>
   <p>
-    Pourquoi GitHub a-t-il désactivé l'utilisation du mot de passe de compte en HTTPS depuis août 2021 ? En quoi l'utilisation d'un <em>Personal Access Token (PAT)</em> ou d'une clé SSH renforce-t-elle considérablement la sécurité du système d'information de l'entreprise et de votre poste de travail ?
+    Un étudiant clique sur le bouton bleu "Commit to main" dans GitHub Desktop, puis éteint son PC de TP et rentre chez lui. Lorsqu'il se connecte sur son compte GitHub depuis chez lui, son nouveau fichier n'apparaît pas. Pourquoi ? Quelle action indispensable a-t-il oublié d'effectuer dans GitHub Desktop ?
   </p>
   <div class="student-answer">
     <em>Réponse attendue de l'étudiant :</em><br>
-    <div style="min-height:90px; color:#57606a;">
-      [Analysez la portée (scopes) restreinte du token, sa date d'expiration programmable, la possibilité de révoquer un token isolé en cas de vol de machine sans changer le mot de passe principal...]
+    <div style="min-height:85px; color:#57606a;">
+      [Expliquez la nature décentralisée de Git : le commit est enregistré uniquement dans la base locale .git sur le disque dur ; l'envoi vers le cloud nécessite impérativement un Push (bouton Push origin)...]
     </div>
   </div>
 </div>
@@ -1226,15 +1340,15 @@ git log --oneline --graph</code></pre>
 <div class="question-card">
   <div class="question-header">
     <div class="q-badge">Question 3</div>
-    <div class="q-title">Analyse d'Impact du Fichier <code>.gitignore</code> en Électronique &amp; Informatique</div>
+    <div class="q-title">Impact du Fichier <code>.gitignore</code> sur l'Interface de GitHub Desktop</div>
   </div>
   <p>
-    Un étudiant de votre équipe a oublié de créer son <code>.gitignore</code> et a fait un <code>git add .</code> qui a poussé les dossiers <code>build/</code> (avec des fichiers <code>.hex</code> et <code>.elf</code> de 8 Mo) ainsi que des sauvegardes Proteus <code>*.pdsbak</code>. Citez au moins <strong>trois conséquences néfastes</strong> majeures pour le projet et expliquez comment réparer cette erreur.
+    Que se passe-t-il dans l'onglet <strong>Changes</strong> de GitHub Desktop si vous enregistrez un schéma sous Proteus 8 (générant des fichiers <code>*.pdsbak</code>) SANS avoir configuré de <code>.gitignore</code> ? Quels sont les risques si ces fichiers temporaires sont accidentellement commités et poussés ?
   </p>
   <div class="student-answer">
     <em>Réponse attendue de l'étudiant :</em><br>
-    <div style="min-height:100px; color:#57606a;">
-      [Détaillez : 1. Explosion de la taille du dépôt .git (clones très lents). 2. Conflits insolubles sur les fichiers binaires non fusionnables. 3. Pollution de l'historique et risques d'incompatibilité de compilateurs. Commande de suppression de l'index : git rm --cached...]
+    <div style="min-height:90px; color:#57606a;">
+      [Détaillez la pollution visuelle de l'onglet Changes, le risque de conflits insolubles sur des sauvegardes binaires, et l'alourdissement inutile du dépôt...]
     </div>
   </div>
 </div>
@@ -1242,16 +1356,15 @@ git log --oneline --graph</code></pre>
 <div class="question-card">
   <div class="question-header">
     <div class="q-badge">Question 4</div>
-    <div class="q-title">Gestion des Conflits &amp; Synchronisation d'Équipe</div>
+    <div class="q-title">Le Rôle Fondamental de la Pull Request (PR) et de l'Analyse du "Diff"</div>
   </div>
   <p>
-    Pendant que vous travailliez sur votre branche locale <code>feature/capteur</code>, votre binôme a poussé une modification validée sur <code>main</code> qui modifie le même fichier de configuration.
-    Que se passe-t-il si vous tentez de fusionner directement ? Quelle est la séquence exacte de commandes Git recommandée pour rapatrier les changements de votre binôme et résoudre un conflit sereinement avant d'ouvrir votre Pull Request ?
+    Pourquoi GitHub Desktop vous propose-t-il automatiquement d'ouvrir une <strong>Pull Request</strong> sur GitHub.com dès que vous publiez une branche de feature, au lieu de fusionner directement en local ? En quoi l'affichage du "Diff" (lignes vertes/rouges) est-il la garantie de la qualité logicielle en entreprise ?
   </p>
   <div class="student-answer">
     <em>Réponse attendue de l'étudiant :</em><br>
     <div style="min-height:90px; color:#57606a;">
-      [Expliquez le conflit de merge, les balises <<<<<<< HEAD, =======, >>>>>>>, le rapatriement via git switch main && git pull, puis le rebase ou merge de main dans la feature branch, la résolution dans l'éditeur et le commit de résolution...]
+      [Évoquez la relecture par les pairs, la détection des erreurs avant intégration sur main, la traçabilité des modifications et l'intégration continue CI/CD...]
     </div>
   </div>
 </div>
@@ -1259,15 +1372,15 @@ git log --oneline --graph</code></pre>
 <div class="question-card">
   <div class="question-header">
     <div class="q-badge">Question 5</div>
-    <div class="q-title">La Pull Request (PR) comme Outil Qualité &amp; Traçabilité</div>
+    <div class="q-title">Complémentarité Interface Graphique (GitHub Desktop) vs Ligne de Commande (Git CLI)</div>
   </div>
   <p>
-    Pourquoi les grandes entreprises de haute technologie (Google, Airbus, Thales, Apple) interdisent-elles formellement les commits directs sur <code>main</code> et rendent-elles la <strong>Pull Request (PR)</strong> obligatoire pour 100% du code produit ?
+    Bien que GitHub Desktop rende le versionnement visuel et intuitif, pourquoi un technicien supérieur ou ingénieur en BTS CIEL doit-il également connaître les commandes de base en terminal (<code>git status</code>, <code>git add</code>, <code>git commit</code>, <code>git push</code>) ? Citez deux cas concrets où l'interface graphique ne peut pas être utilisée.
   </p>
   <div class="student-answer">
     <em>Réponse attendue de l'étudiant :</em><br>
     <div style="min-height:90px; color:#57606a;">
-      [Évoquez la revue de code par les pairs (détection précoce des failles de sécurité et bugs), l'exécution automatique des tests unitaires en CI/CD, la traçabilité complète des exigences réglementaires, et la montée en compétences collective...]
+      [Citez l'administration de serveurs Linux distants via SSH sans interface graphique, les scripts d'automatisation et pipelines d'intégration continue CI/CD, les environnements embarqués sans écran (Raspberry Pi headless)...]
     </div>
   </div>
 </div>
@@ -1282,15 +1395,15 @@ git log --oneline --graph</code></pre>
     <tr>
       <th style="width:25%;">Module / Critère</th>
       <th style="width:50%;">Indicateurs de Réussite &amp; Compétences Visées</th>
-      <th style="width:10%;">Barème</th>
-      <th style="width:15%;">Note Attribuée</th>
+      <th style="width:10%; text-align:center;">Barème</th>
+      <th style="width:15%; text-align:center;">Note Attribuée</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td><strong>Module 0 : Compte &amp; Sécurisation</strong></td>
+      <td><strong>Module 0 : Compte &amp; Connexion Desktop</strong></td>
       <td>
-        Compte GitHub créé avec un identifiant professionnel. Authentification à double facteur (2FA) configurée et active. Profil public accessible et renseigné.
+        Compte GitHub créé avec identifiant professionnel et 2FA actif. Connexion réussie dans GitHub Desktop (nom et email Git configurés).
       </td>
       <td style="text-align:center; font-weight:bold;">/ 3 pts</td>
       <td style="text-align:center;">______ / 3</td>
@@ -1298,15 +1411,15 @@ git log --oneline --graph</code></pre>
     <tr>
       <td><strong>Module 1 : Dépôt Local &amp; <code>.gitignore</code></strong></td>
       <td>
-        <code>git config</code> renseigné correctement (nom + email). Dépôt local initialisé. Fichier <code>.gitignore</code> exhaustif (règles Proteus, Arduino et Python présentes). Premier commit réalisé avec un message conforme aux <em>Conventional Commits</em>.
+        Dépôt <code>bts-ciel-portfolio</code> initialisé dans GitHub Desktop. Fichier <code>.gitignore</code> exhaustif (Proteus, Arduino, Python). Premier commit atomique réalisé avec message explicite.
       </td>
       <td style="text-align:center; font-weight:bold;">/ 5 pts</td>
       <td style="text-align:center;">______ / 5</td>
     </tr>
     <tr>
-      <td><strong>Module 2 : Liaison Cloud &amp; Push</strong></td>
+      <td><strong>Module 2 : Publication Cloud</strong></td>
       <td>
-        Dépôt distant GitHub créé sans conflit. Authentification PAT ou GitHub CLI réussie. Alias <code>origin</code> configuré et premier <code>git push -u origin main</code> effectif sur le Web.
+        Dépôt publié en mode public sur GitHub Cloud. Visualisation réussie sur GitHub.com (<code>README.md</code> formaté). Compréhension de la relation local/distant.
       </td>
       <td style="text-align:center; font-weight:bold;">/ 4 pts</td>
       <td style="text-align:center;">______ / 4</td>
@@ -1314,7 +1427,7 @@ git log --oneline --graph</code></pre>
     <tr>
       <td><strong>Module 3 : Branches &amp; Pull Request</strong></td>
       <td>
-        Branche fonctionnelle créée proprement (<code>git switch -c</code>). Code source réel BTS CIEL ajouté et <code>README.md</code> complété. Pull Request ouverte, relue sur le Web, fusionnée (Merge) et branche nettoyée localement.
+        Branche créée et gérée dans GitHub Desktop. Code source réel ajouté et documenté. Pull Request ouverte, relue, fusionnée (Merge) et rapatriée sur <code>main</code> en local.
       </td>
       <td style="text-align:center; font-weight:bold;">/ 5 pts</td>
       <td style="text-align:center;">______ / 5</td>
@@ -1322,7 +1435,7 @@ git log --oneline --graph</code></pre>
     <tr>
       <td><strong>Module 4 : Réponses aux Questions</strong></td>
       <td>
-        Justesse technique et rigueur d'analyse des questions de compréhension (différence add/commit, sécurité PAT, impact .gitignore, cycle de vie PR).
+        Justesse technique et rigueur d'analyse des 5 questions (rôle de la Staging Area, commit vs push, .gitignore, intérêt de la PR, complémentarité GUI/CLI).
       </td>
       <td style="text-align:center; font-weight:bold;">/ 3 pts</td>
       <td style="text-align:center;">______ / 3</td>
@@ -1337,7 +1450,7 @@ git log --oneline --graph</code></pre>
 
 <footer style="margin-top:50px; padding-top:20px; border-top:1px solid #d0d7de; text-align:center; color:#57606a; font-size:0.85rem;">
   BTS Cybersécurité, Informatique et réseaux, Électronique (CIEL) &mdash; Première Année<br>
-  Activité Pratique &mdash; Gestion de Configuration &amp; Collaboration Logicielle avec Git &amp; GitHub &mdash; Version Pédagogique Conforme Référentiel
+  Activité Pratique &mdash; Gestion de Configuration &amp; Collaboration Logicielle avec GitHub Desktop &amp; Git CLI &mdash; Version Pédagogique Conforme Référentiel
 </footer>
 
 </div> <!-- fin container -->
@@ -1379,22 +1492,22 @@ function genererCmdGit() {
 
   switch (sel) {
     case 'status':
-      code = "# Verifier l'etat des fichiers (Rouge = Untracked/Modifie, Vert = Staged)\ngit status";
+      code = "# Dans GitHub Desktop : regarder l'onglet Changes\n# En ligne de commande Git CLI :\ngit status";
       break;
     case 'add_commit':
-      code = "# 1. Ajouter un fichier specifique a la zone de preparation\ngit add README.md\n\n# 2. Enregistrer l'instantane avec un message conventionnel\ngit commit -m \"feat: mise a jour de la documentation\"";
+      code = "# Dans GitHub Desktop : cocher les cases puis cliquer 'Commit to main'\n# En ligne de commande Git CLI :\ngit add README.md\ngit commit -m \"feat: mise a jour de la documentation\"";
       break;
     case 'branch_new':
-      code = "# 1. Creer et basculer sur une nouvelle branche\ngit switch -c feature/nouveau-capteur\n\n# 2. Verifier la branche active (avec asterisque)\ngit branch";
+      code = "# Dans GitHub Desktop : menu 'Current branch' > 'New branch'\n# En ligne de commande Git CLI :\ngit switch -c feature/mon-projet-tp\ngit branch";
       break;
     case 'push_first':
-      code = "# Publier la branche locale vers GitHub (et lier l'amont)\ngit push -u origin feature/nouveau-capteur";
+      code = "# Dans GitHub Desktop : bouton 'Publish repository' ou 'Push origin'\n# En ligne de commande Git CLI :\ngit push -u origin main";
       break;
     case 'pull':
-      code = "# Rapatrier les modifications distantes de la branche main\ngit switch main\ngit pull origin main";
+      code = "# Dans GitHub Desktop : bouton 'Fetch origin' puis 'Pull origin'\n# En ligne de commande Git CLI :\ngit switch main\ngit pull origin main";
       break;
     case 'log':
-      code = "# Visualiser l'arbre des commits en couleur de facon compacte\ngit log --oneline --graph --all --decorate";
+      code = "# Dans GitHub Desktop : cliquer sur l'onglet 'History'\n# En ligne de commande Git CLI :\ngit log --oneline --graph --all --decorate";
       break;
     default:
       code = "git status";
@@ -1421,7 +1534,7 @@ function updateProgress() {
 
 // Copie de la trame Google Classroom
 function copierTrameClassroom() {
-  const trame = `COMPTE-RENDU TP : INITIATION GIT & GITHUB (BTS CIEL 1ère Année)
+  const trame = `COMPTE-RENDU TP : INITIATION GIT & GITHUB AVEC GITHUB DESKTOP (BTS CIEL 1ère Année)
 
 Nom & Prénom de l'étudiant : 
 Date de réalisation : 
@@ -1430,22 +1543,23 @@ Date de réalisation :
 - Nom d'utilisateur GitHub : @
 - URL du profil public : https://github.com/
 - URL du dépôt public bts-ciel-portfolio : https://github.com/.../bts-ciel-portfolio
-- Statut 2FA : Activé (Oui / Non)
+- Statut de connexion dans GitHub Desktop : Connecté (Oui / Non)
+- Double authentification (2FA) active : Oui / Non
 
 2. TRACABILITÉ DES COMMITS & PULL REQUEST :
-- Hash du premier commit (main) : 
-- Nom de la branche de fonctionnalité créée : feature/...
-- URL de la Pull Request fusionnée (Closed) : https://github.com/.../pull/1
+- Hash SHA-1 du premier commit (History Desktop) : 
+- Nom de la branche de fonctionnalité créée : feature/ajout-projet-tp
+- URL de la Pull Request fusionnée (Closed sur GitHub) : https://github.com/.../pull/1
 - Hash du commit de merge final : 
 
 3. ANALYSE TECHNIQUE (RÉPONSES AUX QUESTIONS) :
-Q1 (Différence add / commit) : 
-Q2 (Sécurité des Tokens PAT vs Mot de passe) : 
+Q1 (Correspondance onglet Changes et Staging Area) : 
+Q2 (Différence entre Commit to main et Push origin) : 
 Q3 (Impact critique du .gitignore en BTS CIEL) : 
-Q4 (Procédure de résolution d'un conflit de synchronisation) : 
-Q5 (Intérêt industriel des Pull Requests) : 
+Q4 (Intérêt de la Pull Request et du Diff en entreprise) : 
+Q5 (Complémentarité entre GitHub Desktop et la ligne de commande CLI) : 
 
-4. AUTO-ÉVALUATION & DIFFICULTÉS RENCONTRÉES :
+4. AUTO-ÉVALUATION & BILAN PERSONNEL :
 `;
 
   navigator.clipboard.writeText(trame).then(() => {
