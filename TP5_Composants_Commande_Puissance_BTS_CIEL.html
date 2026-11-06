@@ -1247,17 +1247,32 @@
   </p>
 
   <div class="svg-card">
-    <svg viewBox="0 0 820 215" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Schéma du potentiomètre à vide puis chargé par RL">
-      <rect width="820" height="215" rx="8" fill="#f8fafc" stroke="#cbd5e1"/>
+    <svg viewBox="0 0 820 225" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Schéma du potentiomètre à vide puis chargé par RL avec voltmètre et ampèremètre">
+      <rect width="820" height="225" rx="8" fill="#f8fafc" stroke="#cbd5e1"/>
+      <!-- Séparateur central -->
+      <line x1="410" y1="12" x2="410" y2="212" stroke="#cbd5e1" stroke-dasharray="5,4" stroke-width="1.5"/>
+
       <!-- Gauche : À vide -->
-      <text x="200" y="25" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="12" font-weight="bold" fill="#0b3c5d">A. Potentiomètre 10 k&Omega; À VIDE (I_sortie = 0 mA)</text>
-      <line x1="120" y1="45" x2="180" y2="45" stroke="#dc2626" stroke-width="2"/>
-      <text x="80" y="49" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#dc2626">+5V Varta</text>
-      <line x1="180" y1="45" x2="180" y2="68" stroke="#1e293b" stroke-width="2"/>
+      <text x="200" y="20" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="12" font-weight="bold" fill="#0b3c5d">A. Potentiomètre 10 k&Omega; À VIDE (I_sortie = 0 mA)</text>
+
+      <!-- Borne +5V et Ampèremètre DC sur l'alimentation -->
+      <text x="60" y="50" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#dc2626">+5V</text>
+      <line x1="88" y1="46" x2="116" y2="46" stroke="#dc2626" stroke-width="2.5"/>
+
+      <!-- Ampèremètre DC série A (I_alim) -->
+      <circle cx="132" cy="46" r="14" fill="#ffffff" stroke="#0284c7" stroke-width="2"/>
+      <text x="132" y="50" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#0284c7">A</text>
+      <text x="132" y="27" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.5" font-weight="bold" fill="#0369a1">I_alim [mA]</text>
+
+      <line x1="146" y1="46" x2="180" y2="46" stroke="#1e293b" stroke-width="2"/>
+      <line x1="180" y1="46" x2="180" y2="68" stroke="#1e293b" stroke-width="2"/>
+
+      <!-- Corps du potentiomètre -->
       <rect x="166" y="68" width="28" height="80" fill="#ffffff" stroke="#1e293b" stroke-width="2"/>
       <text x="150" y="92" text-anchor="end" font-family="Segoe UI, sans-serif" font-size="10" fill="#475569">(1-&alpha;)R</text>
       <text x="150" y="138" text-anchor="end" font-family="Segoe UI, sans-serif" font-size="10" fill="#475569">&alpha;R</text>
-      <!-- Flèche curseur -->
+
+      <!-- Flèche curseur et Voltmètre V_out -->
       <line x1="225" y1="108" x2="196" y2="108" stroke="#0284c7" stroke-width="2.5"/>
       <polygon points="196,108 204,103 204,113" fill="#0284c7"/>
       <line x1="225" y1="108" x2="310" y2="108" stroke="#0284c7" stroke-width="2"/>
@@ -1266,91 +1281,98 @@
       <line x1="310" y1="108" x2="310" y2="126" stroke="#0284c7" stroke-width="2"/>
       <line x1="310" y1="158" x2="310" y2="178" stroke="#1e293b" stroke-width="2"/>
       <line x1="180" y1="148" x2="180" y2="178" stroke="#1e293b" stroke-width="2"/>
-      <line x1="120" y1="178" x2="335" y2="178" stroke="#1e293b" stroke-width="2"/>
-      <text x="90" y="182" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#334155">GND</text>
+      <line x1="60" y1="178" x2="335" y2="178" stroke="#1e293b" stroke-width="2"/>
+      <text x="60" y="196" font-family="Segoe UI, sans-serif" font-size="10.5" font-weight="bold" fill="#334155">GND (0V)</text>
       <text x="275" y="98" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#0284c7">Broche 2 (V_out)</text>
 
-      <line x1="410" y1="15" x2="410" y2="200" stroke="#cbd5e1" stroke-dasharray="5,4" stroke-width="1.5"/>
-
       <!-- Droite : En charge RL = 1 kOhm -->
-      <text x="615" y="25" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="12" font-weight="bold" fill="#b91c1c">B. À mi-course (50 %) AVEC CHARGE R_L = 1 k&Omega;</text>
-      <line x1="485" y1="45" x2="545" y2="45" stroke="#dc2626" stroke-width="2"/>
-      <text x="450" y="49" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#dc2626">+5V</text>
-      <line x1="545" y1="45" x2="545" y2="68" stroke="#1e293b" stroke-width="2"/>
+      <text x="615" y="20" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="12" font-weight="bold" fill="#b91c1c">B. À mi-course (50 %) AVEC CHARGE R_L = 1 k&Omega;</text>
+
+      <!-- Borne +5V et Ampèremètre DC sur l'alimentation -->
+      <text x="440" y="50" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#dc2626">+5V</text>
+      <line x1="468" y1="46" x2="496" y2="46" stroke="#dc2626" stroke-width="2.5"/>
+
+      <!-- Ampèremètre DC série A (I_alim sous charge) -->
+      <circle cx="512" cy="46" r="14" fill="#ffffff" stroke="#0284c7" stroke-width="2"/>
+      <text x="512" y="50" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#0284c7">A</text>
+      <text x="512" y="27" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.5" font-weight="bold" fill="#0369a1">I_alim [mA]</text>
+
+      <line x1="526" y1="46" x2="545" y2="46" stroke="#1e293b" stroke-width="2"/>
+      <line x1="545" y1="46" x2="545" y2="68" stroke="#1e293b" stroke-width="2"/>
+
+      <!-- Corps potentiomètre 5k / 5k -->
       <rect x="531" y="68" width="28" height="80" fill="#ffffff" stroke="#1e293b" stroke-width="2"/>
       <text x="522" y="92" text-anchor="end" font-family="Segoe UI, sans-serif" font-size="10" fill="#475569">5 k&Omega;</text>
       <text x="522" y="138" text-anchor="end" font-family="Segoe UI, sans-serif" font-size="10" fill="#475569">5 k&Omega;</text>
+
+      <!-- Curseur -->
       <line x1="590" y1="108" x2="561" y2="108" stroke="#dc2626" stroke-width="2.5"/>
       <polygon points="561,108 569,103 569,113" fill="#dc2626"/>
       <line x1="590" y1="108" x2="735" y2="108" stroke="#dc2626" stroke-width="2"/>
+
       <!-- Charge RL 1k -->
       <line x1="650" y1="108" x2="650" y2="122" stroke="#b91c1c" stroke-width="2"/>
       <rect x="637" y="122" width="26" height="42" fill="#fee2e2" stroke="#b91c1c" stroke-width="2"/>
       <text x="650" y="147" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#b91c1c">1k&Omega;</text>
       <line x1="650" y1="164" x2="650" y2="178" stroke="#b91c1c" stroke-width="2"/>
-      <!-- Voltmètre -->
+
+      <!-- Voltmètre V -->
       <line x1="735" y1="108" x2="735" y2="126" stroke="#0284c7" stroke-width="2"/>
       <circle cx="735" cy="142" r="16" fill="#ffffff" stroke="#0284c7" stroke-width="2"/>
       <text x="735" y="147" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="13" font-weight="bold" fill="#0284c7">V</text>
       <line x1="735" y1="158" x2="735" y2="178" stroke="#1e293b" stroke-width="2"/>
       <line x1="545" y1="148" x2="545" y2="178" stroke="#1e293b" stroke-width="2"/>
-      <line x1="485" y1="178" x2="765" y2="178" stroke="#1e293b" stroke-width="2"/>
-      <text x="650" y="198" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#b91c1c">Effondrement de V_out ! (5 k&Omega; // 1 k&Omega; = 833 &Omega;)</text>
+      <line x1="440" y1="178" x2="765" y2="178" stroke="#1e293b" stroke-width="2"/>
+      <text x="440" y="196" font-family="Segoe UI, sans-serif" font-size="10.5" font-weight="bold" fill="#334155">GND (0V)</text>
+      <text x="650" y="206" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.8" font-weight="bold" fill="#b91c1c">Effondrement de V_out ! (5 k&Omega; // 1 k&Omega; = 833 &Omega;)</text>
     </svg>
-    <div class="svg-caption">Figure 1.2 — Étude du potentiomètre 10 k&Omega; en pont diviseur de tension : fonctionnement à vide (A) et chute de tension en présence d'une charge R<sub>L</sub> = 1 k&Omega; (B).</div>
+    <div class="svg-caption">Figure 1.2 — Étude du potentiomètre 10 k&Omega; en pont diviseur de tension : mesure de la tension V<sub>out</sub> et du courant d'alimentation I<sub>alim</sub> par voltmètre V et ampèremètre A (placé sur le +5V) à vide (A) et avec charge R<sub>L</sub> = 1 k&Omega; (B).</div>
   </div>
 
   <ol>
-    <li><strong>Simulation sous Proteus (Composant <code>POT-HG</code>) :</strong> Placez le modèle interactif <code>POT-HG</code> de <code>10k</code> alimenté sous <code>5V</code> (source DC ou batterie) et relié au terminal <code>GROUND</code>. Placez un <code>DC VOLTMETER</code> entre le curseur (broche 2) et la masse, ainsi qu'un <code>DC AMMETER</code> (réglé sur <code>mA</code>) sur l'alimentation 5 V.</li>
-    <li><strong>Variation du curseur à vide :</strong> Lancez la simulation et cliquez sur les flèches interactives <code>+</code> / <code>&minus;</code> du potentiomètre pour positionner le curseur à <strong>0 %, 25 %, 50 %, 75 % et 100 %</strong>. Relevez la tension de sortie <i>V<sub>out</sub></i> et vérifiez la stricte linéarité de la relation <i>V<sub>out</sub> = &alpha; &times; U<sub>alim</sub></i>.</li>
-    <li><strong>Effet de charge à mi-course (50 %) :</strong> Réglez le curseur à 50 % (vous lisez exactement 2,50 V à vide). Ajoutez alors en dérivation une résistance de charge <strong><code>R<sub>L</sub> = 1 k&Omega;</code></strong> entre le curseur et la masse (schéma B de la Figure 1.2). Lancez la simulation et observez <strong>l'effondrement spectaculaire de la tension de sortie</strong> (chute de 2,50 V à 0,71 V !).</li>
+    <li><strong>Simulation sous Proteus (Composant <code>POT-HG</code>) :</strong> Placez le modèle interactif <code>POT-HG</code> de <code>10k</code> alimenté sous <code>5V</code> et relié au terminal <code>GROUND</code>. Insérez un <strong><code>DC AMMETER</code> (réglé sur <code>mA</code>) en série sur la ligne <code>+5V</code></strong> et un <strong><code>DC VOLTMETER</code> en dérivation entre le curseur (broche 2) et la masse</strong> (conformément au schéma A de la Figure 1.2).</li>
+    <li><strong>Variation du curseur à vide (0 % à 100 %) :</strong> Lancez la simulation (Play &#9654;) et réglez le curseur à <strong>0 %, 25 %, 50 %, 75 % et 100 %</strong>. À chaque position, relevez <strong>la tension <i>V<sub>out</sub></i> et le courant d'alimentation <i>I<sub>alim</sub></i> (en mA)</strong>. Constatez que le courant consommé à vide reste strictement constant (<i>5 V / 10 k&Omega; = 0,50 mA</i>).</li>
+    <li><strong>Effet de charge à mi-course (50 %) :</strong> Réglez le curseur à 50 % (2,50 V à vide). Branchez la résistance de charge <strong><code>R<sub>L</sub> = 1 k&Omega;</code></strong> entre le curseur et la masse (schéma B de la Figure 1.2). Lancez la simulation et observez l'effondrement de <i>V<sub>out</sub></i> (chute de 2,50 V à ~0,71 V) ainsi que la hausse du courant <i>I<sub>alim</sub></i> (qui monte à ~0,86 mA en raison du courant dérivé dans <code>R<sub>L</sub></code>).</li>
   </ol>
 
   <table>
     <thead>
       <tr>
         <th>Configuration du Potentiomètre (10 k&Omega; sous 5 V)</th>
-        <th class="col-calc">Calcul Théorique</th>
-        <th class="col-sim">Simulation Proteus (POT-HG)</th>
-        <th class="col-err">Écart &epsilon; (%) &amp; Analyse</th>
+        <th class="col-calc">Calcul Théorique (Tension &amp; Courant)</th>
+        <th class="col-sim">Simulation Proteus (POT-HG) : Mesures</th>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <td>À vide — Curseur à <strong>0 %</strong> (butée GND) : <i>V<sub>out</sub></i></td>
-        <td><strong>0,00 V</strong></td>
-        <td>________ V</td>
-        <td>0,00 % (Conforme)</td>
+        <td>À vide — Curseur à <strong>0 %</strong> (butée GND)</td>
+        <td><i>V<sub>out</sub></i> = <strong>0,00 V</strong> &nbsp;|&nbsp; <i>I<sub>alim</sub></i> = <strong>0,50 mA</strong></td>
+        <td><i>V<sub>out</sub></i> = ________ V &nbsp;|&nbsp; <i>I<sub>alim</sub></i> = ________ mA</td>
       </tr>
       <tr>
-        <td>À vide — Curseur à <strong>25 %</strong> : <i>V<sub>out</sub></i></td>
-        <td><i>0,25 &times; 5,00 V</i> = <strong>1,25 V</strong></td>
-        <td>________ V</td>
-        <td>____ %</td>
+        <td>À vide — Curseur à <strong>25 %</strong></td>
+        <td><i>V<sub>out</sub></i> = <i>0,25 &times; 5,00 V</i> = <strong>1,25 V</strong> &nbsp;|&nbsp; <i>I<sub>alim</sub></i> = <strong>0,50 mA</strong></td>
+        <td><i>V<sub>out</sub></i> = ________ V &nbsp;|&nbsp; <i>I<sub>alim</sub></i> = ________ mA</td>
       </tr>
       <tr>
-        <td>À vide — Curseur à <strong>50 %</strong> (mi-course) : <i>V<sub>out</sub></i> et <i>I<sub>alim</sub></i></td>
-        <td><strong>2,50 V</strong> &nbsp;|&nbsp; <i>I</i> = <i>5 / 10k</i> = <strong>0,50 mA</strong></td>
-        <td><i>V<sub>out</sub></i> = ____ V &nbsp;|&nbsp; <i>I</i> = ____ mA</td>
-        <td>____ %</td>
+        <td>À vide — Curseur à <strong>50 %</strong> (mi-course)</td>
+        <td><i>V<sub>out</sub></i> = <i>0,50 &times; 5,00 V</i> = <strong>2,50 V</strong> &nbsp;|&nbsp; <i>I<sub>alim</sub></i> = <strong>0,50 mA</strong></td>
+        <td><i>V<sub>out</sub></i> = ________ V &nbsp;|&nbsp; <i>I<sub>alim</sub></i> = ________ mA</td>
       </tr>
       <tr>
-        <td>À vide — Curseur à <strong>75 %</strong> : <i>V<sub>out</sub></i></td>
-        <td><i>0,75 &times; 5,00 V</i> = <strong>3,75 V</strong></td>
-        <td>________ V</td>
-        <td>____ %</td>
+        <td>À vide — Curseur à <strong>75 %</strong></td>
+        <td><i>V<sub>out</sub></i> = <i>0,75 &times; 5,00 V</i> = <strong>3,75 V</strong> &nbsp;|&nbsp; <i>I<sub>alim</sub></i> = <strong>0,50 mA</strong></td>
+        <td><i>V<sub>out</sub></i> = ________ V &nbsp;|&nbsp; <i>I<sub>alim</sub></i> = ________ mA</td>
       </tr>
       <tr>
-        <td>À vide — Curseur à <strong>100 %</strong> (butée +5V) : <i>V<sub>out</sub></i></td>
-        <td><strong>5,00 V</strong></td>
-        <td>________ V</td>
-        <td>0,00 % (Conforme)</td>
+        <td>À vide — Curseur à <strong>100 %</strong> (butée +5V)</td>
+        <td><i>V<sub>out</sub></i> = <strong>5,00 V</strong> &nbsp;|&nbsp; <i>I<sub>alim</sub></i> = <strong>0,50 mA</strong></td>
+        <td><i>V<sub>out</sub></i> = ________ V &nbsp;|&nbsp; <i>I<sub>alim</sub></i> = ________ mA</td>
       </tr>
       <tr>
-        <td><strong>EN CHARGE à 50 % avec <i>R<sub>L</sub></i> = 1 k&Omega; : <i>V<sub>out,chargé</sub></i></strong></td>
-        <td><i>5 &times; 833 / (5000 + 833)</i> = <strong>0,714 V</strong></td>
-        <td>________ V</td>
-        <td>Effondrement : 5k&Omega; // 1k&Omega; = 833 &Omega;</td>
+        <td><strong>EN CHARGE à 50 % avec <i>R<sub>L</sub></i> = 1 k&Omega;</strong></td>
+        <td><i>V<sub>out</sub></i> = <strong>0,714 V</strong> &nbsp;|&nbsp; <i>I<sub>alim</sub></i> = <i>5 V / 5,83 k&Omega;</i> = <strong>0,86 mA</strong></td>
+        <td><i>V<sub>out</sub></i> = ________ V &nbsp;|&nbsp; <i>I<sub>alim</sub></i> = ________ mA</td>
       </tr>
     </tbody>
   </table>
@@ -2631,17 +2653,17 @@ puissance_autorisee = <span class="kw">False</span>          <span class="co"># 
         </table>
 
         <h3>1.2 Potentiomètre 10 kΩ à vide puis en charge (R_L = 1 kΩ sous Proteus)</h3>
-        <p><i>[📷 Insérer ici la capture Proteus du potentiomètre POT-HG à 50% chargé par 1 kΩ]</i></p>
+        <p><i>[📷 Insérer ici la capture Proteus du potentiomètre POT-HG à 50% chargé par 1 kΩ avec voltmètre V et ampèremètre A actifs]</i></p>
         <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; width:100%;">
           <tr style="background:#e0f2fe; font-weight:bold;">
-            <th>Position Curseur</th><th>Calcul Théorique</th><th>Simulation Proteus (POT-HG)</th><th>Écart ε (%) &amp; Observation</th>
+            <th>Position Curseur</th><th>Calcul Théorique (Tension &amp; Courant)</th><th>Simulation Proteus (POT-HG) : Mesures</th>
           </tr>
-          <tr><td>À vide — 0 %</td><td>0,00 V</td><td></td><td></td></tr>
-          <tr><td>À vide — 25 %</td><td>1,25 V</td><td></td><td></td></tr>
-          <tr><td>À vide — 50 % (V_out et I_alim)</td><td>2,50 V | 0,50 mA</td><td></td><td></td></tr>
-          <tr><td>À vide — 75 %</td><td>3,75 V</td><td></td><td></td></tr>
-          <tr><td>À vide — 100 %</td><td>5,00 V</td><td></td><td></td></tr>
-          <tr><td><b>En charge à 50 % avec R_L = 1 kΩ</b></td><td><b>0,714 V</b></td><td></td><td>Effondrement de V_out</td></tr>
+          <tr><td>À vide — 0 %</td><td>V_out = 0,00 V | I_alim = 0,50 mA</td><td>V_out = ........ V | I_alim = ........ mA</td></tr>
+          <tr><td>À vide — 25 %</td><td>V_out = 1,25 V | I_alim = 0,50 mA</td><td>V_out = ........ V | I_alim = ........ mA</td></tr>
+          <tr><td>À vide — 50 %</td><td>V_out = 2,50 V | I_alim = 0,50 mA</td><td>V_out = ........ V | I_alim = ........ mA</td></tr>
+          <tr><td>À vide — 75 %</td><td>V_out = 3,75 V | I_alim = 0,50 mA</td><td>V_out = ........ V | I_alim = ........ mA</td></tr>
+          <tr><td>À vide — 100 %</td><td>V_out = 5,00 V | I_alim = 0,50 mA</td><td>V_out = ........ V | I_alim = ........ mA</td></tr>
+          <tr><td><b>En charge à 50 % avec R_L = 1 kΩ</b></td><td><b>V_out = 0,714 V | I_alim = 0,86 mA</b></td><td><b>V_out = ........ V | I_alim = ........ mA</b></td></tr>
         </table>
         <p><b>Réponse Question d'ingénierie n°1 (Effet de charge : pourquoi impossible sur moteur mais idéal sur ADC Pico) :</b><br>........................................................................................................</p>
 
