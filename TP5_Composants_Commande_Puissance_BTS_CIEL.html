@@ -434,6 +434,31 @@
       font-style: italic;
     }
 
+    /* Image Cards */
+    .image-card {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 14px;
+      margin: 16px 0;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+    }
+    .image-card img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+      display: block;
+      margin: 0 auto;
+    }
+    .image-caption {
+      font-size: 8.8pt;
+      color: var(--text-muted);
+      margin-top: 8px;
+      font-style: italic;
+    }
+
     /* Code */
     code {
       background-color: #f1f5f9;
@@ -620,7 +645,7 @@
   <h3 style="margin-top:0;">⏱️ Organisation Temporelle de l'Activité (5h00 — Travail en binôme)</h3>
   <div class="timeline-bar">
     <a class="tl-item" href="#sec-prep"><span class="tl-time">0h00 → 0h20 (20 min)</span><strong>Étape 0</strong><br>Inventaire TI Kit, sécurité multimètre &amp; ouverture Docs Classroom</a>
-    <a class="tl-item" href="#sec-p1"><span class="tl-time">0h20 → 1h20 (1h00)</span><strong>Partie 1</strong><br>Résistances &amp; Potentiomètre (à vide / en charge) — Proteus &amp; Réel</a>
+    <a class="tl-item" href="#sec-p1"><span class="tl-time">0h20 → 1h20 (1h00)</span><strong>Partie 1</strong><br>Résistances &amp; Potentiomètre (à vide / en charge) — Simulation Proteus</a>
     <a class="tl-item" href="#sec-p2"><span class="tl-time">1h20 → 2h05 (45 min)</span><strong>Partie 2</strong><br>Caractérisation LED &amp; résistance de limitation — Proteus &amp; Réel</a>
     <a class="tl-item" href="#sec-p3"><span class="tl-time">2h05 → 3h05 (1h00)</span><strong>Partie 3</strong><br>Commande / Puissance par <strong>Relais Grove</strong> (Isolation galvanique)</a>
     <a class="tl-item" href="#sec-p4"><span class="tl-time">3h05 → 4h05 (1h00)</span><strong>Partie 4</strong><br>Commande / Puissance par <strong>Transistor TIP31C</strong> &amp; roue libre 1N4001</a>
@@ -963,22 +988,180 @@
 <!-- ===================================================================== -->
 <!-- PARTIE 1 : RÉSISTANCES & POTENTIOMÈTRE (TI MYPARTS KIT)               -->
 <!-- ===================================================================== -->
-<h2 id="sec-p1">PARTIE 1 : Dipôles Linéaires — Résistances &amp; Potentiomètre (Proteus vs Breadboard) <span class="badge badge-time">1h00</span></h2>
+<h2 id="sec-p1">PARTIE 1 : Dipôles Linéaires — Résistances &amp; Potentiomètre (Simulation Proteus) <span class="badge badge-time">1h00</span></h2>
 
 <div class="card-block">
-  <h3>1.1 Identification, Loi d'Ohm et Lois de Kirchhoff sur Résistances du Kit TI</h3>
+  <div class="callout callout-proteus">
+    <strong>🖥️ MODÉLISATION &amp; MESURES 100% SIMULÉES SOUS PROTEUS ISIS :</strong><br>
+    Dans cette <strong>Partie 1</strong>, l'ensemble des montages et des mesurages est réalisé <strong>exclusivement en simulation sous Proteus ISIS</strong> (aucun câblage réel sur breadboard pour cette partie). Cette approche permet de valider avec une précision absolue les lois fondamentales de Kirchhoff (loi des mailles et loi des nœuds) ainsi que le théorème du pont diviseur avant d'aborder les dipôles actifs et les étages de puissance.
+  </div>
+
+  <h3>1.1 Identification, Loi d'Ohm et Lois de Kirchhoff sur Résistances (Simulation Proteus)</h3>
   <p>
-    Prélevez dans votre <strong>TI myParts Kit</strong> trois résistances de valeurs distinctes :
-    <strong><code>R<sub>1</sub> = 330 &Omega;</code></strong> (ou <code>220 &Omega;</code> selon votre sachet),
+    Dans le logiciel <strong>Proteus ISIS</strong>, vous étudierez trois résistances de valeurs standardisées issues de la série E12 du <em>TI myParts Kit</em> :
+    <strong><code>R<sub>1</sub> = 330 &Omega;</code></strong>,
     <strong><code>R<sub>2</sub> = 1 k&Omega;</code></strong> et
     <strong><code>R<sub>3</sub> = 10 k&Omega;</code></strong>.
-    <em>(Si une valeur exacte diffère dans votre kit, notez la valeur nominale choisie dans votre tableau Google Docs et adaptez vos simulations Proteus avec cette même valeur !)</em>
   </p>
 
+  <!-- SVG FIGURE 1.1 : SCHÉMAS MONTAGE SÉRIE & PARALLÈLE SOUS PROTEUS -->
+  <div class="svg-card">
+    <svg viewBox="0 0 920 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Schémas des montages sous Proteus ISIS : Association Série (Montage 1A) et Association Parallèle (Montage 1B)">
+      <rect width="920" height="330" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+
+      <!-- SÉPARATEUR CENTRAL POINTILLÉ -->
+      <line x1="460" y1="15" x2="460" y2="315" stroke="#cbd5e1" stroke-dasharray="5,4" stroke-width="1.5"/>
+
+      <!-- ======================================================== -->
+      <!-- PARTIE GAUCHE : MONTAGE 1A — ASSOCIATION SÉRIE            -->
+      <!-- ======================================================== -->
+      <text x="230" y="30" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="12" font-weight="bold" fill="#0b3c5d">A. Montage 1A : Association Série (Loi des Mailles &amp; Pont Diviseur)</text>
+
+      <!-- Borne +5V -->
+      <circle cx="50" cy="100" r="5" fill="#dc2626"/>
+      <line x1="50" y1="100" x2="85" y2="100" stroke="#dc2626" stroke-width="2.5"/>
+      <text x="50" y="88" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#dc2626">+5V (DC)</text>
+
+      <!-- Ampèremètre série DC AMMETER -->
+      <circle cx="115" cy="100" r="17" fill="#ffffff" stroke="#0284c7" stroke-width="2"/>
+      <text x="115" y="105" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="12" font-weight="bold" fill="#0284c7">A</text>
+      <text x="115" y="74" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9" font-weight="bold" fill="#0369a1">DC AMMETER</text>
+      <text x="115" y="128" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.5" fill="#0284c7">[mA] I = 3,76 mA</text>
+
+      <line x1="132" y1="100" x2="165" y2="100" stroke="#1e293b" stroke-width="2"/>
+
+      <!-- Résistance R1 = 330 Ohm -->
+      <rect x="165" y="88" width="60" height="24" fill="#ffffff" stroke="#1e293b" stroke-width="2"/>
+      <text x="195" y="104" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#1e293b">R1: 330&Omega;</text>
+
+      <!-- Voltmètre V1 sur R1 -->
+      <line x1="155" y1="100" x2="155" y2="54" stroke="#7c3aed" stroke-width="1.6"/>
+      <line x1="155" y1="54" x2="180" y2="54" stroke="#7c3aed" stroke-width="1.6"/>
+      <circle cx="195" cy="54" r="13" fill="#ffffff" stroke="#7c3aed" stroke-width="2"/>
+      <text x="195" y="58" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#7c3aed">V1</text>
+      <line x1="210" y1="54" x2="235" y2="54" stroke="#7c3aed" stroke-width="1.6"/>
+      <line x1="235" y1="54" x2="235" y2="100" stroke="#7c3aed" stroke-width="1.6"/>
+      <circle cx="155" cy="100" r="3" fill="#7c3aed"/>
+      <circle cx="235" cy="100" r="3" fill="#7c3aed"/>
+      <text x="195" y="38" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9" font-weight="bold" fill="#6d28d9">U_R1 = 1,24 V</text>
+
+      <line x1="225" y1="100" x2="270" y2="100" stroke="#1e293b" stroke-width="2"/>
+
+      <!-- Résistance R2 = 1 kOhm -->
+      <rect x="270" y="88" width="60" height="24" fill="#ffffff" stroke="#1e293b" stroke-width="2"/>
+      <text x="300" y="104" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#1e293b">R2: 1k&Omega;</text>
+
+      <!-- Voltmètre V2 sur R2 -->
+      <line x1="260" y1="100" x2="260" y2="54" stroke="#7c3aed" stroke-width="1.6"/>
+      <line x1="260" y1="54" x2="285" y2="54" stroke="#7c3aed" stroke-width="1.6"/>
+      <circle cx="300" cy="54" r="13" fill="#ffffff" stroke="#7c3aed" stroke-width="2"/>
+      <text x="300" y="58" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#7c3aed">V2</text>
+      <line x1="315" y1="54" x2="340" y2="54" stroke="#7c3aed" stroke-width="1.6"/>
+      <line x1="340" y1="54" x2="340" y2="100" stroke="#7c3aed" stroke-width="1.6"/>
+      <circle cx="260" cy="100" r="3" fill="#7c3aed"/>
+      <circle cx="340" cy="100" r="3" fill="#7c3aed"/>
+      <text x="300" y="38" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9" font-weight="bold" fill="#6d28d9">U_R2 = 3,76 V</text>
+
+      <!-- Boucle vers GND -->
+      <line x1="330" y1="100" x2="415" y2="100" stroke="#1e293b" stroke-width="2"/>
+      <line x1="415" y1="100" x2="415" y2="185" stroke="#1e293b" stroke-width="2"/>
+      <line x1="415" y1="185" x2="50" y2="185" stroke="#1e293b" stroke-width="2"/>
+
+      <!-- Symbole GND -->
+      <line x1="50" y1="185" x2="50" y2="200" stroke="#1e293b" stroke-width="2"/>
+      <line x1="38" y1="200" x2="62" y2="200" stroke="#1e293b" stroke-width="2.5"/>
+      <line x1="42" y1="205" x2="58" y2="205" stroke="#1e293b" stroke-width="2"/>
+      <line x1="46" y1="210" x2="54" y2="210" stroke="#1e293b" stroke-width="1.5"/>
+      <text x="50" y="224" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9" font-weight="bold" fill="#475569">0V (GND)</text>
+
+      <!-- Boîte de calcul / astuces Montage 1A -->
+      <rect x="25" y="240" width="410" height="74" rx="6" fill="#f0f9ff" stroke="#bae6fd"/>
+      <text x="35" y="258" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#0369a1">Lois &amp; Formules sous Proteus (Montage 1A) :</text>
+      <text x="35" y="274" font-family="Segoe UI, sans-serif" font-size="9" fill="#0f172a">• Loi d'Ohm globale : I = 5 V / (330 + 1000) &Omega; = 5 / 1330 = 3,76 mA</text>
+      <text x="35" y="289" font-family="Segoe UI, sans-serif" font-size="9" fill="#0f172a">• Loi des mailles : U_alim = U_R1 + U_R2 = 1,24 V + 3,76 V = 5,00 V</text>
+      <text x="35" y="304" font-family="Segoe UI, sans-serif" font-size="8.8" font-weight="bold" fill="#b91c1c">⚠️ Astuce Proteus : Double-clic sur DC AMMETER &rarr; Display Range = Milliamps</text>
+
+      <!-- ======================================================== -->
+      <!-- PARTIE DROITE : MONTAGE 1B — ASSOCIATION PARALLÈLE        -->
+      <!-- ======================================================== -->
+      <text x="690" y="30" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="12" font-weight="bold" fill="#0b3c5d">B. Montage 1B : Association Parallèle (Loi des Nœuds &amp; Même Tension)</text>
+
+      <!-- Borne +5V -->
+      <circle cx="485" cy="115" r="5" fill="#dc2626"/>
+      <line x1="485" y1="115" x2="515" y2="115" stroke="#dc2626" stroke-width="2.5"/>
+      <text x="485" y="103" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#dc2626">+5V</text>
+
+      <!-- Ampèremètre DC principal A_total -->
+      <circle cx="538" cy="115" r="17" fill="#ffffff" stroke="#dc2626" stroke-width="2"/>
+      <text x="538" y="120" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#dc2626">Atot</text>
+      <text x="538" y="89" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.5" font-weight="bold" fill="#b91c1c">I_total [mA]</text>
+      <text x="538" y="143" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.5" fill="#dc2626">20,15 mA</text>
+
+      <line x1="555" y1="115" x2="590" y2="115" stroke="#1e293b" stroke-width="2"/>
+      <circle cx="590" cy="115" r="3.5" fill="#1e293b"/>
+
+      <!-- Voltmètre U_alim / U_branches -->
+      <line x1="590" y1="115" x2="590" y2="48" stroke="#7c3aed" stroke-width="1.6"/>
+      <line x1="590" y1="48" x2="610" y2="48" stroke="#7c3aed" stroke-width="1.6"/>
+      <circle cx="625" cy="48" r="13" fill="#ffffff" stroke="#7c3aed" stroke-width="2"/>
+      <text x="625" y="52" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#7c3aed">V</text>
+      <text x="625" y="32" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.8" font-weight="bold" fill="#6d28d9">U = 5,00 V</text>
+      <line x1="640" y1="48" x2="660" y2="48" stroke="#7c3aed" stroke-width="1.6"/>
+      <line x1="660" y1="48" x2="660" y2="185" stroke="#7c3aed" stroke-width="1.6"/>
+      <circle cx="660" cy="185" r="3" fill="#7c3aed"/>
+
+      <!-- Branche 1 (Haut) : R1 330 Ohm -->
+      <line x1="590" y1="115" x2="590" y2="80" stroke="#1e293b" stroke-width="2"/>
+      <line x1="590" y1="80" x2="675" y2="80" stroke="#1e293b" stroke-width="2"/>
+      <!-- Ampèremètre branche 1 A1 -->
+      <circle cx="695" cy="80" r="14" fill="#ffffff" stroke="#0284c7" stroke-width="1.8"/>
+      <text x="695" y="84" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#0284c7">A1</text>
+      <text x="695" y="62" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8" fill="#0369a1">I1 = 15,15 mA</text>
+      <line x1="710" y1="80" x2="735" y2="80" stroke="#1e293b" stroke-width="2"/>
+      <rect x="735" y="68" width="56" height="24" fill="#ffffff" stroke="#1e293b" stroke-width="2"/>
+      <text x="763" y="84" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#1e293b">330&Omega;</text>
+      <line x1="791" y1="80" x2="840" y2="80" stroke="#1e293b" stroke-width="2"/>
+
+      <!-- Branche 2 (Bas) : R2 1 kOhm -->
+      <line x1="590" y1="115" x2="590" y2="145" stroke="#1e293b" stroke-width="2"/>
+      <line x1="590" y1="145" x2="675" y2="145" stroke="#1e293b" stroke-width="2"/>
+      <!-- Ampèremètre branche 2 A2 -->
+      <circle cx="695" cy="145" r="14" fill="#ffffff" stroke="#0284c7" stroke-width="1.8"/>
+      <text x="695" y="149" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#0284c7">A2</text>
+      <text x="695" y="170" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8" fill="#0369a1">I2 = 5,00 mA</text>
+      <line x1="710" y1="145" x2="735" y2="145" stroke="#1e293b" stroke-width="2"/>
+      <rect x="735" y="133" width="56" height="24" fill="#ffffff" stroke="#1e293b" stroke-width="2"/>
+      <text x="763" y="149" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#1e293b">1k&Omega;</text>
+      <line x1="791" y1="145" x2="840" y2="145" stroke="#1e293b" stroke-width="2"/>
+
+      <!-- Nœud de sortie branches -->
+      <line x1="840" y1="80" x2="840" y2="145" stroke="#1e293b" stroke-width="2"/>
+      <circle cx="840" cy="115" r="3.5" fill="#1e293b"/>
+      <line x1="840" y1="115" x2="875" y2="115" stroke="#1e293b" stroke-width="2"/>
+      <line x1="875" y1="115" x2="875" y2="185" stroke="#1e293b" stroke-width="2"/>
+      <line x1="875" y1="185" x2="485" y2="185" stroke="#1e293b" stroke-width="2"/>
+
+      <!-- Symbole GND droit -->
+      <line x1="485" y1="185" x2="485" y2="200" stroke="#1e293b" stroke-width="2"/>
+      <line x1="473" y1="200" x2="497" y2="200" stroke="#1e293b" stroke-width="2.5"/>
+      <line x1="477" y1="205" x2="493" y2="205" stroke="#1e293b" stroke-width="2"/>
+      <line x1="481" y1="210" x2="489" y2="210" stroke="#1e293b" stroke-width="1.5"/>
+      <text x="485" y="224" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9" font-weight="bold" fill="#475569">0V (GND)</text>
+
+      <!-- Boîte de calcul / astuces Montage 1B -->
+      <rect x="475" y="240" width="420" height="74" rx="6" fill="#fef2f2" stroke="#fecaca"/>
+      <text x="485" y="258" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#b91c1c">Lois &amp; Formules sous Proteus (Montage 1B) :</text>
+      <text x="485" y="274" font-family="Segoe UI, sans-serif" font-size="9" fill="#0f172a">• Courants de branche : I1 = 5 / 330 = 15,15 mA | I2 = 5 / 1000 = 5,00 mA</text>
+      <text x="485" y="289" font-family="Segoe UI, sans-serif" font-size="9" fill="#0f172a">• Loi des nœuds : I_total = I1 + I2 = 15,15 + 5,00 = 20,15 mA</text>
+      <text x="485" y="304" font-family="Segoe UI, sans-serif" font-size="8.8" font-weight="bold" fill="#047857">• Tension commune : U_R1 = U_R2 = U_alim = 5,00 V (vérifiée au voltmètre)</text>
+    </svg>
+    <div class="svg-caption">Figure 1.1 — Schémas de simulation Proteus ISIS des dipôles linéaires : Association Série (Montage 1A — Loi des mailles et pont diviseur) et Association Parallèle (Montage 1B — Loi des nœuds).</div>
+  </div>
+
   <ol>
-    <li><strong>Contrôle hors tension à l'ohmmètre :</strong> Avant tout câblage, mesurez à l'ohmmètre (bornes <code>&Omega;</code> et <code>COM</code>) la valeur réelle de <code>R<sub>1</sub></code>, <code>R<sub>2</sub></code> et <code>R<sub>3</sub></code> posées seules sur la table. Vérifiez qu'elles respectent leur tolérance constructeur.</li>
-    <li><strong>Montage 1A — Association Série (<code>R<sub>1</sub></code> en série avec <code>R<sub>2</sub></code> sous 5 V) :</strong> Vérifiez la loi d'Ohm et la <strong>loi des mailles</strong> (<i>U<sub>alim</sub> = U<sub>R1</sub> + U<sub>R2</sub></i>, même courant <i>I</i> partout).</li>
-    <li><strong>Montage 1B — Association Parallèle (<code>R<sub>1</sub></code> en dérivation avec <code>R<sub>2</sub></code> sous 5 V) :</strong> Vérifiez la <strong>loi des nœuds</strong> (<i>I<sub>total</sub> = I<sub>1</sub> + I<sub>2</sub></i>, même tension <i>U<sub>alim</sub></i> aux bornes de chaque branche).</li>
+    <li><strong>Saisie sous Proteus ISIS :</strong> Dans un nouveau schéma Proteus, ajoutez le composant <code>RES</code> (disponible via la touche <code>P</code>) ainsi qu'une alimentation <code>BATTERY</code> (ou <code>CELL</code>) réglée à <strong>5,00 V</strong> et un terminal <strong><code>GROUND</code></strong>.</li>
+    <li><strong>Montage 1A — Association Série (Figure 1.1-A) :</strong> Reliez <code>R<sub>1</sub> = 330 &Omega;</code> et <code>R<sub>2</sub> = 1 k&Omega;</code> en série sous 5 V. Insérez un <code>DC AMMETER</code> en série (configuré en <code>mA</code>) et deux <code>DC VOLTMETER</code> en parallèle sur chaque résistance. Lancez la simulation et vérifiez la loi des mailles (<i>U<sub>alim</sub> = U<sub>R1</sub> + U<sub>R2</sub></i>).</li>
+    <li><strong>Montage 1B — Association Parallèle (Figure 1.1-B) :</strong> Câblez <code>R<sub>1</sub></code> et <code>R<sub>2</sub></code> en dérivation sous 5 V. Placez un ampèremètre principal <code>Atot</code> et deux ampèremètres de branche <code>A1</code> et <code>A2</code> (tous en <code>mA</code>), ainsi qu'un voltmètre. Vérifiez la loi des nœuds (<i>I<sub>total</sub> = I<sub>1</sub> + I<sub>2</sub></i>).</li>
   </ol>
 
   <div class="formula-box">
@@ -987,28 +1170,17 @@
     <span class="frac"><span class="num"><i>R</i><sub>2</sub></span><span class="den"><i>R</i><sub>1</sub> + <i>R</i><sub>2</sub></span></span>
     &nbsp;&nbsp;|&nbsp;&nbsp;
     Écart relatif : &epsilon; (%) =
-    <span class="frac"><span class="num">|<i>M</i><sub>réel</sub> &minus; <i>M</i><sub>Proteus</sub>|</span><span class="den">|<i>M</i><sub>Proteus</sub>|</span></span> &times; 100
+    <span class="frac"><span class="num">|<i>M</i><sub>Proteus</sub> &minus; <i>Calcul</i>|</span><span class="den"><i>Calcul</i></span></span> &times; 100
   </div>
 
-  <div class="dual-grid">
-    <div class="protocol-box protocol-proteus">
-      <h4>🖥️ Protocole Simulation Proteus (ISIS)</h4>
-      <ol style="margin:6px 0 0 0; padding-left:18px;">
-        <li>Ajoutez (<code>P</code>) le composant <code>RES</code> et une source <code>BATTERY</code> (ou <code>CELL</code>) réglée à <code>5V</code> + un terminal <code>GROUND</code>.</li>
-        <li>Ouvrez le mode <strong>Virtual Instruments</strong> (icône oscilloscope dans la barre gauche) : placez un <code>DC AMMETER</code> <strong>en série</strong> et deux <code>DC VOLTMETER</code> <strong>en parallèle</strong> sur <code>R1</code> et <code>R2</code>.</li>
-        <li><strong>Astuce indispensable :</strong> Double-cliquez sur chaque <code>DC AMMETER</code> et passez <em>Display Range</em> de <code>Amps</code> à <strong><code>Milliamps (mA)</code></strong> !</li>
-        <li>Lancez la simulation (bouton Play &#9654; en bas à gauche) et faites une <strong>capture d'écran</strong> pour le Google Docs (Montage 1A puis 1B).</li>
-      </ol>
-    </div>
-    <div class="protocol-box protocol-real">
-      <h4>🔌 Protocole Mesurage Réel (Breadboard + Varta)</h4>
-      <ol style="margin:6px 0 0 0; padding-left:18px;">
-        <li>Hors tension, câblez <code>R<sub>1</sub></code> et <code>R<sub>2</sub></code> sur la breadboard.</li>
-        <li>Reliez la <strong>Powerbank Varta 5 V</strong> aux rails <code>+</code> (rouge) et <code>&minus;</code> (bleu/noir). Réveillez la Varta et relevez <i>U<sub>Varta</sub></i> réelle.</li>
-        <li>Mesurez <i>U<sub>R1</sub></i> et <i>U<sub>R2</sub></i> au <strong>voltmètre en parallèle</strong>.</li>
-        <li>Passez le multimètre en <strong>ampèremètre DC (borne <code>mA</code>)</strong>, <strong>ouvrez la branche</strong> sur la breadboard pour insérer vos pointes de touche en série, relevez <i>I</i> et prenez une <strong>photo</strong> pour le Docs !</li>
-      </ol>
-    </div>
+  <div class="protocol-box protocol-proteus" style="margin-bottom:14px;">
+    <h4>🖥️ Guide Méthodique de Simulation sous Proteus ISIS</h4>
+    <ol style="margin:6px 0 0 0; padding-left:18px;">
+      <li><strong>Insertion des instruments virtuels :</strong> Cliquez sur l'icône <em>Virtual Instruments Mode</em> dans la boîte à outils de gauche (icône oscilloscope). Sélectionnez <strong><code>DC AMMETER</code></strong> et <strong><code>DC VOLTMETER</code></strong>.</li>
+      <li><strong>Configuration indispensable de l'ampèremètre :</strong> Double-cliquez sur chaque <code>DC AMMETER</code> placé sur votre schéma et modifiez le champ <em>Display Range</em> de <code>Amps</code> à <strong><code>Milliamps (mA)</code></strong> ! Sans ce réglage, un courant de 3,76 mA ou 15,15 mA s'afficherait sous la forme erronée <code>0.00 A</code>.</li>
+      <li><strong>Exécution interactive :</strong> Lancez la simulation en cliquant sur le bouton <strong>Play (&#9654;)</strong> situé en bas à gauche de la fenêtre Proteus. Relevez directement les valeurs affichées sur les cadrans virtuels.</li>
+      <li><strong>Captures d'écran :</strong> Réalisez une capture d'écran nette de chaque montage en simulation active (Montage 1A puis 1B) et insérez-la dans votre Google Docs Classroom.</li>
+    </ol>
   </div>
 
   <table>
@@ -1016,53 +1188,53 @@
       <tr>
         <th>Montage &amp; Grandeur étudiée</th>
         <th class="col-calc">Calcul Théorique (pour 5,00 V)</th>
-        <th class="col-sim">Simulation Proteus</th>
-        <th class="col-real">Mesure Réelle Breadboard</th>
-        <th class="col-err">Écart &epsilon; (%)</th>
+        <th class="col-sim">Simulation Proteus ISIS</th>
+        <th class="col-err">Écart relatif &epsilon; (%)</th>
+        <th>Validation</th>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <td><strong>Hors tension :</strong> <i>R<sub>1</sub></i> (330 &Omega;) / <i>R<sub>2</sub></i> (1 k&Omega;) / <i>R<sub>3</sub></i> (10 k&Omega;)</td>
-        <td>330 &Omega; / 1000 &Omega; / 10 000 &Omega;</td>
-        <td><em>(Valeurs saisies)</em></td>
-        <td>____ &Omega; / ____ &Omega; / ____ k&Omega;</td>
-        <td>____ %</td>
+        <td><strong>Valeurs nominales Proteus :</strong> <i>R<sub>1</sub></i> / <i>R<sub>2</sub></i> / <i>R<sub>3</sub></i></td>
+        <td>330 &Omega; / 1 000 &Omega; / 10 000 &Omega;</td>
+        <td>330 &Omega; / 1 k&Omega; / 10 k&Omega; (paramétrées)</td>
+        <td>0,00 %</td>
+        <td><span class="badge badge-success">Conforme</span></td>
       </tr>
       <tr>
-        <td><strong>Série (1A) :</strong> Tension <i>U<sub>R1</sub></i> (V)</td>
-        <td><i>5 &times; 330 / 1330</i> = <strong>1,24 V</strong></td>
-        <td>________ V</td>
+        <td><strong>Série (1A) :</strong> Tension <i>U<sub>R1</sub></i> (V) aux bornes de R<sub>1</sub> (330 &Omega;)</td>
+        <td><i>5 &times; 330 / 1330</i> = <strong>1,241 V</strong></td>
         <td>________ V</td>
         <td>____ %</td>
+        <td>&epsilon; &lt; 1 %</td>
       </tr>
       <tr>
-        <td><strong>Série (1A) :</strong> Tension <i>U<sub>R2</sub></i> (V)</td>
-        <td><i>5 &times; 1000 / 1330</i> = <strong>3,76 V</strong></td>
-        <td>________ V</td>
+        <td><strong>Série (1A) :</strong> Tension <i>U<sub>R2</sub></i> (V) aux bornes de R<sub>2</sub> (1 k&Omega;)</td>
+        <td><i>5 &times; 1000 / 1330</i> = <strong>3,759 V</strong></td>
         <td>________ V</td>
         <td>____ %</td>
+        <td>&epsilon; &lt; 1 %</td>
       </tr>
       <tr>
         <td><strong>Série (1A) :</strong> Courant de maille <i>I</i> (mA)</td>
-        <td><i>5 / 1330</i> = <strong>3,76 mA</strong></td>
-        <td>________ mA</td>
+        <td><i>5 / 1330</i> = <strong>3,759 mA</strong></td>
         <td>________ mA</td>
         <td>____ %</td>
+        <td>&epsilon; &lt; 1 %</td>
       </tr>
       <tr>
         <td><strong>Parallèle (1B) :</strong> Courants <i>I<sub>1</sub></i> (dans R<sub>1</sub>) et <i>I<sub>2</sub></i> (dans R<sub>2</sub>)</td>
-        <td><i>I<sub>1</sub></i> = <strong>15,15 mA</strong> | <i>I<sub>2</sub></i> = <strong>5,00 mA</strong></td>
-        <td><i>I<sub>1</sub></i>=____ mA | <i>I<sub>2</sub></i>=____ mA</td>
-        <td><i>I<sub>1</sub></i>=____ mA | <i>I<sub>2</sub></i>=____ mA</td>
+        <td><i>I<sub>1</sub></i> = <strong>15,15 mA</strong> &nbsp;|&nbsp; <i>I<sub>2</sub></i> = <strong>5,00 mA</strong></td>
+        <td><i>I<sub>1</sub></i> = ____ mA &nbsp;|&nbsp; <i>I<sub>2</sub></i> = ____ mA</td>
         <td>____ %</td>
+        <td>&epsilon; &lt; 1 %</td>
       </tr>
       <tr>
         <td><strong>Parallèle (1B) :</strong> Courant principal <i>I<sub>total</sub></i> (mA)</td>
         <td><i>I<sub>1</sub> + I<sub>2</sub></i> = <strong>20,15 mA</strong></td>
         <td>________ mA</td>
-        <td>________ mA</td>
         <td>____ %</td>
+        <td>&epsilon; &lt; 1 %</td>
       </tr>
     </tbody>
   </table>
@@ -1125,12 +1297,13 @@
       <line x1="485" y1="178" x2="765" y2="178" stroke="#1e293b" stroke-width="2"/>
       <text x="650" y="198" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#b91c1c">Effondrement de V_out ! (5 k&Omega; // 1 k&Omega; = 833 &Omega;)</text>
     </svg>
-    <div class="svg-caption">Figure 1.1 — Étude du potentiomètre 10 k&Omega; en pont diviseur de tension : fonctionnement à vide (A) et chute de tension en présence d'une charge R<sub>L</sub> = 1 k&Omega; (B).</div>
+    <div class="svg-caption">Figure 1.2 — Étude du potentiomètre 10 k&Omega; en pont diviseur de tension : fonctionnement à vide (A) et chute de tension en présence d'une charge R<sub>L</sub> = 1 k&Omega; (B).</div>
   </div>
 
   <ol>
-    <li><strong>Sous Proteus :</strong> Placez un <code>POT-HG</code> de <code>10k</code> alimenté en <code>5V</code>. Cliquez sur les flèches <code>+</code> / <code>&minus;</code> du composant pendant la simulation pour régler le curseur à <strong>0 %, 25 %, 50 %, 75 % et 100 %</strong> à vide, puis ajoutez à <strong>50 %</strong> une résistance de charge <code>R<sub>L</sub> = 1k</code> entre le curseur et la masse.</li>
-    <li><strong>Sur Breadboard :</strong> Câblez le potentiomètre de <code>10 k&Omega;</code> sous 5 V Varta. Réglez-le en butée basse (0 %), à mi-course exacte (ajustez au tournevis ou au doigt jusqu'à lire ~2,50 V au voltmètre !), puis en butée haute (100 %). Relevez aussi le courant consommé sur le <code>+5V</code>. Revenez ensuite à mi-course (~2,50 V à vide) et <strong>branchez votre résistance <code>R<sub>2</sub> = 1 k&Omega;</code> entre le curseur et <code>GND</code></strong> : observez l'effondrement de <i>V<sub>out</sub></i> !</li>
+    <li><strong>Simulation sous Proteus (Composant <code>POT-HG</code>) :</strong> Placez le modèle interactif <code>POT-HG</code> de <code>10k</code> alimenté sous <code>5V</code> (source DC ou batterie) et relié au terminal <code>GROUND</code>. Placez un <code>DC VOLTMETER</code> entre le curseur (broche 2) et la masse, ainsi qu'un <code>DC AMMETER</code> (réglé sur <code>mA</code>) sur l'alimentation 5 V.</li>
+    <li><strong>Variation du curseur à vide :</strong> Lancez la simulation et cliquez sur les flèches interactives <code>+</code> / <code>&minus;</code> du potentiomètre pour positionner le curseur à <strong>0 %, 25 %, 50 %, 75 % et 100 %</strong>. Relevez la tension de sortie <i>V<sub>out</sub></i> et vérifiez la stricte linéarité de la relation <i>V<sub>out</sub> = &alpha; &times; U<sub>alim</sub></i>.</li>
+    <li><strong>Effet de charge à mi-course (50 %) :</strong> Réglez le curseur à 50 % (vous lisez exactement 2,50 V à vide). Ajoutez alors en dérivation une résistance de charge <strong><code>R<sub>L</sub> = 1 k&Omega;</code></strong> entre le curseur et la masse (schéma B de la Figure 1.2). Lancez la simulation et observez <strong>l'effondrement spectaculaire de la tension de sortie</strong> (chute de 2,50 V à 0,71 V !).</li>
   </ol>
 
   <table>
@@ -1138,8 +1311,8 @@
       <tr>
         <th>Configuration du Potentiomètre (10 k&Omega; sous 5 V)</th>
         <th class="col-calc">Calcul Théorique</th>
-        <th class="col-sim">Simulation Proteus</th>
-        <th class="col-real">Mesure Breadboard</th>
+        <th class="col-sim">Simulation Proteus (POT-HG)</th>
+        <th class="col-err">Écart &epsilon; (%) &amp; Analyse</th>
       </tr>
     </thead>
     <tbody>
@@ -1147,37 +1320,37 @@
         <td>À vide — Curseur à <strong>0 %</strong> (butée GND) : <i>V<sub>out</sub></i></td>
         <td><strong>0,00 V</strong></td>
         <td>________ V</td>
-        <td>________ V</td>
+        <td>0,00 % (Conforme)</td>
       </tr>
       <tr>
         <td>À vide — Curseur à <strong>25 %</strong> : <i>V<sub>out</sub></i></td>
-        <td><strong>1,25 V</strong></td>
+        <td><i>0,25 &times; 5,00 V</i> = <strong>1,25 V</strong></td>
         <td>________ V</td>
-        <td><em>(Optionnel)</em></td>
+        <td>____ %</td>
       </tr>
       <tr>
         <td>À vide — Curseur à <strong>50 %</strong> (mi-course) : <i>V<sub>out</sub></i> et <i>I<sub>alim</sub></i></td>
-        <td><strong>2,50 V</strong> | <i>I</i> = <strong>0,50 mA</strong></td>
-        <td>____ V | ____ mA</td>
-        <td>____ V | ____ mA</td>
+        <td><strong>2,50 V</strong> &nbsp;|&nbsp; <i>I</i> = <i>5 / 10k</i> = <strong>0,50 mA</strong></td>
+        <td><i>V<sub>out</sub></i> = ____ V &nbsp;|&nbsp; <i>I</i> = ____ mA</td>
+        <td>____ %</td>
       </tr>
       <tr>
         <td>À vide — Curseur à <strong>75 %</strong> : <i>V<sub>out</sub></i></td>
-        <td><strong>3,75 V</strong></td>
+        <td><i>0,75 &times; 5,00 V</i> = <strong>3,75 V</strong></td>
         <td>________ V</td>
-        <td><em>(Optionnel)</em></td>
+        <td>____ %</td>
       </tr>
       <tr>
         <td>À vide — Curseur à <strong>100 %</strong> (butée +5V) : <i>V<sub>out</sub></i></td>
         <td><strong>5,00 V</strong></td>
         <td>________ V</td>
-        <td>________ V</td>
+        <td>0,00 % (Conforme)</td>
       </tr>
       <tr>
         <td><strong>EN CHARGE à 50 % avec <i>R<sub>L</sub></i> = 1 k&Omega; : <i>V<sub>out,chargé</sub></i></strong></td>
-        <td><i>5 &times; 833 / (5000 + 833)</i> = <strong>0,71 V</strong></td>
+        <td><i>5 &times; 833 / (5000 + 833)</i> = <strong>0,714 V</strong></td>
         <td>________ V</td>
-        <td>________ V</td>
+        <td>Effondrement : 5k&Omega; // 1k&Omega; = 833 &Omega;</td>
       </tr>
     </tbody>
   </table>
@@ -1189,7 +1362,7 @@
 
   <label class="step-check no-print">
     <input type="checkbox" class="tp-step-cb" data-step="1" onchange="updateProgress()">
-    <span>Partie 1 validée : Captures Proteus + photos Breadboard + tableaux Résistances &amp; Potentiomètre insérés dans le Google Docs.</span>
+    <span>Partie 1 validée : Schémas Proteus ISIS saisis, simulations exécutées (mesures 100% simulées sous Proteus), captures d'écran et tableaux Résistances &amp; Potentiomètre insérés dans le Google Docs.</span>
   </label>
 </div>
 
@@ -1215,10 +1388,185 @@
     Après avoir placé <code>LED-RED</code> sur votre schéma Proteus, double-cliquez dessus et vérifiez que le champ <strong>Model Type</strong> est bien positionné sur <strong><code>Analog</code></strong> (et non <code>Digital</code>), afin que Proteus calcule fidèlement la loi exponentielle SPICE de la jonction PN (<i>V<sub>F</sub></i> et <i>I<sub>F</sub></i> réalistes) !
   </div>
 
+  <!-- SVG FIGURE 2.1 : SCHÉMAS CARACTÉRISATION LED POLARISATION DIRECTE & INVERSE -->
+  <div class="svg-card">
+    <svg viewBox="0 0 920 310" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Schémas du montage de caractérisation de LED sous Proteus et paillasse : polarisation directe et inverse">
+      <rect width="920" height="310" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+
+      <!-- SÉPARATEUR POINTILLÉ -->
+      <line x1="460" y1="15" x2="460" y2="295" stroke="#cbd5e1" stroke-dasharray="5,4" stroke-width="1.5"/>
+
+      <!-- ======================================================== -->
+      <!-- GAUCHE : POLARISATION DIRECTE (SENS PASSANT)              -->
+      <!-- ======================================================== -->
+      <text x="230" y="28" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="12" font-weight="bold" fill="#0b3c5d">A. Polarisation Directe : Sens Passant (LED Allumée)</text>
+
+      <!-- Source +5V -->
+      <circle cx="45" cy="100" r="5" fill="#dc2626"/>
+      <line x1="45" y1="100" x2="80" y2="100" stroke="#dc2626" stroke-width="2.5"/>
+      <text x="45" y="88" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#dc2626">+5V</text>
+
+      <!-- Ampèremètre série DC AMMETER [mA] -->
+      <circle cx="110" cy="100" r="17" fill="#ffffff" stroke="#0284c7" stroke-width="2"/>
+      <text x="110" y="105" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="12" font-weight="bold" fill="#0284c7">A</text>
+      <text x="110" y="74" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.8" font-weight="bold" fill="#0369a1">I_F [mA]</text>
+
+      <line x1="127" y1="100" x2="160" y2="100" stroke="#1e293b" stroke-width="2"/>
+
+      <!-- Résistance de protection R -->
+      <rect x="160" y="88" width="70" height="24" fill="#ffffff" stroke="#1e293b" stroke-width="2"/>
+      <text x="195" y="104" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#1e293b">R_prot</text>
+
+      <!-- Voltmètre V1 sur R -->
+      <line x1="150" y1="100" x2="150" y2="52" stroke="#7c3aed" stroke-width="1.6"/>
+      <line x1="150" y1="52" x2="180" y2="52" stroke="#7c3aed" stroke-width="1.6"/>
+      <circle cx="195" cy="52" r="13" fill="#ffffff" stroke="#7c3aed" stroke-width="2"/>
+      <text x="195" y="56" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#7c3aed">V1</text>
+      <line x1="210" y1="52" x2="240" y2="52" stroke="#7c3aed" stroke-width="1.6"/>
+      <line x1="240" y1="52" x2="240" y2="100" stroke="#7c3aed" stroke-width="1.6"/>
+      <circle cx="150" cy="100" r="3" fill="#7c3aed"/>
+      <circle cx="240" cy="100" r="3" fill="#7c3aed"/>
+      <text x="195" y="36" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9" font-weight="bold" fill="#6d28d9">U_R = 5V &minus; V_F</text>
+
+      <line x1="230" y1="100" x2="280" y2="100" stroke="#1e293b" stroke-width="2"/>
+
+      <!-- SYMBOLE LED PASSANTE (Anode à gauche, Cathode à droite) -->
+      <!-- Anode lead -->
+      <line x1="280" y1="100" x2="295" y2="100" stroke="#1e293b" stroke-width="2"/>
+      <!-- Triangle rouge -->
+      <polygon points="295,85 295,115 320,100" fill="#ef4444" stroke="#b91c1c" stroke-width="1.8"/>
+      <!-- Barre cathode -->
+      <line x1="320" y1="85" x2="320" y2="115" stroke="#b91c1c" stroke-width="3"/>
+      <!-- Cathode lead -->
+      <line x1="320" y1="100" x2="350" y2="100" stroke="#1e293b" stroke-width="2"/>
+      <!-- Flèches d'émission lumineuse -->
+      <g stroke="#eab308" stroke-width="2" stroke-linecap="round">
+        <line x1="305" y1="80" x2="320" y2="65"/>
+        <polyline points="314,65 320,65 320,71"/>
+        <line x1="315" y1="83" x2="330" y2="68"/>
+        <polyline points="324,68 330,68 330,74"/>
+      </g>
+      <!-- Repères Anode / Cathode -->
+      <text x="282" y="128" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.8" font-weight="bold" fill="#dc2626">Anode (A)</text>
+      <text x="282" y="139" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8" fill="#475569">Patte longue (+)</text>
+      <text x="335" y="128" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.8" font-weight="bold" fill="#2563eb">Cathode (K)</text>
+      <text x="335" y="139" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8" fill="#475569">Méplat (&minus;)</text>
+
+      <!-- Voltmètre V2 sur LED -->
+      <line x1="285" y1="100" x2="285" y2="160" stroke="#0284c7" stroke-width="1.6"/>
+      <line x1="285" y1="160" x2="295" y2="160" stroke="#0284c7" stroke-width="1.6"/>
+      <circle cx="310" cy="160" r="13" fill="#ffffff" stroke="#0284c7" stroke-width="2"/>
+      <text x="310" y="164" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#0284c7">V2</text>
+      <line x1="325" y1="160" x2="335" y2="160" stroke="#0284c7" stroke-width="1.6"/>
+      <line x1="335" y1="160" x2="335" y2="100" stroke="#0284c7" stroke-width="1.6"/>
+      <circle cx="285" cy="100" r="3" fill="#0284c7"/>
+      <circle cx="335" cy="100" r="3" fill="#0284c7"/>
+      <text x="310" y="184" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9" font-weight="bold" fill="#0369a1">V_F (1,8 V à 2,2 V)</text>
+
+      <!-- Ligne de retour vers GND -->
+      <line x1="350" y1="100" x2="420" y2="100" stroke="#1e293b" stroke-width="2"/>
+      <line x1="420" y1="100" x2="420" y2="200" stroke="#1e293b" stroke-width="2"/>
+      <line x1="420" y1="200" x2="45" y2="200" stroke="#1e293b" stroke-width="2"/>
+
+      <!-- Symbole GND -->
+      <line x1="45" y1="200" x2="45" y2="212" stroke="#1e293b" stroke-width="2"/>
+      <line x1="33" y1="212" x2="57" y2="212" stroke="#1e293b" stroke-width="2.5"/>
+      <line x1="37" y1="217" x2="53" y2="217" stroke="#1e293b" stroke-width="2"/>
+      <line x1="41" y1="222" x2="49" y2="222" stroke="#1e293b" stroke-width="1.5"/>
+      <text x="45" y="235" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.8" font-weight="bold" fill="#475569">0V (GND)</text>
+
+      <!-- Boîte explicative Polarisation directe -->
+      <rect x="25" y="245" width="410" height="54" rx="6" fill="#f0fdf4" stroke="#bbf7d0"/>
+      <text x="35" y="262" font-family="Segoe UI, sans-serif" font-size="9.2" font-weight="bold" fill="#15803d">• Sens Passant : I_F = (5 V &minus; V_F) / R_prot &gt; 0 &rarr; Émission lumineuse</text>
+      <text x="35" y="277" font-family="Segoe UI, sans-serif" font-size="8.8" fill="#1e293b">• V_F quasi stable (seuil jonction PN : ~1,9V Rouge / ~2,1V Verte)</text>
+      <text x="35" y="291" font-family="Segoe UI, sans-serif" font-size="8.8" font-weight="bold" fill="#0369a1">• Proteus : Double-clic LED &rarr; Model Type = Analog (loi exponentielle SPICE)</text>
+
+      <!-- ======================================================== -->
+      <!-- DROITE : POLARISATION INVERSE (SENS BLOQUÉ)               -->
+      <!-- ======================================================== -->
+      <text x="690" y="28" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="12" font-weight="bold" fill="#b91c1c">B. Polarisation Inverse : Sens Bloqué (LED Éteinte)</text>
+
+      <!-- Source +5V -->
+      <circle cx="490" cy="100" r="5" fill="#dc2626"/>
+      <line x1="490" y1="100" x2="525" y2="100" stroke="#dc2626" stroke-width="2.5"/>
+      <text x="490" y="88" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#dc2626">+5V</text>
+
+      <!-- Ampèremètre série DC AMMETER -->
+      <circle cx="555" cy="100" r="17" fill="#ffffff" stroke="#dc2626" stroke-width="2"/>
+      <text x="555" y="105" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="12" font-weight="bold" fill="#dc2626">A</text>
+      <text x="555" y="74" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.8" font-weight="bold" fill="#b91c1c">I_rev &approx; 0 mA</text>
+
+      <line x1="572" y1="100" x2="605" y2="100" stroke="#1e293b" stroke-width="2"/>
+
+      <!-- Résistance R = 330 Ohm -->
+      <rect x="605" y="88" width="70" height="24" fill="#ffffff" stroke="#1e293b" stroke-width="2"/>
+      <text x="640" y="104" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#1e293b">330&Omega;</text>
+
+      <!-- Voltmètre V3 sur R (0 V) -->
+      <line x1="595" y1="100" x2="595" y2="52" stroke="#7c3aed" stroke-width="1.6"/>
+      <line x1="595" y1="52" x2="625" y2="52" stroke="#7c3aed" stroke-width="1.6"/>
+      <circle cx="640" cy="52" r="13" fill="#ffffff" stroke="#7c3aed" stroke-width="2"/>
+      <text x="640" y="56" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#7c3aed">V3</text>
+      <line x1="655" y1="52" x2="685" y2="52" stroke="#7c3aed" stroke-width="1.6"/>
+      <line x1="685" y1="52" x2="685" y2="100" stroke="#7c3aed" stroke-width="1.6"/>
+      <circle cx="595" cy="100" r="3" fill="#7c3aed"/>
+      <circle cx="685" cy="100" r="3" fill="#7c3aed"/>
+      <text x="640" y="36" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9" font-weight="bold" fill="#6d28d9">U_R = 0,00 V</text>
+
+      <line x1="675" y1="100" x2="725" y2="100" stroke="#1e293b" stroke-width="2"/>
+
+      <!-- SYMBOLE LED INVERSÉE (Cathode à gauche, Anode à droite) -->
+      <!-- Lead vers Cathode -->
+      <line x1="725" y1="100" x2="745" y2="100" stroke="#1e293b" stroke-width="2"/>
+      <!-- Barre cathode à gauche -->
+      <line x1="745" y1="85" x2="745" y2="115" stroke="#475569" stroke-width="3"/>
+      <!-- Triangle gris pointant vers la gauche -->
+      <polygon points="770,85 770,115 745,100" fill="#94a3b8" stroke="#475569" stroke-width="1.8"/>
+      <!-- Lead Anode -->
+      <line x1="770" y1="100" x2="800" y2="100" stroke="#1e293b" stroke-width="2"/>
+
+      <!-- Repères inversés -->
+      <text x="735" y="128" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.8" font-weight="bold" fill="#2563eb">Cathode (K)</text>
+      <text x="735" y="139" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8" fill="#475569">au +5V</text>
+      <text x="785" y="128" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.8" font-weight="bold" fill="#dc2626">Anode (A)</text>
+      <text x="785" y="139" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8" fill="#475569">vers GND</text>
+
+      <!-- Voltmètre V4 sur LED inversée -->
+      <line x1="735" y1="100" x2="735" y2="160" stroke="#dc2626" stroke-width="1.6"/>
+      <line x1="735" y1="160" x2="745" y2="160" stroke="#dc2626" stroke-width="1.6"/>
+      <circle cx="760" cy="160" r="13" fill="#ffffff" stroke="#dc2626" stroke-width="2"/>
+      <text x="760" y="164" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#dc2626">V4</text>
+      <line x1="775" y1="160" x2="785" y2="160" stroke="#dc2626" stroke-width="1.6"/>
+      <line x1="785" y1="160" x2="785" y2="100" stroke="#dc2626" stroke-width="1.6"/>
+      <circle cx="735" cy="100" r="3" fill="#dc2626"/>
+      <circle cx="785" cy="100" r="3" fill="#dc2626"/>
+      <text x="760" y="184" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9" font-weight="bold" fill="#b91c1c">U_LED = 5,00 V</text>
+
+      <!-- Ligne de retour vers GND -->
+      <line x1="800" y1="100" x2="865" y2="100" stroke="#1e293b" stroke-width="2"/>
+      <line x1="865" y1="100" x2="865" y2="200" stroke="#1e293b" stroke-width="2"/>
+      <line x1="865" y1="200" x2="490" y2="200" stroke="#1e293b" stroke-width="2"/>
+
+      <!-- Symbole GND droit -->
+      <line x1="490" y1="200" x2="490" y2="212" stroke="#1e293b" stroke-width="2"/>
+      <line x1="478" y1="212" x2="502" y2="212" stroke="#1e293b" stroke-width="2.5"/>
+      <line x1="482" y1="217" x2="498" y2="217" stroke="#1e293b" stroke-width="2"/>
+      <line x1="486" y1="222" x2="494" y2="222" stroke="#1e293b" stroke-width="1.5"/>
+      <text x="490" y="235" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.8" font-weight="bold" fill="#475569">0V (GND)</text>
+
+      <!-- Boîte explicative Polarisation inverse -->
+      <rect x="475" y="245" width="415" height="54" rx="6" fill="#fef2f2" stroke="#fecaca"/>
+      <text x="485" y="262" font-family="Segoe UI, sans-serif" font-size="9.2" font-weight="bold" fill="#b91c1c">• Sens Bloqué : Diode en inverse &rarr; I_rev &approx; 0,00 mA (LED éteinte)</text>
+      <text x="485" y="277" font-family="Segoe UI, sans-serif" font-size="8.8" fill="#1e293b">• Chute de tension nulle dans R_prot : U_R = R &times; 0 = 0,00 V</text>
+      <text x="485" y="291" font-family="Segoe UI, sans-serif" font-size="8.8" font-weight="bold" fill="#b91c1c">• Toute la tension d'alim est aux bornes de la LED : U_LED = U_alim = 5,00 V</text>
+    </svg>
+    <div class="svg-caption">Figure 2.1 — Montage de caractérisation de la LED : Polarisation directe / sens passant avec mesures de V<sub>F</sub>, U<sub>R</sub>, I<sub>F</sub> (A) et Polarisation inverse / sens bloqué (B).</div>
+  </div>
+
   <h3>2.1 Comparaison LED Rouge vs LED Verte (avec <code>R = 330 &Omega;</code> sous 5 V) &amp; Non-Linéarité</h3>
   <ol>
     <li><strong>Dimensionnement préalable :</strong> Pour <i>U<sub>alim</sub></i> = 5,00 V et <i>V<sub>F,estimé</sub></i> = 1,9 V, vérifiez par le calcul quel courant <i>I<sub>F</sub></i> circule avec une résistance normalisée du kit TI de <strong><code>R = 330 &Omega;</code></strong> (et vérifiez que la puissance dissipée <i>P<sub>R</sub> = U<sub>R</sub> &times; I<sub>F</sub></i> est très inférieure à 0,25 W).</li>
-    <li><strong>Simulation Proteus puis Câblage Breadboard :</strong> Mesurez simultanément (ou successivement) <i>V<sub>F</sub></i> aux bornes de la LED, <i>U<sub>R</sub></i> aux bornes de la résistance et le courant série <i>I<sub>F</sub></i> (en mA) pour :
+    <li><strong>Simulation Proteus puis Câblage Breadboard :</strong> Câblez le banc de mesure conformément au schéma de la <strong>Figure 2.1</strong> (schéma A en direct puis schéma B en inverse). Mesurez simultanément (ou successivement) <i>V<sub>F</sub></i> aux bornes de la LED, <i>U<sub>R</sub></i> aux bornes de la résistance et le courant série <i>I<sub>F</sub></i> (en mA) pour :
       <ul>
         <li>la <strong>LED Rouge</strong> avec <code>330 &Omega;</code>, puis la <strong>LED Verte</strong> avec <code>330 &Omega;</code> ;</li>
         <li>la <strong>LED Rouge</strong> en faisant varier la résistance du kit TI : <code>220 &Omega;</code> &rarr; <code>330 &Omega;</code> &rarr; <code>1 k&Omega;</code> &rarr; <code>10 k&Omega;</code> ;</li>
@@ -1319,10 +1667,48 @@
 
   <h3>3.2 Architecture Interne du Module Seeed Grove Relay &amp; Isolation Galvanique</h3>
   <p>
-    Le module <strong>Grove - Relay v1.2</strong> intègre sur son petit circuit imprimé un étage pré-amplificateur à transistor NPN (<code>S9013</code>), une bobine électromagnétique basse tension (3 V / ~90 mA alimentée par le rail <code>VCC</code> du câble Grove), une diode de roue libre interne, une LED rouge témoin et un <strong>contact mécanique Normalement Ouvert (<code>NO</code>)</strong> raccordé au bornier à vis vert à 2 plots.
+    Le module <strong>Grove - Relay v1.2</strong> intègre sur son circuit imprimé un étage d'interfaçage complet permettant à une sortie logique de commander une charge de puissance sans liaison électrique directe (<strong>isolation galvanique</strong>).
+  </p>
+  <p>
+    L'image ci-dessous (<strong>Figure 3.1</strong>) représente la saisie sous <strong>Proteus ISIS</strong> du banc d'essai complet associant la commande logique par microcontrôleur, le module Grove Relay et la boucle de puissance moteur :
   </p>
 
-  <!-- SVG 2 : RELAIS GROVE COMMANDE VS PUISSANCE -->
+  <!-- IMAGE FOURNIE : SCHÉMA PROTEUS DU FICHIER GROVE RELAY MOTEUR -->
+  <div class="image-card">
+    <img src="images/grove_relay_moteur_proteus.png" alt="Schéma Proteus ISIS du montage Grove Relay moteur" style="max-width:100%; height:auto; border-radius:8px; border:1px solid #cbd5e1; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+    <div class="image-caption">Figure 3.1 — Schéma sous Proteus ISIS issu du fichier projet fourni « Grove Relay moteur.pdsprj » : pilotage par microcontrôleur (D2), module Grove Relay interne (transistor NPN, résistance de base 4,7 k&Omega;, diode de roue libre, LED témoin avec 1 k&Omega;, bobine et contact sec) et circuit de puissance isolé (BAT1 5V + Moteur CC).</div>
+  </div>
+
+  <div class="callout callout-proteus">
+    <strong>🖥️ TRAVAIL DE SIMULATION PROTEUS : Fichier Fourni « Grove Relay moteur.pdsprj »</strong><br>
+    Un projet complet prêt à l'emploi est mis à votre disposition à la racine du dossier de travail : <strong><code>Grove Relay moteur.pdsprj</code></strong>.
+    <ol style="margin:6px 0 0 0; padding-left:18px;">
+      <li><strong>Ouverture du projet :</strong> Lancez <strong>Proteus 8</strong> et ouvrez directement le fichier fourni <strong><code>Grove Relay moteur.pdsprj</code></strong>.</li>
+      <li><strong>Analyse de la structure matérielle :</strong>
+        <ul>
+          <li><strong>Partie Commande (Gauche) :</strong> La broche numérique <strong><code>D2</code></strong> génère l'ordre logique. Elle attaque la base du transistor NPN via la résistance de <strong><code>4,7 k&Omega;</code></strong>. Une diode de roue libre (en inverse sur la bobine) élimine la surtension inductive à l'ouverture, et la LED rouge avec résistance de <code>1 k&Omega;</code> signale l'excitation de la bobine.</li>
+          <li><strong>Partie Puissance (Droite) :</strong> La batterie <strong><code>BAT1 (5V)</code></strong> et le <strong>moteur CC</strong> forment une boucle indépendante branchée sur les lames du contact sec (Normally Open). Aucun fil de masse n'est partagé entre la commande et la puissance.</li>
+        </ul>
+      </li>
+      <li><strong>Toutes les mesures à effectuer en simulation sous Proteus :</strong>
+        Lancez la simulation interactive (bouton Play &#9654;) et effectuez <strong>toutes les mesures</strong> pour les deux états de commande (D2 = 0 puis D2 = 1) :
+        <ul>
+          <li>Tension logique de commande <i>U<sub>cmd</sub></i> sur D2 (0 V au repos, 5 V au travail) et courant de base <i>I<sub>B</sub></i> ;</li>
+          <li>Tension aux bornes de la bobine du relais et courant de bobine ;</li>
+          <li>Tension aux bornes du contact sec du relais <i>U<sub>contact</sub></i> (5 V ouvert / ~0,00 V fermé) ;</li>
+          <li>Tension aux bornes du moteur <i>U<sub>moteur</sub></i> (0 V à l'arrêt / ~5 V en rotation) et courant moteur <i>I<sub>moteur</sub></i> ;</li>
+          <li>Vérification visuelle de l'allumage de la LED rouge interne et de la rotation effective du moteur.</li>
+        </ul>
+      </li>
+      <li><strong>Captures d'écran :</strong> Insérez dans votre compte-rendu Google Docs les captures annotées du projet Proteus <code>Grove Relay moteur</code> en simulation (état OFF puis état ON avec l'ensemble des instruments virtuels lisibles).</li>
+    </ol>
+  </div>
+
+  <p>
+    Le synoptique ci-après (<strong>Figure 3.2</strong>) met en évidence la frontière matérielle et la <strong>barrière d'isolation galvanique</strong> stricte entre la Partie Commande et la Partie Puissance :
+  </p>
+
+  <!-- SVG 2 : RELAIS GROVE COMMANDE VS PUISSANCE (SCHÉMA CONSERVÉ) -->
   <div class="svg-card">
     <svg viewBox="0 0 920 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Schéma Partie Commande et Partie Puissance avec Relais Grove et Isolation Galvanique">
       <rect width="920" height="330" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
@@ -1444,13 +1830,13 @@
       <line x1="740" y1="298" x2="740" y2="255" stroke="#0284c7" stroke-width="1.8"/>
       <text x="782" y="302" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#0284c7">U_moteur</text>
     </svg>
-    <div class="svg-caption">Figure 3.1 — Séparation Partie Commande (3,3 V Pico) / Partie Puissance (5 V Powerbank Varta + Moteur CC jaune) par Relais Grove avec emplacement des multimètres.</div>
+    <div class="svg-caption">Figure 3.2 — Synoptique fonctionnel et barrière d'isolation galvanique : séparation stricte entre la Partie Commande (Raspberry Pi Pico 3,3 V) et la Partie Puissance (5 V Powerbank Varta + Moteur CC jaune) avec emplacement des multimètres.</div>
   </div>
 
-  <h3>3.3 Simulation Proteus puis Prototypage Réel avec le Raspberry Pi Pico</h3>
+  <h3>3.3 Prototypage Réel avec le Raspberry Pi Pico &amp; Banc d'Essai Puissance</h3>
   <ol>
-    <li><strong>Simulation Proteus :</strong> Reproduisez le schéma de la Figure 3.1 dans Proteus ISIS (modélisez l'étage interne du module Grove avec un <code>2N3904</code>, <code>RES = 4.7k</code>, <code>1N4001</code> et un <code>RELAY</code> réglé sur <code>Component Value = 3V</code> alimenté en <code>3.3V</code> ; côté puissance, placez une source <code>5V</code>, le contact du relais et un <code>MOTOR</code> réglé sur <code>5V / 25 &Omega;</code>). Relevez toutes les grandeurs à l'état ouvert (commande <code>0V</code>) puis fermé (commande <code>3.3V</code>).</li>
-    <li><strong>Câblage Réel :</strong>
+    <li><strong>Simulation Proteus préalable (Projet fourni « Grove Relay moteur ») :</strong> Comme étudié et mesuré au paragraphe 3.2 sur le fichier <strong><code>Grove Relay moteur.pdsprj</code></strong>, vous avez validé le basculement du contact sec, la protection par diode de roue libre et relevé l'ensemble des grandeurs électriques OFF/ON avant de raccorder le matériel réel sur votre paillasse.</li>
+    <li><strong>Câblage Réel sur Paillasse :</strong>
       <ul>
         <li>Branchez le module <strong>Grove Relay</strong> sur le port <strong><code>D16</code></strong> du <em>Grove Shield for Pi Pico</em> (switch vérifié sur <strong><code>3V3</code></strong> !).</li>
         <li><strong>Côté bornier vert à vis du relais (Partie Puissance) :</strong> Reliez le fil <code>+5V</code> de la Powerbank Varta (en passant en série par votre multimètre sur la borne <strong><code>10A</code></strong> !) à la borne 1 du bornier vert ; reliez la borne 2 du bornier vert à un fil du <strong>moteur CC jaune 3–6 V</strong> ; reliez le second fil du moteur au <code>GND (&minus;)</code> de la Powerbank Varta. <em>Notez qu'aucun fil ne relie la Varta au Pico !</em></li>
@@ -1483,8 +1869,8 @@ relais_grove = Pin(<span class="dv">16</span>, Pin.OUT)  <span class="co"># Port
       <tr>
         <th>Zone</th>
         <th>Grandeur mesurée</th>
-        <th class="col-sim">Proteus : OFF (0) / ON (1)</th>
-        <th class="col-real">Réel : OFF (0) / ON (1)</th>
+        <th class="col-sim">Proteus (« Grove Relay moteur ») : OFF / ON</th>
+        <th class="col-real">Réel (Pico + Varta) : OFF / ON</th>
       </tr>
     </thead>
     <tbody>
@@ -2229,31 +2615,33 @@ puissance_autorisee = <span class="kw">False</span>          <span class="co"># 
           </tr>
         </table>
 
-        <h2 style="color:#0b3c5d;">PARTIE 1 — Résistances &amp; Potentiomètre (Proteus vs Breadboard)</h2>
-        <h3>1.1 Mesures sur Résistances (Série &amp; Dérivation)</h3>
-        <p><i>[📷 Insérer ici la capture Proteus (Série + Parallèle) et la photo Breadboard + Multimètre]</i></p>
+        <h2 style="color:#0b3c5d;">PARTIE 1 — Résistances &amp; Potentiomètre (Simulation Proteus)</h2>
+        <h3>1.1 Mesures sur Résistances (Série &amp; Dérivation sous Proteus ISIS)</h3>
+        <p><i>[📷 Insérer ici les captures Proteus : Montage 1A Série + Montage 1B Parallèle avec afficheurs actifs]</i></p>
         <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; width:100%;">
           <tr style="background:#e0f2fe; font-weight:bold;">
-            <th>Grandeur étudiée</th><th>Calcul Théorique</th><th>Simulation Proteus</th><th>Mesure Breadboard</th><th>Écart ε (%)</th>
+            <th>Grandeur étudiée</th><th>Calcul Théorique</th><th>Simulation Proteus ISIS</th><th>Écart relatif ε (%)</th><th>Validation</th>
           </tr>
-          <tr><td>Ohmmètre hors tension : R1 / R2 / R3</td><td>330 Ω / 1 kΩ / 10 kΩ</td><td>-</td><td></td><td></td></tr>
-          <tr><td>Montage Série (1A) : U_R1 (V)</td><td>1,24 V</td><td></td><td></td><td></td></tr>
-          <tr><td>Montage Série (1A) : U_R2 (V)</td><td>3,76 V</td><td></td><td></td><td></td></tr>
-          <tr><td>Montage Série (1A) : Courant I (mA)</td><td>3,76 mA</td><td></td><td></td><td></td></tr>
+          <tr><td>Valeurs nominales Proteus (R1 / R2 / R3)</td><td>330 Ω / 1 kΩ / 10 kΩ</td><td>330 Ω / 1 kΩ / 10 kΩ</td><td>0,00 %</td><td>Conforme</td></tr>
+          <tr><td>Montage Série (1A) : U_R1 (V)</td><td>1,241 V</td><td></td><td></td><td></td></tr>
+          <tr><td>Montage Série (1A) : U_R2 (V)</td><td>3,759 V</td><td></td><td></td><td></td></tr>
+          <tr><td>Montage Série (1A) : Courant de maille I (mA)</td><td>3,759 mA</td><td></td><td></td><td></td></tr>
           <tr><td>Montage Parallèle (1B) : I1 et I2 (mA)</td><td>15,15 mA / 5,00 mA</td><td></td><td></td><td></td></tr>
-          <tr><td>Montage Parallèle (1B) : I_total (mA)</td><td>20,15 mA</td><td></td><td></td><td></td></tr>
+          <tr><td>Montage Parallèle (1B) : Courant principal I_total (mA)</td><td>20,15 mA</td><td></td><td></td><td></td></tr>
         </table>
 
-        <h3>1.2 Potentiomètre 10 kΩ à vide puis en charge (R_L = 1 kΩ)</h3>
-        <p><i>[📷 Insérer ici la capture Proteus du potentiomètre chargé par 1 kΩ]</i></p>
+        <h3>1.2 Potentiomètre 10 kΩ à vide puis en charge (R_L = 1 kΩ sous Proteus)</h3>
+        <p><i>[📷 Insérer ici la capture Proteus du potentiomètre POT-HG à 50% chargé par 1 kΩ]</i></p>
         <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; width:100%;">
           <tr style="background:#e0f2fe; font-weight:bold;">
-            <th>Position Curseur</th><th>Calcul Théorique</th><th>Simulation Proteus</th><th>Mesure Breadboard</th>
+            <th>Position Curseur</th><th>Calcul Théorique</th><th>Simulation Proteus (POT-HG)</th><th>Écart ε (%) &amp; Observation</th>
           </tr>
           <tr><td>À vide — 0 %</td><td>0,00 V</td><td></td><td></td></tr>
+          <tr><td>À vide — 25 %</td><td>1,25 V</td><td></td><td></td></tr>
           <tr><td>À vide — 50 % (V_out et I_alim)</td><td>2,50 V | 0,50 mA</td><td></td><td></td></tr>
+          <tr><td>À vide — 75 %</td><td>3,75 V</td><td></td><td></td></tr>
           <tr><td>À vide — 100 %</td><td>5,00 V</td><td></td><td></td></tr>
-          <tr><td><b>En charge à 50 % avec R_L = 1 kΩ</b></td><td><b>0,71 V</b></td><td></td><td></td></tr>
+          <tr><td><b>En charge à 50 % avec R_L = 1 kΩ</b></td><td><b>0,714 V</b></td><td></td><td>Effondrement de V_out</td></tr>
         </table>
         <p><b>Réponse Question d'ingénierie n°1 (Effet de charge : pourquoi impossible sur moteur mais idéal sur ADC Pico) :</b><br>........................................................................................................</p>
 
@@ -2273,12 +2661,12 @@ puissance_autorisee = <span class="kw">False</span>          <span class="co"># 
         <p><b>Réponse Question d'ingénierie n°2 (Non-linéarité V_F et différence LED Rouge / Verte) :</b><br>........................................................................................................</p>
 
         <h2 style="color:#0b3c5d;">PARTIE 3 — Commande / Puissance par Relais Grove (Isolation Galvanique)</h2>
-        <p><i>[📷 Insérer ici la capture Proteus Relais + photo du câblage réel Pico + Relais Grove + Varta + Moteur jaune]</i></p>
+        <p><i>[📷 Insérer ici la capture Proteus du projet fourni « Grove Relay moteur.pdsprj » (OFF et ON) + photo du banc réel Pico + Relais Grove + Varta + Moteur jaune]</i></p>
         <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; width:100%;">
           <tr style="background:#fee2e2; font-weight:bold;">
-            <th>Zone</th><th>Grandeur</th><th>Proteus (OFF / ON)</th><th>Réel (OFF / ON)</th>
+            <th>Zone</th><th>Grandeur</th><th>Proteus (« Grove Relay moteur » : OFF / ON)</th><th>Réel Pico + Varta (OFF / ON)</th>
           </tr>
-          <tr><td>Commande</td><td>U_cmd GP16 (V)</td><td></td><td></td></tr>
+          <tr><td>Commande</td><td>U_cmd GP16 / D2 (V)</td><td></td><td></td></tr>
           <tr><td>Puissance</td><td>U_contact bornier relais (V)</td><td></td><td></td></tr>
           <tr><td>Puissance</td><td>U_moteur (V)</td><td></td><td></td></tr>
           <tr><td>Puissance</td><td>I_moteur à vide (mA)</td><td></td><td></td></tr>
