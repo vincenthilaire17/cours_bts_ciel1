@@ -1726,8 +1726,169 @@
     </ol>
   </div>
 
+  <!-- 3.2.1 ANALYSE DÉTAILLÉE DES COMPOSANTS DU MODULE & JUSTIFICATION DU DIMENSIONNEMENT -->
+  <h4>3.2.1 Analyse Détaillée des Composants Internes du Module Grove Relay &amp; Justification du Dimensionnement</h4>
   <p>
-    Le synoptique ci-après (<strong>Figure 3.2</strong>) met en évidence la frontière matérielle et la <strong>barrière d'isolation galvanique</strong> stricte entre la Partie Commande et la Partie Puissance :
+    En observant le sous-ensemble entouré en pointillés bleus dans le projet Proteus <strong><code>Grove Relay moteur.pdsprj</code></strong>, vous constatez que le module ne se résume pas à un simple électroaimant : il intègre un étage d'adaptation et de protection complet.
+  </p>
+
+  <!-- IMAGES DES COMPOSANTS SOUS PROTEUS -->
+  <div class="dual-grid">
+    <div class="image-card">
+      <img src="images/proteus_transistor_q1_2n3904.png" alt="Boîte de dialogue Edit Component du Transistor Q1 2N3904 sous Proteus" style="max-width:100%; height:auto; border-radius:6px; border:1px solid #cbd5e1;">
+      <div class="image-caption">Transistor NPN Q1 sous Proteus : Référence <code>2N3904</code>, modèle SPICE Fairchild, boîtier TO-92 (<i>V<sub>CEO</sub> = 40 V, I<sub>C,max</sub> = 200 mA</i>).</div>
+    </div>
+    <div class="image-card">
+      <img src="images/proteus_diode_d2_1n4148.png" alt="Boîte de dialogue Edit Component de la Diode D2 1N4148 sous Proteus" style="max-width:100%; height:auto; border-radius:6px; border:1px solid #cbd5e1;">
+      <div class="image-caption">Diode de roue libre D2 sous Proteus : Référence <code>1N4148</code>, modèle LISA LX_D_SS, boîtier DO-35 (<i>t<sub>rr</sub> &le; 4 ns, I<sub>FRM</sub> = 450 mA</i>).</div>
+    </div>
+  </div>
+  <div class="image-caption" style="text-align:center; margin-bottom:14px;">Figure 3.2 — Paramètres SPICE des composants internes sous Proteus : transistor NPN Q1 (<code>2N3904</code>) et diode de roue libre D2 (<code>1N4148</code>) connectés à la bobine du relais.</div>
+
+  <div class="dual-grid">
+    <div class="protocol-box zone-cmd">
+      <h4 style="color:#0369a1; margin-top:0;">🔍 1. Transistor NPN Q1 (<code>2N3904</code>) &amp; Résistance de Base (<code>4,7 k&Omega;</code>)</h4>
+      <p style="font-size:9.1pt; margin:4px 0;">
+        <strong>Pourquoi un transistor intermédiaire ?</strong> La bobine 5 V du relais (modèle Songle SRD-05VDC) a une résistance d'environ $R_{\text{bobine}} \approx 70\,\Omega$. Le courant requis pour magnétiser le noyau et fermer le contact est :
+      </p>
+      <div class="formula-box" style="margin:6px 0; font-size:9.2pt; padding:6px 10px;">
+        $I_{\text{bobine}} = \frac{V_{CC} - V_{CE,\text{sat}}}{R_{\text{bobine}}} \approx \frac{5{,}0\text{ V} - 0{,}15\text{ V}}{70\,\Omega} \approx \mathbf{69{,}3\text{ mA}}$
+      </div>
+      <p style="font-size:9.1pt; margin:4px 0;">
+        Ce courant de ~70 mA est <strong>6 fois supérieur</strong> au courant maximal recommandé par broche d'un Raspberry Pi Pico (12 mA) et 3,5 fois supérieur à celui d'un ATmega328 (20 mA). Le transistor NPN <strong><code>2N3904</code></strong> est donc indispensable comme étage tampon (interrupteur électronique commandé).
+      </p>
+      <p style="font-size:9.1pt; margin:4px 0;">
+        <strong>Dimensionnement du transistor :</strong> $I_{C,\max} = 200\text{ mA} > 73\text{ mA}$ (bobine + LED), le transistor fonctionne à seulement 36 % de sa capacité. Tension maximale $V_{CEO} = 40\text{ V} \gg 5\text{ V}$.
+      </p>
+      <p style="font-size:9.1pt; margin:4px 0;">
+        <strong>Calcul du courant de base $I_B$ et saturation :</strong>
+      </p>
+      <div class="formula-box" style="margin:6px 0; font-size:9.2pt; padding:6px 10px;">
+        Sous 5,0 V (Arduino) : $I_B = \frac{5{,}0 - 0{,}7}{4\,700} \approx \mathbf{0{,}915\text{ mA}}$
+        <br>
+        Sous 3,3 V (Pi Pico) : $I_B = \frac{3{,}3 - 0{,}7}{4\,700} \approx \mathbf{0{,}553\text{ mA}}$
+      </div>
+      <p style="font-size:9.1pt; margin:4px 0;">
+        Le gain forcé nécessaire pour saturer est $\beta_{\text{forcé}} = \frac{I_{C,\text{sat}}}{I_B} \approx \frac{70}{0{,}915} \approx 76{,}5$. Comme le gain en courant typique du 2N3904 est $\beta \approx 150$ à $250$, le coefficient de sursaturation $k = \frac{\beta}{\beta_{\text{forcé}}} \approx 2{,}3 > 1$ : la saturation est franche ($V_{CE,\text{sat}} \le 0{,}2\text{ V}$).
+      </p>
+    </div>
+
+    <div class="protocol-box zone-pwr">
+      <h4 style="color:#b91c1c; margin-top:0;">🛡️ 2. Diode de Roue Libre D2 (<code>1N4148</code>) &amp; Branche LED Témoin</h4>
+      <p style="font-size:9.1pt; margin:4px 0;">
+        <strong>Rôle vital de la diode D2 :</strong> La bobine d'un relais est un composant inductif ($L_{\text{bobine}} \approx 100\text{ à }200\text{ mH}$). À la coupure du courant (quand Q1 se bloque), la bobine s'oppose à la disparition du flux magnétique en produisant une force électromotrice d'auto-induction inverse :
+      </p>
+      <div class="formula-box" style="margin:6px 0; font-size:9.2pt; padding:6px 10px;">
+        $u_L(t) = -L \cdot \frac{\mathrm{d}i}{\mathrm{d}t}$
+      </div>
+      <p style="font-size:9.1pt; margin:4px 0;">
+        Sans diode, cette surtension s'additionne au $V_{CC}$ (5 V) et vient frapper le collecteur du transistor Q1, dépassant largement sa tension limite $V_{CEO} = 40\text{ V}$ et entraînant sa destruction par claquage d'avalanche !
+      </p>
+      <p style="font-size:9.1pt; margin:4px 0;">
+        <strong>Pourquoi une diode rapide <code>1N4148</code> ?</strong>
+      </p>
+      <ul style="margin:4px 0 0 0; padding-left:18px; font-size:9.1pt;">
+        <li>Temps de recouvrement inverse ultra-rapide : <strong>$t_{rr} \le 4\text{ ns}$</strong> (commutation quasi instantanée, bien plus réactive qu'une 1N4001 de redressement).</li>
+        <li>Courant crête répétitif admissible : <strong>$I_{FRM} = 450\text{ mA} > 70\text{ mA}$</strong>.</li>
+        <li>Tension inverse maximale admissible : <strong>$V_{RRM} = 100\text{ V} \gg 5\text{ V}$</strong>.</li>
+      </ul>
+      <p style="font-size:9.1pt; margin:6px 0 2px 0;">
+        <strong>Branche LED témoin rouge ($1\text{ k}\Omega$) :</strong>
+        $I_{\text{LED}} = \frac{5{,}0\text{ V} - 1{,}8\text{ V} - 0{,}15\text{ V}}{1\,000\,\Omega} \approx \mathbf{3{,}05\text{ mA}}$. Signalisation visuelle nette sans surconsommation.
+      </p>
+    </div>
+  </div>
+
+  <!-- 3.2.2 MESURE SOUS PROTEUS DU PIC DE TENSION À LA DÉCHARGE DE LA BOBINE -->
+  <h4>3.2.2 Mesure sous Proteus du Pic de Tension à la Décharge de la Bobine du Relais : Avec Diode <code>1N4148</code> vs Sans Diode</h4>
+  <p>
+    Pour vérifier expérimentalement en simulation le rôle protecteur de la diode de roue libre <strong>D2</strong>, réalisez les deux acquisitions ci-dessous sous Proteus :
+  </p>
+
+  <div class="callout callout-proteus">
+    <strong>🔬 PROTOCOLE PROTEUS : Relevé du Pic de Tension sur le Collecteur de Q1 à la Décharge</strong>
+    <ol style="margin:6px 0 0 0; padding-left:18px;">
+      <li><strong>Branchement de l'oscilloscope virtuel :</strong>
+        Reliez la <strong>Voie A (jaune)</strong> directement sur le <strong>collecteur du transistor Q1</strong> (noeud commun entre le collecteur, la borne basse de la bobine et l'anode de D2). Raccordez la masse de l'oscilloscope à la masse <code>GND</code> de commande.
+      </li>
+      <li><strong>Réglages de l'oscilloscope :</strong>
+        Base de temps = <strong>$50\,\mu\text{s/div}$</strong> ; Voie A = <strong>$10\text{ V/div}$</strong> (couplage DC) ; Déclenchement (Trigger) = Source <strong>CH-A</strong>, Pente <strong>Montante (+)</strong>, Seuil = <strong>$+6\text{ V}$</strong>, Mode = <strong>SINGLE</strong> (One-Shot).
+      </li>
+      <li><strong>Mesure 1 — Avec la diode de roue libre D2 (1N4148) en place (État nominal) :</strong>
+        Lancez la simulation, passez D2 à 1 (5 V) : la bobine est alimentée et $V_{CE} \approx 0{,}15\text{ V}$.
+        Passez brusquement D2 à 0 (0 V) : le transistor se bloque et la bobine se décharge à travers D2.
+        <strong>Relevez la tension de crête maximale $V_{C,\max}$ sur le collecteur :</strong>
+        <br>
+        &rarr; La tension est bridée à : $V_{C,\max} = V_{CC} + V_{F,\text{diode}} \approx 5{,}0\text{ V} + 0{,}7\text{ V} = \mathbf{5{,}7\text{ V}}$.
+        <br>
+        <em>Concluez sur la sécurité de Q1 : $5{,}7\text{ V} \ll V_{CEO} (40\text{ V})$. Le transistor est protégé à 100 %.</em>
+      </li>
+      <li><strong>Mesure 2 — SANS la diode de roue libre D2 (Simulation d'une rupture / absence de diode) :</strong>
+        Dans Proteus, <strong>supprimez ou déconnectez temporairement la diode D2 (1N4148)</strong> (clic droit sur D2 &rarr; <em>Delete Object</em> ou coupez le fil reliant son anode au collecteur).
+        Basculez le calibre vertical de la Voie A sur <strong>$20\text{ V/div}$</strong>.
+        Relancez la simulation One-Shot et coupez la commande (D2 = 1 &rarr; D2 = 0).
+        <strong>Observez la décharge de la bobine et relevez la tension de pic crête $V_{C,\text{pic,sans D2}}$ :</strong>
+        <br>
+        &rarr; L'extra-tension d'ouverture $u_L = -L \cdot \frac{\mathrm{d}i}{\mathrm{d}t}$ s'envole en un pic violent pouvant dépasser <strong>$50\text{ V}$ à $80\text{ V}$</strong> !
+        <br>
+        <em>Constatez le dépassement destructif : ce pic dépasse largement la tension de claquage $V_{CEO} = 40\text{ V}$ du transistor 2N3904 ! Dans un circuit réel, le transistor serait instantanément détruit par claquage de jonction.</em>
+      </li>
+      <li><strong>Remise en état :</strong> Rebranchez impérativement la diode D2 (<code>1N4148</code>) dans votre schéma Proteus avant de continuer (menu <em>Édition &rarr; Annuler</em> ou réinsérez le composant).</li>
+    </ol>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Grandeur / Paramètre simulé dans le module Grove Relay</th>
+        <th class="col-calc">Valeur Calculée / Datasheet</th>
+        <th class="col-sim">Valeur Mesurée sous Proteus</th>
+        <th>Analyse &amp; Justification du Dimensionnement</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Courant de base <i>I<sub>B</sub></i> (commande D2 = 1 sous 5 V)</td>
+        <td>~0,915 mA</td>
+        <td>________ mA</td>
+        <td>Compatible GPIO (&lt; 20 mA), saturation garantie</td>
+      </tr>
+      <tr>
+        <td>Courant de collecteur <i>I<sub>C</sub></i> (bobine ~70 mA + LED ~3 mA)</td>
+        <td>~72,5 mA</td>
+        <td>________ mA</td>
+        <td>Très inférieur au maximum du 2N3904 (<i>I<sub>C,max</sub> = 200 mA</i>)</td>
+      </tr>
+      <tr>
+        <td>Tension collecteur-émetteur de saturation <i>V<sub>CE,sat</sub></i> (D2 = 1)</td>
+        <td>&le; 0,20 V</td>
+        <td>________ V</td>
+        <td>Transistor NPN saturé, pertes par conduction négligeables</td>
+      </tr>
+      <tr>
+        <td>Tension crête collecteur <i>V<sub>C,max</sub></i> <strong>AVEC diode D2 (1N4148)</strong></td>
+        <td>~5,70 V (5 V + 0,7 V)</td>
+        <td>________ V</td>
+        <td>✅ Sécurité totale : <i>5,7 V &lt;&lt; V<sub>CEO</sub> (40 V)</i></td>
+      </tr>
+      <tr>
+        <td>Tension crête collecteur <i>V<sub>C,pic</sub></i> <strong>SANS diode D2 (supprimée)</strong></td>
+        <td>Théorie : $u_L \gg 40\text{ V}$</td>
+        <td>________ V (Pic &gt; 50 V !)</td>
+        <td>❌ <strong>DANGER DESTRUCTION :</strong> dépasse <i>V<sub>CEO</sub> (40 V)</i> !</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="student-answer">
+    <strong>💡 Question d'ingénierie n°3.2 (à rédiger dans votre Google Docs Classroom) :</strong><br>
+    1. <strong>Rôle et dimensionnement de Q1 :</strong> Pourquoi est-il impossible de relier directement la bobine du relais à une broche GPIO de microcontrôleur ? Justifiez le choix de la référence <code>2N3904</code> d'après sa fiche technique ($I_{C,\max}$, $V_{CEO}$).<br>
+    2. <strong>Calcul du courant de base et saturation :</strong> En appliquant la loi des mailles, calculez le courant $I_B$ sous 5 V et sous 3,3 V avec $R_B = 4{,}7\text{ k}\Omega$. Démontrez que le transistor est correctement saturé dans les deux cas.<br>
+    3. <strong>Mesure du pic de décharge :</strong> Quelle valeur de pic de tension avez-vous relevée au collecteur de Q1 lors de la coupure de la commande avec la diode 1N4148 ? Et sans la diode ? Expliquez ce qu'il adviendrait physiquement du transistor 2N3904 dans un montage réel non pourvu de diode de roue libre.
+  </div>
+
+  <p>
+    Le synoptique ci-après (<strong>Figure 3.3</strong>) met en évidence la frontière matérielle et la <strong>barrière d'isolation galvanique</strong> stricte entre la Partie Commande et la Partie Puissance :
   </p>
 
   <!-- SVG 2 : RELAIS GROVE COMMANDE VS PUISSANCE (SCHÉMA CONSERVÉ) -->
@@ -1852,7 +2013,7 @@
       <line x1="740" y1="298" x2="740" y2="255" stroke="#0284c7" stroke-width="1.8"/>
       <text x="782" y="302" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#0284c7">U_moteur</text>
     </svg>
-    <div class="svg-caption">Figure 3.2 — Synoptique fonctionnel et barrière d'isolation galvanique : séparation stricte entre la Partie Commande (Raspberry Pi Pico 3,3 V) et la Partie Puissance (5 V Powerbank Varta + Moteur CC jaune) avec emplacement des multimètres.</div>
+    <div class="svg-caption">Figure 3.3 — Synoptique fonctionnel et barrière d'isolation galvanique : séparation stricte entre la Partie Commande (Raspberry Pi Pico 3,3 V) et la Partie Puissance (5 V Powerbank Varta + Moteur CC jaune) avec emplacement des multimètres.</div>
   </div>
 
   <h3>3.3 Prototypage Réel avec le Raspberry Pi Pico &amp; Banc d'Essai Puissance</h3>
@@ -1954,7 +2115,7 @@ relais_grove = Pin(<span class="dv">16</span>, Pin.OUT)  <span class="co"># Port
   <!-- CARTE MOTEUR OLIMEX MG-6-48 -->
   <div class="image-card">
     <img src="images/moteur_olimex_mg_6_48.png" alt="Fiche technique DigiKey du motoréducteur CC Olimex MG-6-48" style="max-width:100%; height:auto; border-radius:8px; border:1px solid #cbd5e1; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
-    <div class="image-caption">Figure 3.3 — Actionneur du banc d'essai : Motoréducteur CC Olimex LTD référence <code>MG-6-48</code> (230 tr/min sous 6 V DC, rapport de réduction 1:48, courant en charge 150 à 250 mA, inductance d'induit <i>L &approx; 1 à 3 mH</i>, résistance <i>R &approx; 20 à 30 &Omega;</i>).</div>
+    <div class="image-caption">Figure 3.4 — Actionneur du banc d'essai : Motoréducteur CC Olimex LTD référence <code>MG-6-48</code> (230 tr/min sous 6 V DC, rapport de réduction 1:48, courant en charge 150 à 250 mA, inductance d'induit <i>L &approx; 1 à 3 mH</i>, résistance <i>R &approx; 20 à 30 &Omega;</i>).</div>
   </div>
 
   <div class="dual-grid">
@@ -2203,7 +2364,7 @@ relais_grove = Pin(<span class="dv">16</span>, Pin.OUT)  <span class="co"># Port
       <line x1="775" y1="329" x2="795" y2="329" stroke="#38bdf8" stroke-width="2"/>
       <text x="800" y="332" font-family="Segoe UI, sans-serif" font-size="8" fill="#7dd3fc">1N4001 (5,7V Roue libre)</text>
     </svg>
-    <div class="svg-caption">Figure 3.4 — Surtension inductive à l'ouverture du relais : banc de mesure sécurisé avec diode Zener 12 V et oscillogrammes comparatifs One-Shot (Pic non protégé &gt; 75 V dangereux pour l'AD3 vs Écrêtage Zener 12 V sécurisé vs Diode de roue libre classique 1N4001).</div>
+    <div class="svg-caption">Figure 3.5 — Surtension inductive à l'ouverture du relais : banc de mesure sécurisé avec diode Zener 12 V et oscillogrammes comparatifs One-Shot (Pic non protégé &gt; 75 V dangereux pour l'AD3 vs Écrêtage Zener 12 V sécurisé vs Diode de roue libre classique 1N4001).</div>
   </div>
 
   <table>
@@ -2997,6 +3158,19 @@ puissance_autorisee = <span class="kw">False</span>          <span class="co"># 
           <tr><td>Puissance</td><td>I_moteur freiné au doigt (mA)</td><td>-</td><td></td></tr>
         </table>
         <p><b>Réponse Question d'ingénierie n°3 (U_contact, hausse de I_moteur en charge, impossibilité du PWM sur relais) :</b><br>........................................................................................................</p>
+
+        <h3 style="color:#0b3c5d;">3.2 Architecture Interne &amp; Décharge de la Bobine du Relais (Simulation Proteus)</h3>
+        <p><i>[📷 Insérer ici la capture Proteus de l'oscillogramme au collecteur de Q1 : avec diode D2 (5,7 V) vs sans diode D2 (pic de surtension &gt; 50 V)]</i></p>
+        <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; width:100%;">
+          <tr style="background:#fee2e2; font-weight:bold;">
+            <th>Grandeur simulée dans le module Grove Relay</th><th>Valeur Calculée / Théorique</th><th>Mesure Proteus (D2 = 0 / D2 = 1)</th><th>Analyse &amp; Sécurité Q1 (2N3904)</th>
+          </tr>
+          <tr><td>Courant de base I_B (D2 = 1 sous 5 V)</td><td>~0,915 mA</td><td></td><td>Saturation franche (V_CEsat &le; 0,2 V)</td></tr>
+          <tr><td>Courant collecteur I_C (bobine + LED)</td><td>~72,5 mA</td><td></td><td>Inférieur à I_C,max (200 mA)</td></tr>
+          <tr><td>Tension collecteur V_C AVEC diode D2 (1N4148)</td><td>~5,70 V</td><td></td><td>Conforme : 5,7 V &lt;&lt; V_CEO (40 V)</td></tr>
+          <tr><td>Tension collecteur V_C SANS diode D2 (supprimée)</td><td>Pic &gt;&gt; 40 V</td><td></td><td>Dépassement destructif de V_CEO !</td></tr>
+        </table>
+        <p><b>Réponse Question d'ingénierie n°3.2 (Justification du 2N3904, saturation par R_B = 4,7k, rôle et nécessité vitale de la diode 1N4148) :</b><br>........................................................................................................</p>
 
         <h3 style="color:#7c3aed;">3.4 Étude de la Surtension Inductive (One-Shot Proteus, Écrêtage Zener &amp; Démonstration Enseignant AD3)</h3>
         <p><i>[📷 Insérer ici l'oscillogramme Proteus One-Shot (sans diode vs avec Zener 12V) + photo/capture écran Digilent WaveForms de la Démonstration Enseignant avec le moteur Olimex MG-6-48]</i></p>
