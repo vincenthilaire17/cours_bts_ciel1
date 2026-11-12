@@ -647,7 +647,7 @@
     <a class="tl-item" href="#sec-prep"><span class="tl-time">0h00 → 0h20 (20 min)</span><strong>Étape 0</strong><br>Inventaire TI Kit, sécurité multimètre &amp; ouverture Docs Classroom</a>
     <a class="tl-item" href="#sec-p1"><span class="tl-time">0h20 → 1h20 (1h00)</span><strong>Partie 1</strong><br>Résistances &amp; Potentiomètre (à vide / en charge) — Simulation Proteus</a>
     <a class="tl-item" href="#sec-p2"><span class="tl-time">1h20 → 2h05 (45 min)</span><strong>Partie 2</strong><br>Caractérisation LED &amp; résistance de limitation — Proteus &amp; Réel</a>
-    <a class="tl-item" href="#sec-p3"><span class="tl-time">2h05 → 3h05 (1h00)</span><strong>Partie 3</strong><br>Commande / Puissance par <strong>Relais Grove</strong> (Isolation galvanique)</a>
+    <a class="tl-item" href="#sec-p3"><span class="tl-time">2h05 → 3h05 (1h00)</span><strong>Partie 3</strong><br>Commande / Puissance par <strong>Relais Grove</strong> (Isolation galvanique &amp; Démo Surtension AD3)</a>
     <a class="tl-item" href="#sec-p4"><span class="tl-time">3h05 → 4h05 (1h00)</span><strong>Partie 4</strong><br>Commande / Puissance par <strong>Transistor TIP31C</strong> &amp; roue libre 1N4001</a>
     <a class="tl-item" href="#sec-p5"><span class="tl-time">4h05 → 5h00 (55 min)</span><strong>Partie 5</strong><br>Variateur PWM Pico + Potentiomètre + Relais sécurité &amp; Rendu</a>
   </div>
@@ -1942,9 +1942,311 @@ relais_grove = Pin(<span class="dv">16</span>, Pin.OUT)  <span class="co"># Port
     3. Pourquoi est-il <strong>impossible</strong> d'utiliser ce relais mécanique pour faire varier la vitesse du moteur par MLI/PWM à 1 000 commutations par seconde (1 kHz) ?
   </div>
 
+  <!-- ===================================================================== -->
+  <!-- 3.4 ÉTUDE & DÉMONSTRATION : SURTENSION INDUCTIVE À L'OUVERTURE DU RELAIS -->
+  <!-- ===================================================================== -->
+  <h3>3.4 Démonstration &amp; Étude de la Surtension Inductive à l'Ouverture du Relais : Simulation Proteus One-Shot, Écrêtage Zener &amp; Démonstration Enseignant AD3</h3>
+
+  <p>
+    Dans le schéma du projet fourni (<strong>Figure 3.1</strong>), vous avez constaté que si la bobine de commande du relais bénéficie d'une diode de roue libre interne (D1), <strong>le circuit de puissance du moteur CC, lui, ne dispose d'aucune diode de protection</strong>.
+  </p>
+
+  <!-- CARTE MOTEUR OLIMEX MG-6-48 -->
+  <div class="image-card">
+    <img src="images/moteur_olimex_mg_6_48.png" alt="Fiche technique DigiKey du motoréducteur CC Olimex MG-6-48" style="max-width:100%; height:auto; border-radius:8px; border:1px solid #cbd5e1; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+    <div class="image-caption">Figure 3.3 — Actionneur du banc d'essai : Motoréducteur CC Olimex LTD référence <code>MG-6-48</code> (230 tr/min sous 6 V DC, rapport de réduction 1:48, courant en charge 150 à 250 mA, inductance d'induit <i>L &approx; 1 à 3 mH</i>, résistance <i>R &approx; 20 à 30 &Omega;</i>).</div>
+  </div>
+
+  <div class="dual-grid">
+    <div class="protocol-box" style="background:#fff7ed; border:1px solid #fed7aa; border-top:4px solid #ea580c;">
+      <h4 style="color:#c2410c; margin-top:0;">⚡ Physique de la Rupture Inductive : Loi de Faraday &amp; Lenz</h4>
+      <p style="margin:0 0 6px 0; font-size:9.2pt;">
+        L'induit du moteur CC est un bobinage inductif traversé par un courant permanent $I \approx 200\text{ mA}$ emmagasinant de l'énergie magnétique :
+      </p>
+      <div class="formula-box" style="margin:6px 0; font-size:9.3pt; padding:6px 10px;">
+        $E_L = \frac{1}{2} L I^2$
+        &nbsp;&nbsp;|&nbsp;&nbsp;
+        $u_L(t) = L \cdot \frac{\mathrm{d}i}{\mathrm{d}t}$
+        &nbsp;&nbsp;&rArr;&nbsp;&nbsp;
+        $\Delta t \to 0 \implies u_L \gg U_{\text{alim}}$
+      </div>
+      <p style="margin:6px 0 0 0; font-size:9.1pt;">
+        À l'ouverture du contact sec mécanique du relais, l'air s'interpose et coupe brutalement le courant ($\Delta t < 1\,\mu\text{s}$). L'inductance réagit violemment pour s'opposer à cette disparition : elle engendre une <strong>extra-tension de rupture (surtension inductive ou <em>inductive kickback</em>)</strong> pouvant atteindre <strong>60 V à plus de 100 V</strong> !
+      </p>
+    </div>
+
+    <div class="protocol-box zone-pwr">
+      <h4 style="color:#b91c1c; margin-top:0;">⚠️ Conséquences Pratiques &amp; Risque Métrologique Majeur</h4>
+      <ul style="margin:4px 0 0 0; padding-left:18px; font-size:9.1pt;">
+        <li><strong>Dégradation du relais :</strong> L'arc électrique d'ouverture ionise l'air entre les lames, arrache de la matière par étincelage, crée des micro-soudures et charbonne prématurément les contacts.</li>
+        <li><strong>Pollution électromagnétique (CEM) :</strong> L'impulsion HF rayonne dans les câbles et réinitialise ou perturbe le microcontrôleur voisin.</li>
+        <li><strong>⛔ DANGER DESTRUCTION INSTRUMENT :</strong> L'oscilloscope USB de laboratoire <strong>Digilent Analog Discovery 3 (AD3)</strong> a une plage nominale de $\pm 25\text{ V}$ et une limite de destruction absolue de <strong>$\pm 50\text{ V}$</strong>. Un branchement direct en réel sans précaution <strong>détruirait instantanément son étage d'entrée analogique</strong> !</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout callout-proteus">
+    <strong>🖥️ Étape 1 — Simulation Proteus ISIS : Capture One-Shot du pic de surtension non protégé</strong><br>
+    Avant toute manipulation physique, nous utilisons la simulation Proteus pour capturer cet événement transitoire unique en totale sécurité :
+    <ol style="margin:6px 0 0 0; padding-left:18px;">
+      <li>Ouvrez votre projet Proteus <strong><code>Grove Relay moteur.pdsprj</code></strong>.</li>
+      <li>Ajoutez l'oscilloscope virtuel Proteus (menu latéral gauche <em>Virtual Instruments</em> &rarr; <strong><code>OSCILLOSCOPE</code></strong>).</li>
+      <li>Raccordez la <strong>Voie A (fil jaune)</strong> directement sur la borne d'alimentation du moteur (après le contact sec du relais) et la référence de masse à la borne négative de la batterie <code>BAT1</code> (GND puissance).</li>
+      <li><strong>Configuration de l'oscilloscope Proteus pour une capture unique (One-Shot) :</strong>
+        <ul>
+          <li>Base de temps : <strong>$200\,\mu\text{s/div}$</strong> ou <strong>$500\,\mu\text{s/div}$</strong> ;</li>
+          <li>Voie A : calibre <strong>$10\text{ V/div}$</strong> ou <strong>$20\text{ V/div}$</strong>, couplage <strong>DC</strong> ;</li>
+          <li>Déclenchement (Trigger) : Source = <strong>CH-A</strong>, Pente = <strong>Montante (+)</strong>, Seuil (Level) = <strong>$+6\text{ V}$</strong> (au-dessus des 5 V continus pour ne déclencher que lors de l'anomalie de surtension) ;</li>
+          <li>Mode de balayage : basculez sur <strong>SINGLE</strong> (One-Shot).</li>
+        </ul>
+      </li>
+      <li>Lancez la simulation interactive : activez D2 à 1 (le moteur tourne sous 5 V), puis repassez D2 à 0 pour ouvrir le relais.</li>
+      <li><strong>Résultat :</strong> Dès l'ouverture, l'oscilloscope fige immédiatement le transitoire. <strong>Relevez la valeur crête $V_{\text{pic,Proteus}}$</strong> (le pic s'envole bien au-delà de 5 V, atteignant 40 V à 80 V selon la modélisation de l'inductance).</li>
+    </ol>
+  </div>
+
+  <div class="callout callout-proteus">
+    <strong>🛡️ Étape 2 — Protection de la mesure par Diode Zener d'écrêtage sous Proteus</strong><br>
+    Pour mesurer l'existence du phénomène physique sans courir le moindre risque de détruire un instrument de laboratoire ($\pm 50\text{ V}$ max pour l'AD3), nous insérons un <strong>écrêteur de tension à diode Zener</strong> :
+    <ol style="margin:6px 0 0 0; padding-left:18px;">
+      <li>Dans Proteus, ajoutez une diode Zener 12 V (composant <strong><code>ZENER</code></strong> ou référence <strong><code>BZX55C12</code></strong> / <strong><code>1N4742A</code></strong>).</li>
+      <li>Câblez la diode Zener en parallèle inverse aux bornes du moteur :
+        <strong>Cathode (trait noir) reliée au pôle positif du moteur</strong>, et <strong>Anode reliée à la masse de puissance GND</strong>.
+      </li>
+      <li><strong>Fonctionnement physique de l'écrêtage :</strong>
+        <ul>
+          <li><strong>En rotation permanente (5 V) :</strong> $U_{\text{moteur}} = 5\text{ V} < V_Z (12\text{ V})$. La diode Zener est polarisée en inverse sous son seuil de claquage : elle reste bloquée ($I_Z \approx 0$). Elle n'absorbe aucun courant et ne perturbe en rien le moteur.</li>
+          <li><strong>À l'ouverture du relais :</strong> Dès que la surtension inductive atteint $12\text{ V}$, la Zener entre en régime d'avalanche contrôlée et conduit le courant d'induit à la masse, dissipant l'énergie magnétique en chaleur.</li>
+        </ul>
+      </li>
+      <li>Relancez la simulation One-Shot Proteus : observez l'oscillogramme. <strong>Le pic est désormais rigoureusement raboté (écrêté) au palier $V_Z \approx 12\text{ V}$ !</strong> La mesure prouve l'existence de la surtension tout en garantissant un niveau de tension parfaitement inoffensif (&lt; 25 V).</li>
+    </ol>
+  </div>
+
+  <div class="callout callout-real" style="background:#f0fdf4; border:1px solid #bbf7d0; border-left:5px solid #16a34a; padding:13px 16px; border-radius:8px; margin:14px 0;">
+    <strong style="color:#15803d;">🔬 Étape 3 — DÉMONSTRATION ENSEIGNANT AU VIDÉOPROJECTEUR : Relevé Réel One-Shot avec l'Analog Discovery 3 (AD3)</strong><br>
+    <div style="margin-top:6px; font-size:9.2pt;">
+      <em>⚠️ Mesure de sécurité laboratoire : En raison du coût de l'équipement (400 €) et de la sensibilité de son étage d'entrée ($\pm 50\text{ V}$ max absolu), cet essai en conditions réelles est exécuté <strong>exclusivement au bureau de démonstration par l'enseignant</strong> et projeté en direct pour l'ensemble du groupe.</em>
+    </div>
+    <ul style="margin:6px 0 0 0; padding-left:18px; font-size:9.1pt;">
+      <li><strong>Composition du banc de démonstration :</strong> Raspberry Pi Pico (GP16), module Seeed Grove Relay, Powerbank Varta 5 V, Moteur CC Olimex MG-6-48, Diode Zener 12 V (BZX55C12), boîtier <strong>Digilent Analog Discovery 3</strong> raccordé en USB au PC de paillasse enseignant.</li>
+      <li><strong>Raccordement AD3 :</strong> Sonde Voie 1 (fil orange <code>1+</code> au pôle positif du moteur, fil orange/blanc <code>1-</code> à la masse Varta).</li>
+      <li><strong>Paramétrage du logiciel Digilent WaveForms (Scope) :</strong>
+        <ul>
+          <li>Voie 1 : Calibre <strong>$5\text{ V/div}$</strong>, Offset <strong>$-10\text{ V}$</strong> ;</li>
+          <li>Base de temps : <strong>$500\,\mu\text{s/div}$</strong> (fenêtre de visualisation $5\text{ ms}$) ;</li>
+          <li>Déclenchement (Trigger) : Mode <strong>Single</strong>, Source = <code>Channel 1</code>, Type = <code>Edge</code>, Condition = <code>Rising</code>, Seuil = <strong>$6{,}0\text{ V}$</strong>.</li>
+        </ul>
+      </li>
+      <li><strong>Observations en direct sur le vidéoprojecteur :</strong>
+        Lors de la coupure de commande, la trace WaveForms se fige instantanément : les étudiants constatent le front transitoire ultra-rapide qui vient percuter le palier d'écrêtage de la diode Zener à environ <strong>$12{,}2\text{ V}$</strong> pendant plusieurs centaines de microsecondes, validant expérimentalement la réalité physique du kickback inductif sans avoir endommagé le convertisseur de l'AD3 !
+      </li>
+      <li><strong>Démonstration complémentaire de l'arc électrique :</strong> L'enseignant présente sous loupe d'atelier ou microscope USB l'étincelle bleue (micro-arc de rupture) qui jaillit entre les pastilles du relais lorsqu'aucune diode n'absorbe l'énergie inductive.</li>
+    </ul>
+  </div>
+
+  <!-- SVG 3.4 : BANC DE TEST SÉCURISÉ & OSCILLOGRAMMES ONE-SHOT COMPARATIFS -->
+  <div class="svg-card">
+    <svg viewBox="0 0 940 370" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Schéma de mesure sécurisée par Diode Zener et oscillogramme One-Shot de surtension inductive">
+      <rect width="940" height="370" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+
+      <!-- PANNEAU GAUCHE : SCHÉMA DU BANC DE TEST SÉCURISÉ -->
+      <rect x="14" y="14" width="445" height="342" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+      <text x="236" y="36" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="12" font-weight="bold" fill="#0b3c5d">BANC DE MESURE SÉCURISÉ (DÉMONSTRATION ENSEIGNANT)</text>
+
+      <!-- Source Varta 5V -->
+      <rect x="28" y="70" width="70" height="60" rx="4" fill="#1e293b" stroke="#334155"/>
+      <text x="63" y="94" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#fde047">VARTA</text>
+      <text x="63" y="110" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#ffffff">5,0 V</text>
+
+      <!-- Contact Relais NO -->
+      <rect x="135" y="70" width="60" height="60" rx="4" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/>
+      <text x="165" y="87" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9" font-weight="bold" fill="#166534">Contact Relais</text>
+      <circle cx="150" cy="110" r="3.5" fill="#166534"/>
+      <circle cx="180" cy="110" r="3.5" fill="#166534"/>
+      <!-- Lame ouverte -->
+      <line x1="150" y1="110" x2="174" y2="95" stroke="#dc2626" stroke-width="2.5"/>
+      <text x="165" y="125" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8" fill="#dc2626">Ouverture t=0</text>
+
+      <!-- Ligne +5V vers Contact -->
+      <line x1="98" y1="88" x2="150" y2="88" stroke="#dc2626" stroke-width="2.5"/>
+      <line x1="150" y1="88" x2="150" y2="110" stroke="#dc2626" stroke-width="2"/>
+
+      <!-- Ligne contact vers Moteur Olimex -->
+      <line x1="180" y1="110" x2="250" y2="110" stroke="#ea580c" stroke-width="2.5"/>
+      <line x1="250" y1="110" x2="250" y2="80" stroke="#ea580c" stroke-width="2.5"/>
+      <line x1="250" y1="80" x2="275" y2="80" stroke="#ea580c" stroke-width="2.5"/>
+
+      <!-- Bloc Moteur Olimex MG-6-48 -->
+      <rect x="275" y="55" width="160" height="90" rx="6" fill="#fef9c3" stroke="#ca8a04" stroke-width="2"/>
+      <text x="355" y="74" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#854d0e">Moteur Olimex MG-6-48</text>
+      <!-- Inductance L -->
+      <path d="M 285 105 C 285 95, 295 95, 295 105 C 295 95, 305 95, 305 105 C 305 95, 315 95, 315 105" fill="none" stroke="#854d0e" stroke-width="2"/>
+      <text x="300" y="124" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.5" fill="#854d0e">L &approx; 2 mH</text>
+      <!-- Symbole M -->
+      <circle cx="355" cy="105" r="15" fill="#ffffff" stroke="#ca8a04" stroke-width="2"/>
+      <text x="355" y="110" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#854d0e">M</text>
+      <text x="395" y="105" font-family="Segoe UI, sans-serif" font-size="8.5" fill="#854d0e">R &approx; 25 &Omega;</text>
+      <line x1="315" y1="105" x2="340" y2="105" stroke="#854d0e" stroke-width="2"/>
+      <line x1="370" y1="105" x2="425" y2="105" stroke="#854d0e" stroke-width="2"/>
+      <line x1="425" y1="105" x2="425" y2="175" stroke="#334155" stroke-width="2.5"/>
+
+      <!-- Ligne retour GND -->
+      <line x1="425" y1="175" x2="63" y2="175" stroke="#334155" stroke-width="2.5"/>
+      <line x1="63" y1="175" x2="63" y2="130" stroke="#334155" stroke-width="2.5"/>
+
+      <!-- Diode Zener 12V d'écrêtage -->
+      <line x1="250" y1="110" x2="250" y2="135" stroke="#ea580c" stroke-width="2"/>
+      <!-- Diode Zener symbole vertical : Cathode en haut (vers +), Anode en bas (vers GND) -->
+      <line x1="240" y1="135" x2="260" y2="135" stroke="#7c3aed" stroke-width="2.5"/>
+      <line x1="240" y1="135" x2="240" y2="140" stroke="#7c3aed" stroke-width="2"/>
+      <line x1="260" y1="135" x2="260" y2="130" stroke="#7c3aed" stroke-width="2"/>
+      <polygon points="250,135 242,152 258,152" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.8"/>
+      <line x1="250" y1="152" x2="250" y2="175" stroke="#334155" stroke-width="2"/>
+      <rect x="175" y="136" width="60" height="22" rx="3" fill="#ede9fe" stroke="#7c3aed"/>
+      <text x="205" y="151" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.5" font-weight="bold" fill="#6d28d9">Zener 12V</text>
+
+      <!-- Appareil de mesure : Digilent Analog Discovery 3 (AD3) -->
+      <rect x="50" y="210" width="370" height="128" rx="8" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.8"/>
+      <rect x="62" y="222" width="130" height="104" rx="6" fill="#0f172a" stroke="#334155"/>
+      <text x="127" y="246" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10.5" font-weight="bold" fill="#38bdf8">DIGILENT</text>
+      <text x="127" y="263" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#fde047">Discovery 3</text>
+      <text x="127" y="283" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.5" fill="#94a3b8">USB Scope 14-bit</text>
+      <text x="127" y="302" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.5" fill="#cbd5e1">Plage : &plusmn;25 V</text>
+      <text x="127" y="318" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8" font-weight="bold" fill="#f87171">MAX : &plusmn;50 V PEAK</text>
+
+      <!-- Fils AD3 reliés aux bornes de la Zener / Moteur -->
+      <path d="M 192 250 L 250 250 L 250 120" fill="none" stroke="#ea580c" stroke-width="2.5"/>
+      <circle cx="192" cy="250" r="4" fill="#ea580c"/>
+      <text x="212" y="244" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#ea580c">Voie 1+ (Orange)</text>
+
+      <path d="M 192 285 L 340 285 L 340 175" fill="none" stroke="#0284c7" stroke-width="2" stroke-dasharray="4,3"/>
+      <circle cx="192" cy="285" r="4" fill="#0284c7"/>
+      <text x="212" y="280" font-family="Consolas, monospace" font-size="9" font-weight="bold" fill="#0284c7">Voie 1&minus; (Masse / GND)</text>
+
+      <!-- Cartouche Alerte Métrologie -->
+      <rect x="202" y="295" width="206" height="32" rx="4" fill="#fef2f2" stroke="#dc2626"/>
+      <text x="305" y="308" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.2" font-weight="bold" fill="#b91c1c">⚠️ SÉCURITÉ MATÉRIELLE AD3</text>
+      <text x="305" y="321" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8" fill="#991b1b">Zener 12V bride la surtension &lt; 25V</text>
+
+      <!-- PANNEAU DROIT : OSCILLOGRAMMES COMPARATIFS ONE-SHOT -->
+      <rect x="475" y="14" width="450" height="342" rx="8" fill="#090d16" stroke="#1e293b" stroke-width="1.5"/>
+      <text x="700" y="36" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="12" font-weight="bold" fill="#38bdf8">OSCILLOGRAMMES ONE-SHOT À L'OUVERTURE DU RELAIS</text>
+
+      <!-- Grille oscilloscope -->
+      <g stroke="#1e293b" stroke-width="0.8">
+        <line x1="520" y1="52" x2="520" y2="290"/>
+        <line x1="590" y1="52" x2="590" y2="290"/>
+        <line x1="660" y1="52" x2="660" y2="290"/>
+        <line x1="730" y1="52" x2="730" y2="290"/>
+        <line x1="800" y1="52" x2="800" y2="290"/>
+        <line x1="870" y1="52" x2="870" y2="290"/>
+        <line x1="510" y1="60" x2="900" y2="60"/>
+        <line x1="510" y1="105" x2="900" y2="105"/>
+        <line x1="510" y1="150" x2="900" y2="150"/>
+        <line x1="510" y1="195" x2="900" y2="195"/>
+        <line x1="510" y1="240" x2="900" y2="240"/>
+        <line x1="510" y1="275" x2="900" y2="275"/>
+      </g>
+
+      <!-- Graduations et Axes -->
+      <text x="502" y="278" text-anchor="end" font-family="Consolas, monospace" font-size="8.5" fill="#64748b">0V</text>
+      <text x="502" y="261" text-anchor="end" font-family="Consolas, monospace" font-size="8.5" fill="#94a3b8">5V</text>
+      <text x="502" y="238" text-anchor="end" font-family="Consolas, monospace" font-size="8.5" font-weight="bold" fill="#a855f7">12V</text>
+      <text x="502" y="114" text-anchor="end" font-family="Consolas, monospace" font-size="8.5" font-weight="bold" fill="#ef4444">50V</text>
+      <text x="502" y="69" text-anchor="end" font-family="Consolas, monospace" font-size="8.5" fill="#f87171">75V</text>
+
+      <text x="520" y="304" text-anchor="middle" font-family="Consolas, monospace" font-size="8" fill="#64748b">0 ms</text>
+      <text x="590" y="304" text-anchor="middle" font-family="Consolas, monospace" font-size="8" fill="#64748b">1 ms</text>
+      <text x="660" y="304" text-anchor="middle" font-family="Consolas, monospace" font-size="8" fill="#64748b">2 ms</text>
+      <text x="730" y="304" text-anchor="middle" font-family="Consolas, monospace" font-size="8" fill="#64748b">3 ms</text>
+      <text x="800" y="304" text-anchor="middle" font-family="Consolas, monospace" font-size="8" fill="#64748b">4 ms</text>
+      <text x="870" y="304" text-anchor="middle" font-family="Consolas, monospace" font-size="8" fill="#64748b">5 ms</text>
+
+      <!-- ZONE DESTRUCTEUR AD3 (> 50 V) -->
+      <rect x="520" y="52" width="370" height="58" fill="#ef4444" fill-opacity="0.15"/>
+      <line x1="520" y1="110" x2="890" y2="110" stroke="#ef4444" stroke-width="1.8" stroke-dasharray="5,3"/>
+      <text x="705" y="102" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.5" font-weight="bold" fill="#f87171">⛔ ZONE DE DESTRUCTION AD3 (&gt; 50 V)</text>
+
+      <!-- ZONE SÉCURISÉE AD3 (< 25 V) -->
+      <rect x="520" y="195" width="370" height="80" fill="#22c55e" fill-opacity="0.08"/>
+      <text x="790" y="210" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8" fill="#4ade80">Zone Sécurisée AD3 (&lt; 25 V)</text>
+
+      <!-- Seuil Trigger One-Shot (6 V) -->
+      <line x1="520" y1="254" x2="890" y2="254" stroke="#eab308" stroke-width="1.2" stroke-dasharray="3,3"/>
+      <text x="888" y="250" text-anchor="end" font-family="Segoe UI, sans-serif" font-size="8" fill="#fde047">Trigger 6 V</text>
+
+      <!-- Ligne seuil Zener 12V -->
+      <line x1="520" y1="234" x2="890" y2="234" stroke="#a855f7" stroke-width="1.5" stroke-dasharray="4,2"/>
+      <text x="888" y="230" text-anchor="end" font-family="Segoe UI, sans-serif" font-size="8" font-weight="bold" fill="#c084fc">Palier Zener 12 V</text>
+
+      <!-- COURBE 1 : SANS AUCUNE PROTECTION (ROUGE POINTILLÉ) -->
+      <path d="M 520 258 L 555 258 L 558 65 L 565 140 L 575 80 L 590 120 L 610 270 L 630 275 L 890 275" fill="none" stroke="#f87171" stroke-width="2.5" stroke-dasharray="4,3"/>
+      <circle cx="558" cy="65" r="4" fill="#ef4444"/>
+      <text x="568" y="60" font-family="Segoe UI, sans-serif" font-size="9" font-weight="bold" fill="#fca5a5">Pic réel non protégé &gt; 75 V !</text>
+
+      <!-- COURBE 2 : AVEC DIODE ZENER 12 V (VERT VIF) -->
+      <path d="M 520 258 L 555 258 L 557 234 L 615 234 L 625 275 L 890 275" fill="none" stroke="#4ade80" stroke-width="3"/>
+      <circle cx="557" cy="234" r="3.5" fill="#4ade80"/>
+      <text x="618" y="226" font-family="Segoe UI, sans-serif" font-size="9" font-weight="bold" fill="#4ade80">Écrêtage net à 12,2 V (Sécurité AD3)</text>
+
+      <!-- COURBE 3 : AVEC DIODE 1N4001 ROUE LIBRE (BLEU) -->
+      <path d="M 520 258 L 555 258 L 556 254 L 640 255 L 655 275 L 890 275" fill="none" stroke="#38bdf8" stroke-width="2"/>
+      <text x="660" y="268" font-family="Segoe UI, sans-serif" font-size="8" fill="#7dd3fc">Diode 1N4001 (5,7 V)</text>
+
+      <!-- Légende en bas du panneau droit -->
+      <rect x="495" y="316" width="410" height="26" rx="4" fill="#1e293b"/>
+      <line x1="505" y1="329" x2="525" y2="329" stroke="#f87171" stroke-width="2.5" stroke-dasharray="4,2"/>
+      <text x="530" y="332" font-family="Segoe UI, sans-serif" font-size="8" fill="#fca5a5">Sans diode (&gt; 75V Danger)</text>
+      <line x1="640" y1="329" x2="660" y2="329" stroke="#4ade80" stroke-width="2.5"/>
+      <text x="665" y="332" font-family="Segoe UI, sans-serif" font-size="8" font-weight="bold" fill="#86efac">Zener 12V (Protégé AD3)</text>
+      <line x1="775" y1="329" x2="795" y2="329" stroke="#38bdf8" stroke-width="2"/>
+      <text x="800" y="332" font-family="Segoe UI, sans-serif" font-size="8" fill="#7dd3fc">1N4001 (5,7V Roue libre)</text>
+    </svg>
+    <div class="svg-caption">Figure 3.4 — Surtension inductive à l'ouverture du relais : banc de mesure sécurisé avec diode Zener 12 V et oscillogrammes comparatifs One-Shot (Pic non protégé &gt; 75 V dangereux pour l'AD3 vs Écrêtage Zener 12 V sécurisé vs Diode de roue libre classique 1N4001).</div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Configuration d'essai (Coupure Moteur Olimex MG-6-48)</th>
+        <th class="col-sim">Simulation Proteus One-Shot (V)</th>
+        <th class="col-real">Démonstration Enseignant AD3 Réel (V)</th>
+        <th>Observations physiques &amp; Sécurité métrologique</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Sans aucune protection</strong> (Moteur CC inductif nu)</td>
+        <td><i>V<sub>pic,Proteus</sub></i> = ________ V</td>
+        <td><span class="badge" style="background:#fee2e2; color:#b91c1c;">NON RÉALISÉ EN RÉEL</span><br>(Risque destruction AD3 &plusmn;50 V)</td>
+        <td>Arc électrique d'ouverture, étincelage bleuâtre, perturbation CEM HF sévère</td>
+      </tr>
+      <tr>
+        <td><strong>Avec Diode Zener 12 V</strong> (Protection &amp; mesure)</td>
+        <td><i>V<sub>pic,Proteus</sub></i> = ________ V</td>
+        <td><i>V<sub>pic,AD3</sub></i> = ________ V</td>
+        <td>Écrêtage net à $V_Z \approx 12\text{ V}$, tension maintenue sous la limite de sécurité AD3 (&lt; 25 V)</td>
+      </tr>
+      <tr>
+        <td><strong>Avec Diode de roue libre classique 1N4001</strong> (Référence)</td>
+        <td><i>V<sub>pic,Proteus</sub></i> = ~5,7 V</td>
+        <td><i>V<sub>pic,AD3</sub></i> = ~5,7 V</td>
+        <td>Surtension bridée à $U_{\text{alim}} + 0,7\text{ V}$, zéro étincelle (technique requise en Partie 4)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="student-answer">
+    <strong>💡 Question d'ingénierie n°3.4 (à rédiger dans votre Google Docs Classroom) :</strong><br>
+    1. <strong>Physique de la coupure :</strong> D'après la relation $u_L(t) = L \cdot \frac{\mathrm{d}i}{\mathrm{d}t}$, pourquoi la coupure mécanique d'un circuit inductif engendre-t-elle une surtension positive ou négative très supérieure à la tension de la source (5 V) ? Que devient l'énergie magnétique $\frac{1}{2} L I^2$ accumulée dans le bobinage sans diode ?<br>
+    2. <strong>Sécurité métrologique :</strong> Justifiez précisément pourquoi il est formellement interdit de brancher l'oscilloscope Digilent Analog Discovery 3 directement sur le moteur sans diode d'écrêtage. Quelle est la limite destructrice absolue de l'AD3 ?<br>
+    3. <strong>Intérêt de l'écrêtage Zener vs Diode 1N4001 :</strong> Quel avantage présente la diode Zener pour cette démonstration par rapport à une diode 1N4001 classique ? Pourquoi le transistor TIP31C de la Partie 4 imposera-t-il, lui, une diode de roue libre 1N4001 et non une Zener 12 V ?
+  </div>
+
   <label class="step-check no-print">
     <input type="checkbox" class="tp-step-cb" data-step="3" onchange="updateProgress()">
-    <span>Partie 3 validée : Mesures Partie Commande / Partie Puissance du Relais Grove (Proteus + Réel) complétées dans Google Docs.</span>
+    <span>Partie 3 validée : Mesures Relais Grove, Simulation Proteus One-Shot du pic de surtension, Écrêtage Zener et Démonstration Réelle AD3 complétées dans Google Docs.</span>
   </label>
 </div>
 
@@ -2682,7 +2984,7 @@ puissance_autorisee = <span class="kw">False</span>          <span class="co"># 
         </table>
         <p><b>Réponse Question d'ingénierie n°2 (Non-linéarité V_F et différence LED Rouge / Verte) :</b><br>........................................................................................................</p>
 
-        <h2 style="color:#0b3c5d;">PARTIE 3 — Commande / Puissance par Relais Grove (Isolation Galvanique)</h2>
+        <h2 style="color:#0b3c5d;">PARTIE 3 — Commande / Puissance par Relais Grove (Isolation Galvanique &amp; Surtension Inductive)</h2>
         <p><i>[📷 Insérer ici la capture Proteus du projet fourni « Grove Relay moteur.pdsprj » (OFF et ON) + photo du banc réel Pico + Relais Grove + Varta + Moteur jaune]</i></p>
         <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; width:100%;">
           <tr style="background:#fee2e2; font-weight:bold;">
@@ -2695,6 +2997,18 @@ puissance_autorisee = <span class="kw">False</span>          <span class="co"># 
           <tr><td>Puissance</td><td>I_moteur freiné au doigt (mA)</td><td>-</td><td></td></tr>
         </table>
         <p><b>Réponse Question d'ingénierie n°3 (U_contact, hausse de I_moteur en charge, impossibilité du PWM sur relais) :</b><br>........................................................................................................</p>
+
+        <h3 style="color:#7c3aed;">3.4 Étude de la Surtension Inductive (One-Shot Proteus, Écrêtage Zener &amp; Démonstration Enseignant AD3)</h3>
+        <p><i>[📷 Insérer ici l'oscillogramme Proteus One-Shot (sans diode vs avec Zener 12V) + photo/capture écran Digilent WaveForms de la Démonstration Enseignant avec le moteur Olimex MG-6-48]</i></p>
+        <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; width:100%;">
+          <tr style="background:#ede9fe; font-weight:bold;">
+            <th>Configuration d'essai (Coupure Moteur Olimex MG-6-48)</th><th>Simulation Proteus One-Shot (V)</th><th>Démonstration Enseignant AD3 Réel (V)</th><th>Observations physiques &amp; Sécurité métrologique</th>
+          </tr>
+          <tr><td>Sans aucune protection (moteur inductif nu)</td><td>V_pic = ________ V</td><td>NON RÉALISÉ (Danger destruction AD3 ±50V)</td><td>Arc électrique d'ouverture, étincelage bleuâtre, perturbation CEM</td></tr>
+          <tr><td>Avec Diode Zener 12 V (Protection &amp; mesure)</td><td>V_pic = ________ V</td><td>V_pic = ________ V</td><td>Écrêtage net à V_Z ~ 12 V, tension maintenue sous la limite de sécurité AD3 (&lt; 25 V)</td></tr>
+          <tr><td>Avec Diode de roue libre classique 1N4001 (Référence)</td><td>V_pic = ~5,7 V</td><td>V_pic = ~5,7 V</td><td>Surtension bridée à U_alim + 0,7 V, zéro étincelle (technique requise en Partie 4)</td></tr>
+        </table>
+        <p><b>Réponse Question d'ingénierie n°3.4 (Origine de la surtension u_L = -L di/dt, justification sécurité AD3 ±50V, comparaison Zener 12V vs 1N4001) :</b><br>........................................................................................................</p>
 
         <h2 style="color:#0b3c5d;">PARTIE 4 — Commande / Puissance par Transistor TIP31C &amp; Diode 1N4001</h2>
         <p><i>[📷 Insérer ici la capture Proteus TIP31C + photo du câblage Breadboard TIP31C + 1N4001]</i></p>
