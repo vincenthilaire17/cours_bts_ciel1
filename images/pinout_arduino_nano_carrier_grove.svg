@@ -1,0 +1,137 @@
+<svg viewBox="0 0 940 430" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Brochage et connecteurs du Seeed Studio Grove Shield pour Arduino Nano">
+  <defs>
+    <style>
+      .t-bold { font-family: 'Segoe UI', -apple-system, sans-serif; font-weight: bold; }
+      .t-mono { font-family: 'Consolas', 'Courier New', monospace; }
+      .t-sans { font-family: 'Segoe UI', -apple-system, sans-serif; }
+    </style>
+  </defs>
+
+  <rect width="940" height="430" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+
+  <!-- Titre -->
+  <text x="470" y="30" class="t-bold" font-size="16" fill="#0b3c5d" text-anchor="middle">Seeed Studio Grove Shield for Arduino Nano — Implantation &amp; Affectation des Ports</text>
+  <text x="470" y="48" class="t-sans" font-size="11" fill="#64748b" text-anchor="middle">Support d'interconnexion rapide modulaire Grove • Rail d'alimentation VCC = 5 V • Connecteurs normalisés 4 broches</text>
+
+  <!-- CARTE SHIELD GROVE NANO (PCB VERT/CYAN) -->
+  <g transform="translate(190, 65)">
+    <!-- PCB Base -->
+    <rect x="0" y="0" width="560" height="320" rx="12" fill="#0f766e" stroke="#115e59" stroke-width="2.5"/>
+    <rect x="8" y="8" width="544" height="304" rx="8" fill="#134e4a"/>
+
+    <!-- Sérigraphie logo & titre -->
+    <text x="280" y="32" class="t-bold" font-size="12" fill="#5eead4" text-anchor="middle">GROVE SHIELD FOR ARDUINO NANO</text>
+    <text x="280" y="46" class="t-sans" font-size="9" fill="#99f6e4" text-anchor="middle">Seeed Studio — Compatible Nano v3 / Nano Every</text>
+
+    <!-- Support Arduino Nano central (2 rangées de connecteurs femelles) -->
+    <g transform="translate(200, 60)">
+      <rect x="-10" y="-8" width="180" height="236" rx="6" fill="#042f2e" stroke="#2dd4bf" stroke-width="1.2"/>
+      <!-- Header femelle gauche (15 broches) -->
+      <rect x="0" y="0" width="22" height="220" rx="3" fill="#1e293b" stroke="#0f172a"/>
+      <!-- Header femelle droite (15 broches) -->
+      <rect x="138" y="0" width="22" height="220" rx="3" fill="#1e293b" stroke="#0f172a"/>
+
+      <!-- Empreinte Arduino Nano enfiché -->
+      <rect x="15" y="10" width="130" height="200" rx="4" fill="#00979d" opacity="0.85" stroke="#ffffff" stroke-dasharray="3,3"/>
+      <text x="80" y="90" class="t-bold" font-size="12" fill="#ffffff" text-anchor="middle">ARDUINO</text>
+      <text x="80" y="108" class="t-bold" font-size="12" fill="#fde047" text-anchor="middle">NANO v3</text>
+      <text x="80" y="128" class="t-sans" font-size="9" fill="#e0f2fe" text-anchor="middle">(Enfiché au centre)</text>
+
+      <!-- Bouton Reset sur le shield -->
+      <circle cx="80" cy="170" r="10" fill="#e2e8f0" stroke="#475569"/>
+      <circle cx="80" cy="170" r="4" fill="#ef4444"/>
+      <text x="80" y="192" class="t-sans" font-size="7.5" fill="#f8fafc" text-anchor="middle">RESET</text>
+    </g>
+
+    <!-- CONNECTEURS GROVE GAUCHE (NUMÉRIQUE & UART) -->
+    <!-- Port D2 -->
+    <g transform="translate(18, 55)">
+      <rect x="0" y="0" width="145" height="52" rx="5" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+      <rect x="6" y="6" width="30" height="40" rx="3" fill="#f8fafc" stroke="#94a3b8"/>
+      <text x="88" y="20" class="t-bold" font-size="10.5" fill="#1d4ed8">PORT D2</text>
+      <text x="88" y="34" class="t-mono" font-size="8.5" fill="#334155">Sig1: D2 | Sig2: D3</text>
+      <text x="88" y="46" class="t-bold" font-size="8" fill="#15803d">➜ Relais Grove</text>
+    </g>
+
+    <!-- Port D4 -->
+    <g transform="translate(18, 118)">
+      <rect x="0" y="0" width="145" height="52" rx="5" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+      <rect x="6" y="6" width="30" height="40" rx="3" fill="#f8fafc" stroke="#94a3b8"/>
+      <text x="88" y="20" class="t-bold" font-size="10.5" fill="#1d4ed8">PORT D4</text>
+      <text x="88" y="34" class="t-mono" font-size="8.5" fill="#334155">Sig1: D4 | Sig2: D5</text>
+      <text x="88" y="46" class="t-sans" font-size="8" fill="#64748b">GPIO / Témoin LED</text>
+    </g>
+
+    <!-- Port D6 -->
+    <g transform="translate(18, 181)">
+      <rect x="0" y="0" width="145" height="52" rx="5" fill="#f0fdf4" stroke="#86efac" stroke-width="2"/>
+      <rect x="6" y="6" width="30" height="40" rx="3" fill="#ffffff" stroke="#22c55e"/>
+      <text x="88" y="20" class="t-bold" font-size="10.5" fill="#15803d">PORT D6 (LED BAR)</text>
+      <text x="88" y="34" class="t-mono t-bold" font-size="8.5" fill="#166534">D6(DATA) | D7(CLK)</text>
+      <text x="88" y="46" class="t-bold" font-size="8" fill="#047857">➜ Grove - LED Bar</text>
+    </g>
+
+    <!-- Port UART -->
+    <g transform="translate(18, 244)">
+      <rect x="0" y="0" width="145" height="52" rx="5" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+      <rect x="6" y="6" width="30" height="40" rx="3" fill="#f8fafc" stroke="#94a3b8"/>
+      <text x="88" y="20" class="t-bold" font-size="10.5" fill="#6d28d9">PORT UART</text>
+      <text x="88" y="34" class="t-mono" font-size="8.5" fill="#334155">RX (D0) | TX (D1)</text>
+      <text x="88" y="46" class="t-sans" font-size="8" fill="#64748b">Liaison Série TTL</text>
+    </g>
+
+    <!-- CONNECTEURS GROVE DROITE (ANALOGIQUE & I2C) -->
+    <!-- Port A0 -->
+    <g transform="translate(397, 55)">
+      <rect x="0" y="0" width="145" height="52" rx="5" fill="#fffbeb" stroke="#f59e0b" stroke-width="2"/>
+      <rect x="109" y="6" width="30" height="40" rx="3" fill="#ffffff" stroke="#d97706"/>
+      <text x="56" y="20" class="t-bold" font-size="10.5" fill="#b45309">PORT A0 (POT)</text>
+      <text x="56" y="34" class="t-mono t-bold" font-size="8.5" fill="#92400e">Sig1: A0 | Sig2: A1</text>
+      <text x="56" y="46" class="t-bold" font-size="8" fill="#b45309">➜ Potentiomètre</text>
+    </g>
+
+    <!-- Port A2 -->
+    <g transform="translate(397, 118)">
+      <rect x="0" y="0" width="145" height="52" rx="5" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+      <rect x="109" y="6" width="30" height="40" rx="3" fill="#f8fafc" stroke="#94a3b8"/>
+      <text x="56" y="20" class="t-bold" font-size="10.5" fill="#0284c7">PORT A2</text>
+      <text x="56" y="34" class="t-mono" font-size="8.5" fill="#334155">Sig1: A2 | Sig2: A3</text>
+      <text x="56" y="46" class="t-sans" font-size="8" fill="#64748b">Entrée Analogique</text>
+    </g>
+
+    <!-- Port A6 -->
+    <g transform="translate(397, 181)">
+      <rect x="0" y="0" width="145" height="52" rx="5" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+      <rect x="109" y="6" width="30" height="40" rx="3" fill="#f8fafc" stroke="#94a3b8"/>
+      <text x="56" y="20" class="t-bold" font-size="10.5" fill="#0284c7">PORT A6</text>
+      <text x="56" y="34" class="t-mono" font-size="8.5" fill="#334155">Sig1: A6 | Sig2: A7</text>
+      <text x="56" y="46" class="t-sans" font-size="8" fill="#64748b">CAN pur (0–5 V)</text>
+    </g>
+
+    <!-- Port I2C -->
+    <g transform="translate(397, 244)">
+      <rect x="0" y="0" width="145" height="52" rx="5" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+      <rect x="109" y="6" width="30" height="40" rx="3" fill="#f8fafc" stroke="#94a3b8"/>
+      <text x="56" y="20" class="t-bold" font-size="10.5" fill="#6d28d9">PORT I2C</text>
+      <text x="56" y="34" class="t-mono" font-size="8.5" fill="#334155">SDA (A4) | SCL (A5)</text>
+      <text x="56" y="46" class="t-sans" font-size="8" fill="#64748b">Bus I2C (Capteurs)</text>
+    </g>
+  </g>
+
+  <!-- DÉTAIL CÂBLAGE D'UN CONNECTEUR GROVE -->
+  <g transform="translate(30, 395)">
+    <text x="0" y="16" class="t-bold" font-size="11" fill="#0b3c5d">Standard Câble Grove :</text>
+    
+    <rect x="145" y="4" width="12" height="14" fill="#eab308" rx="2"/>
+    <text x="162" y="15" class="t-mono" font-size="9" fill="#1e293b">Broche 1 : Signal Principal (Jaune)</text>
+
+    <rect x="360" y="4" width="12" height="14" fill="#ffffff" stroke="#94a3b8" rx="2"/>
+    <text x="377" y="15" class="t-mono" font-size="9" fill="#1e293b">Broche 2 : Signal Secondaire (Blanc)</text>
+
+    <rect x="585" y="4" width="12" height="14" fill="#ef4444" rx="2"/>
+    <text x="602" y="15" class="t-mono" font-size="9" fill="#1e293b">Broche 3 : VCC (+5 V) (Rouge)</text>
+
+    <rect x="765" y="4" width="12" height="14" fill="#1e293b" rx="2"/>
+    <text x="782" y="15" class="t-mono" font-size="9" fill="#1e293b">Broche 4 : GND (0 V) (Noir)</text>
+  </g>
+</svg>

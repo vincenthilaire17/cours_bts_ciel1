@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>TP 5 bis : NANO-DRIVECARRIER — Transition C++ Embarqué, Nano Carrier, Fonctions &amp; Commande Moteur — BTS CIEL (3h)</title>
+  <style>
+    :root {
+      --primary: #0b3c5d;
+      --primary-light: #e0f2fe;
+      --secondary: #00979d; /* Couleur Cyan Arduino officielle */
+      --secondary-dark: #006468;
+      --accent: #d97706;
+      --cmd-blue: #0284c7;
+      --cmd-bg: #f0f9ff;
+      --pwr-red: #dc2626;
+      --pwr-bg: #fef2f2;
+      --sim-purple: #7c3aed;
+      --sim-bg: #f5f3ff;
+      --real-green: #15803d;
+      --real-bg: #f0fdf4;
+      --bg-page: #f8fafc;
+      --bg-card: #ffffff;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --border: #cbd5e1;
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      color: var(--text-main);
+      background-color: var(--bg-page);
+      scroll-behavior: smooth;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.58;
+      color: var(--text-main);
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 18px 20px 70px 20px;
+    }
+
+    @page {
+      margin: 1.3cm;
+      size: A4;
+    }
+
+    @media print {
+      body {
+        max-width: 100%;
+        padding: 0;
+        font-size: 9.5pt;
+        color: #000;
+        background: #fff;
+      }
+      .no-print { display: none !important; }
+      .card-block {
+        box-shadow: none !important;
+        border: 1px solid #cbd5e1 !important;
+      }
+      pre, blockquote, table, .svg-card, .callout { page-break-inside: avoid; }
+      h1, h2, h3, h4 { page-break-after: avoid; }
+      a { color: #000; text-decoration: underline; }
+    }
+
+    /* Barre supérieure collante */
+    .top-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 16px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+    }
+    .top-bar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .back-link {
+      font-weight: 700;
+      color: var(--primary);
+      text-decoration: none;
+      font-size: 9.5pt;
+      padding: 5px 10px;
+      border-radius: 6px;
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+    }
+    .back-link:hover { background: #e2e8f0; text-decoration: none; }
+
+    .progress-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 9pt;
+      font-weight: 600;
+      color: #334155;
+    }
+    .progress-track {
+      width: 140px;
+      height: 10px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #00979d, #16a34a);
+      transition: width 0.25s ease;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+      padding: 7px 13px;
+      font-size: 9pt;
+      font-weight: 700;
+      font-family: inherit;
+      transition: transform 0.1s ease, opacity 0.15s ease, box-shadow 0.15s ease;
+      text-decoration: none;
+    }
+    .btn:hover { opacity: 0.93; text-decoration: none; }
+    .btn:active { transform: translateY(1px); }
+    .btn-primary {
+      background: linear-gradient(135deg, #00979d, #0b3c5d);
+      color: #ffffff;
+      box-shadow: 0 2px 6px rgba(0, 151, 157, 0.25);
+    }
+    .btn-secondary {
+      background: #ffffff;
+      color: #334155;
+      border: 1px solid #cbd5e1;
+    }
+    .btn-secondary:hover { background: #f8fafc; }
+
+    /* En-tête principal */
+    .header-kicker {
+      font-size: 0.82rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: #008388;
+      margin-bottom: 4px;
+    }
+    h1 {
+      font-size: 1.85rem;
+      color: var(--primary);
+      margin: 0 0 10px 0;
+      line-height: 1.25;
+    }
+    .meta-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 22px;
+    }
+    .meta-pill {
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: #e2e8f0;
+      color: #334155;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .meta-pill-arduino {
+      background: #e0f2fe;
+      color: #006468;
+      border: 1px solid #00979d;
+    }
+    .meta-pill-accent {
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #f59e0b;
+    }
+
+    /* Cartes de contenu */
+    .card-block {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 22px 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    }
+
+    h2 {
+      color: var(--primary);
+      font-size: 1.32rem;
+      margin-top: 0;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 2px solid var(--primary-light);
+      padding-bottom: 8px;
+    }
+    h3 {
+      color: #1e40af;
+      font-size: 1.1rem;
+      margin-top: 18px;
+      margin-bottom: 8px;
+    }
+    h4 {
+      color: #334155;
+      font-size: 0.98rem;
+      margin-top: 14px;
+      margin-bottom: 6px;
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      vertical-align: middle;
+    }
+    .badge-time { background: #fef3c7; color: #92400e; margin-left: auto; font-size: 0.8rem; }
+    .badge-ciel { background: #e0f2fe; color: #0284c7; }
+
+    /* Timeline du TP */
+    .timeline-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 10px;
+      margin: 16px 0;
+    }
+    .tl-item {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 0.85rem;
+      text-decoration: none;
+      color: inherit;
+      border-left: 4px solid #00979d;
+      transition: all 0.15s ease;
+    }
+    .tl-item:hover {
+      background: #f0fdf4;
+      border-color: #00979d;
+      transform: translateY(-2px);
+    }
+    .tl-time {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: #008388;
+      margin-bottom: 3px;
+    }
+
+    /* Tableaux */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0;
+      font-size: 0.88rem;
+    }
+    th, td {
+      border: 1px solid #cbd5e1;
+      padding: 8px 12px;
+      text-align: left;
+    }
+    th {
+      background-color: #f1f5f9;
+      color: #0b3c5d;
+      font-weight: 700;
+    }
+    tr:nth-child(even) { background-color: #f8fafc; }
+
+    /* Boîtes d'avertissement et astuces */
+    .callout {
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin: 16px 0;
+      font-size: 0.9rem;
+      border-left: 4px solid;
+    }
+    .callout-info {
+      background: #f0f9ff;
+      border-color: #0284c7;
+      color: #0369a1;
+    }
+    .callout-warning {
+      background: #fffbeb;
+      border-color: #f59e0b;
+      color: #92400e;
+    }
+    .callout-danger {
+      background: #fef2f2;
+      border-color: #ef4444;
+      color: #991b1b;
+    }
+    .callout-tip {
+      background: #f0fdf4;
+      border-color: #22c55e;
+      color: #166534;
+    }
+    .callout h4 {
+      margin-top: 0;
+      margin-bottom: 6px;
+      color: inherit;
+    }
+
+    /* Cartes SVG */
+    .svg-card {
+      margin: 18px 0;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      background: #ffffff;
+      padding: 12px;
+      text-align: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+    }
+    .svg-card svg {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
+    .svg-caption {
+      font-size: 0.82rem;
+      font-style: italic;
+      color: #64748b;
+      margin-top: 8px;
+    }
+
+    /* Code & pre */
+    pre {
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 14px 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 0.86rem;
+      line-height: 1.45;
+      position: relative;
+    }
+    code {
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 0.9em;
+      background: #f1f5f9;
+      color: #0f766e;
+      padding: 2px 5px;
+      border-radius: 4px;
+    }
+    pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+    }
+    .code-wrapper {
+      position: relative;
+      margin: 14px 0;
+    }
+    .copy-code-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: #334155;
+      color: #ffffff;
+      border: none;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 4px 8px;
+      cursor: pointer;
+      opacity: 0.85;
+      transition: opacity 0.15s ease;
+    }
+    .copy-code-btn:hover { opacity: 1; background: #00979d; }
+
+    /* Formules mathématiques */
+    .frac {
+      display: inline-flex;
+      flex-direction: column;
+      vertical-align: middle;
+      text-align: center;
+      font-size: 0.88em;
+      line-height: 1.1;
+      margin: 0 3px;
+    }
+    .frac > span { display: block; padding: 0 4px; }
+    .frac span.num { border-bottom: 1.2px solid #0f172a; }
+    .frac span.den { padding-top: 1px; }
+
+    .formula-box {
+      background: #f8fafc;
+      border: 1px dashed #94a3b8;
+      border-radius: 6px;
+      padding: 10px 16px;
+      margin: 12px 0;
+      font-family: 'Cambria Math', 'Times New Roman', serif;
+      font-size: 1.05rem;
+      color: #0b3c5d;
+      text-align: center;
+    }
+
+    /* Zones de questions / réponses rétractables */
+    .answer-box {
+      background: #faf5ff;
+      border: 1px solid #d8b4fe;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin: 14px 0;
+    }
+    .answer-box summary {
+      cursor: pointer;
+      font-weight: 700;
+      color: #6b21a8;
+      font-size: 0.92rem;
+      outline: none;
+    }
+    .answer-box summary:hover { color: #581c87; }
+    .answer-content {
+      margin-top: 10px;
+      font-size: 0.88rem;
+      color: #3b0764;
+      line-height: 1.5;
+    }
+
+    /* Checklists interactives */
+    .check-list {
+      list-style: none;
+      padding-left: 0;
+      margin: 10px 0;
+    }
+    .check-list li {
+      margin-bottom: 6px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 0.9rem;
+    }
+    .check-list input[type="checkbox"] {
+      margin-top: 4px;
+      cursor: pointer;
+    }
+
+    /* Toast notification */
+    #toast-msg {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #1e293b;
+      color: #ffffff;
+      padding: 10px 18px;
+      border-radius: 8px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+      font-size: 0.88rem;
+      font-weight: 600;
+      display: none;
+      z-index: 1000;
+      border-left: 4px solid #00979d;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- BARRE SUPÉRIEURE COLLANTE -->
+  <header class="top-bar no-print">
+    <div class="top-bar-left">
+      <a href="index.html" class="back-link">&larr; Portail BTS CIEL 1</a>
+      <div class="progress-wrap">
+        <span>Progression :</span>
+        <div class="progress-track">
+          <div class="progress-fill" id="p-bar"></div>
+        </div>
+        <span id="p-text">0%</span>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button type="button" class="btn btn-secondary" onclick="basculerReponses()">Tout Déplier</button>
+      <button type="button" class="btn btn-secondary" onclick="window.print()">Imprimer / PDF</button>
+      <button type="button" class="btn btn-primary" onclick="copierCompteRenduGoogleDocs()">Copier Compte Rendu (Docs)</button>
+    </div>
+  </header>
+
+  <!-- EN-TÊTE PRINCIPAL DU TP -->
+  <div class="header-kicker">BTS CIEL — 1<sup>re</sup> Année | Option B (Électronique et Réseaux) | Du MicroPython au C++ Embarqué</div>
+  <h1>TP 5 bis : NANO-DRIVECARRIER — Transition C++ Embarqué, Nano Carrier, Fonctions &amp; Commande Moteur</h1>
+
+  <div class="meta-bar">
+    <span class="meta-pill meta-pill-arduino">🟦 <strong>Cible :</strong> Arduino Nano v3 (ATmega328P @ 16 MHz)</span>
+    <span class="meta-pill">🔌 <strong>Carrier :</strong> Arduino Nano Connector Carrier (Datasheet ASX00051)</span>
+    <span class="meta-pill">📊 <strong>IHM :</strong> Grove Potentiomètre 10k + Grove - LED Bar (MY9221)</span>
+    <span class="meta-pill">⚙️ <strong>Actionneurs :</strong> Relais Grove + Moteur CC 3-6V + Transistor TIP31C</span>
+    <span class="meta-pill meta-pill-accent">⏱️ <strong>Durée calibrée :</strong> 3h00</span>
+  </div>
+
+  <!-- CADRAGE PÉDAGOGIQUE & ANCRAGE BO BTS CIEL -->
+  <div class="card-block">
+    <h2>🎯 Contexte Pédagogique &amp; Compétences du Référentiel BTS CIEL</h2>
+    <p>
+      Au <strong>TP 5 (PICO-DRIVEBENCH)</strong>, vous avez caractérisé sur Breadboard les dipôles discrets de base (potentiomètre, résistances, LEDs),
+      validé l'isolation galvanique d'un <strong>Relais Grove</strong> et moduler la vitesse d'un moteur CC via un <strong>transistor TIP31C</strong> 
+      en langage <em>MicroPython sur Raspberry Pi Pico</em>.
+    </p>
+    <p>
+      En <strong>BTS CIEL Option B (Électronique et Réseaux)</strong>, la majorité des systèmes industriels et des objets communicants temps réel 
+      est développée en <strong>langage C / C++ compilé</strong> pour microcontrôleur bare-metal. Ce TP de transition vous fait franchir deux étapes professionnelles majeures :
+    </p>
+    <ol>
+      <li><strong>Abandonner le câblage volant pour une plateforme modulaire industrielle :</strong> L'<strong>Arduino Nano</strong> est enfiché sur son <strong>Shield d'extension Grove</strong>, éliminant les faux contacts et standardisant les alimentations <code>5 V / GND</code>.</li>
+      <li><strong>Structurer votre logiciel en Fonctions C++ typées :</strong> Finie la boucle "spaghetti" ! Vous apprendrez à décomposer votre programme en sous-fonctions spécialisées (prototypes, types scalaires, passage par valeur vs <strong>passage par référence <code>&amp;</code></strong>).</li>
+      <li><strong>Exploiter un afficheur dynamique spécialisé :</strong> Le module <strong>Grove - LED Bar (driver MY9221)</strong>, affichant en direct le niveau de vitesse consigné (0 à 10 segments).</li>
+    </ol>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width:25%;">Compétence BO BTS CIEL</th>
+          <th style="width:40%;">Activité Réalisée dans le TP</th>
+          <th style="width:35%;">Indicateurs d'Évaluation</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>C1.2 — Élaborer ou modifier le logiciel embarqué</strong></td>
+          <td>Concevoir un programme C++ modulaire pour ATmega328P : prototypes, fonctions typées, passage par référence <code>&amp;</code>, lecture du CAN 10 bits et pilotage de la bibliothèque <code>Grove_LED_Bar.h</code>.</td>
+          <td>Code compilant sans avertissement, découpage fonctionnel respecté, passage par référence maîtrisé, commentaires clairs.</td>
+        </tr>
+        <tr>
+          <td><strong>C2.1 — Vérifier la conformité fonctionnelle et électrique</strong></td>
+          <td>Vérifier le quantum du CAN (<i>q</i> &approx; 4,89 mV), contrôler la linéarité du bargraphe, valider la coupure de sécurité par relais et la modulation PWM du transistor au multimètre/oscilloscope.</td>
+          <td>Tableaux de mesure complétés, concordance calculs/mesures, identification de la f.c.é.m. et de <i>V<sub>CE,sat</sub></i>.</td>
+        </tr>
+        <tr>
+          <td><strong>C3.1 — Câbler et interconnecter les sous-ensembles</strong></td>
+          <td>Enficher l'Arduino Nano sur le Nano Connector Carrier, configurer le sélecteur 5V, raccorder le potentiomètre sur Grove J7 (A0), la LED Bar sur D6/D7 et l'étage de puissance Varta 5 V.</td>
+          <td>Aucun court-circuit, affectation stricte des broches, respect de la polarité et masses communes.</td>
+        </tr>
+        <tr>
+          <td><strong>C4.2 — Mettre en œuvre des instruments de mesure</strong></td>
+          <td>Exploiter le Moniteur Série pour la télémétrie temps réel et le multimètre numérique en mesure de tension moyenne.</td>
+          <td>Télémétrie claire à 115200 bauds, relevés précis de la tension moteur.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- CHRONOGRAMME DU TP 3H -->
+    <h3>⏱️ Découpage Horaire de la Séance (3h00 = 180 min)</h3>
+    <div class="timeline-grid">
+      <a class="tl-item" href="#sec-prep">
+        <span class="tl-time">0h00 – 0h25 (25 min)</span>
+        <strong>Étape 0</strong><br>Pinouts Nano &amp; Shield, Lib Grove_LED_Bar
+      </a>
+      <a class="tl-item" href="#sec-p1">
+        <span class="tl-time">0h25 – 1h10 (45 min)</span>
+        <strong>Partie 1</strong><br>Fonctions C++ &amp; CAN Potentiomètre (A0)
+      </a>
+      <a class="tl-item" href="#sec-p2">
+        <span class="tl-time">1h10 – 1h50 (40 min)</span>
+        <strong>Partie 2</strong><br>Afficheur Grove - LED Bar (MY9221)
+      </a>
+      <a class="tl-item" href="#sec-p3">
+        <span class="tl-time">1h50 – 2h35 (45 min)</span>
+        <strong>Partie 3</strong><br>Puissance : Relais Sécu &amp; PWM TIP31C
+      </a>
+      <a class="tl-item" href="#sec-p4">
+        <span class="tl-time">2h35 – 3h00 (25 min)</span>
+        <strong>Partie 4</strong><br>Synthèse Système &amp; Compte Rendu
+      </a>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- ÉTAPE 0 : INVENTAIRE MATÉRIEL & PINOUTS                               -->
+  <!-- ===================================================================== -->
+  <div class="card-block" id="sec-prep">
+    <h2>Étape 0 : Architecture Matérielle, Pinout &amp; Écosystème Grove <span class="badge badge-time">25 min</span></h2>
+    
+    <div class="callout callout-info">
+      <h4>📦 Matériel Requis sur le Poste de Travail</h4>
+      <ul class="check-list">
+        <li><label><input type="checkbox" onchange="actualiserProgression()"> 1x Carte <strong>Arduino Nano v3</strong> (microcontrôleur ATmega328P, logique 5 V, quartz 16 MHz) + câble USB Mini-B</label></li>
+        <li><label><input type="checkbox" onchange="actualiserProgression()"> 1x Carte d'extension officielle <strong>Arduino Nano Connector Carrier</strong> (SKU ASX00051) avec connecteurs Grove (J4, J5, J6, J7), connecteur QWIIC et lecteur MicroSD</label></li>
+        <li><label><input type="checkbox" onchange="actualiserProgression()"> 1x Module <strong>Grove - Rotary Angle Sensor (Potentiomètre 10 k&Omega;)</strong> + câble Grove 4 broches</label></li>
+        <li><label><input type="checkbox" onchange="actualiserProgression()"> 1x Module <strong>Grove - LED Bar v2.0 (10 segments, driver MY9221)</strong> + câble Grove</label></li>
+        <li><label><input type="checkbox" onchange="actualiserProgression()"> 1x Module <strong>Grove - Relay</strong> (isolation galvanique de la ligne 5 V)</label></li>
+        <li><label><input type="checkbox" onchange="actualiserProgression()"> 1x Étage de puissance étudié au TP 5 : <strong>Transistor NPN TIP31C</strong> + résistance de base <code>330 &Omega;</code> + diode de roue libre <code>1N4001</code></label></li>
+        <li><label><input type="checkbox" onchange="actualiserProgression()"> 1x <strong>Moteur CC jaune 3–6 V</strong> + <strong>Powerbank Varta 5 V</strong> (alimentation indépendante du moteur)</label></li>
+      </ul>
+    </div>
+
+    <h3>0.1 Le Cœur de Calcul : Brochage de l'Arduino Nano v3 (ATmega328P)</h3>
+    <p>
+      Contrairement au Raspberry Pi Pico (RP2040 en logique 3,3 V), l'<strong>Arduino Nano</strong> fonctionne en <strong>logique pure 5 V (TTL)</strong>.
+      Il dispose d'un microcontrôleur 8 bits ATmega328P cadencé à 16 MHz, intégrant 32 Ko de mémoire Flash, 2 Ko de SRAM et 1 Ko d'EEPROM.
+    </p>
+
+    <!-- FIGURE 1 : BROCHAGE OFFICIEL ARDUINO NANO -->
+    <div class="svg-card">
+      <img src="images/arduino_nano_pinout_official_page2.png" alt="Brochage officiel complet Arduino Nano v3 (Datasheet A000005)" style="width:100%; max-width:920px; border-radius:6px; box-shadow:0 3px 10px rgba(0,0,0,0.08);">
+      <div class="svg-caption">Figure 0.1 — Brochage officiel complet de l'Arduino Nano v3 (Datasheet Officielle Arduino A000005) : Multiplexage E/S, Timers PWM (OC1A/B sur D9/D10, OC2A/B sur D11/D3, OC0A/B sur D6/D5), CAN 10 bits (ADC0–ADC7), Interrupts (INT0/INT1, PCINT) et bus de communication (UART, I2C, SPI).</div>
+    </div>
+
+    <details class="answer-box">
+      <summary>🔍 Voir la Vue Simplifiée des Broches &amp; Ports Microcontrôleur (Page 1 Datasheet)</summary>
+      <div class="answer-content" style="text-align:center;">
+        <img src="images/arduino_nano_pinout_official_page1.png" alt="Brochage simplifié Arduino Nano v3" style="width:100%; max-width:880px; border-radius:6px; margin: 10px 0;">
+        <p style="font-size:0.85rem; color:#64748b; font-style:italic;">Vue structurelle : Correspondance entre broches externes DIP-30 et ports internes de l'ATmega328P (Port B: PB0-PB5, Port C: PC0-PC6, Port D: PD0-PD7).</p>
+      </div>
+    </details>
+
+    <h3>0.2 La Carte d'Extension Officielle : Arduino Nano Connector Carrier (Datasheet ASX00051)</h3>
+    <p>
+      Pour sécuriser le câblage et standardiser les interconnexions, l'Arduino Nano s'enfiche directement au centre 
+      du <strong>Nano Connector Carrier</strong> officiel d'Arduino (SKU <code>ASX00051</code>). Ce carrier industriel 
+      développe la connectivité de la famille Nano en combinant une face supérieure (<strong>TOP</strong>) à connecteurs Nano 
+      femelles et une face inférieure (<strong>BOTTOM</strong>) équipée de <strong>connecteurs Grove</strong> et <strong>QWIIC</strong>, 
+      ainsi que d'un lecteur de carte <strong>Micro SD</strong> pour l'enregistrement de données.
+    </p>
+
+    <!-- FIGURE 2 : BROCHAGE OFFICIEL DU CARRIER -->
+    <div class="svg-card">
+      <img src="images/nano_connector_carrier_pinout.jpg" alt="Brochage officiel Arduino Nano Connector Carrier Datasheet" style="width:100%; max-width:920px; border-radius:6px; box-shadow:0 3px 10px rgba(0,0,0,0.08);">
+      <div class="svg-caption">Figure 0.2 — Brochage officiel de l'Arduino Nano Connector Carrier (Datasheet ASX00051) : Vues TOP (headers Nano JP1/JP2 &amp; switch de tension) et BOTTOM (connecteurs Grove J4 à J7, QWIIC et lecteur MicroSD).</div>
+    </div>
+
+    <div class="callout callout-danger">
+      <h4>⚡ Règle Impérative de Configuration : Le Commutateur &laquo; 5V - 3V3 &raquo;</h4>
+      <p>
+        Sur la face supérieure (<strong>TOP</strong>), à gauche des connecteurs femelles du Nano, se trouve le sélecteur d'alimentation :<br>
+        <strong>&laquo; Set the board selector switch to match your Nano board GPIO voltage &raquo;</strong>.<br>
+        L'Arduino Nano v3 (ATmega328P) fonctionnant en <strong>logique pure 5 V</strong>, vous <strong>DEVEZ positionner ce commutateur sur &laquo; 5V &raquo;</strong> !
+        Cette configuration garantit que la broche <code>VCC</code> de l'ensemble des connecteurs Grove délivre bien les 5,0 V indispensables 
+        au potentiomètre Grove, à la LED Bar et au relais.
+      </p>
+    </div>
+
+    <h4>Affectation des Connecteurs Grove en Face Inférieure (BOTTOM) :</h4>
+    <ul>
+      <li><strong>Connecteur Grove (J7) — Entrées A0 / A1 :</strong> Broche 1 = <code>A0</code> | Broche 2 = <code>A1</code> | Broche 3 = <code>VCC (5V)</code> | Broche 4 = <code>GND</code>.<br>
+      ➜ <strong>C'est sur ce port Grove J7 que vous brancherez directement le Potentiomètre 10 k&Omega; !</strong></li>
+      <li><strong>Connecteur Grove (J5) — Entrées A2 / A3 :</strong> Broche 1 = <code>GND</code> | Broche 2 = <code>VCC</code> | Broche 3 = <code>A3</code> | Broche 4 = <code>A2</code>.</li>
+      <li><strong>Connecteur Grove (J6) — Bus I2C :</strong> Broche 1 = <code>SCL (A5)</code> | Broche 2 = <code>SDA (A4)</code> | Broche 3 = <code>VCC</code> | Broche 4 = <code>GND</code>.</li>
+      <li><strong>Connecteur Grove (J4) — Liaison Série UART :</strong> Broche 1 = <code>GND</code> | Broche 2 = <code>VCC</code> | Broche 3 = <code>TX (D1)</code> | Broche 4 = <code>RX (D0)</code>.</li>
+      <li><strong>Connecteur QWIIC :</strong> Interface I2C miniature 3,3 V (<code>SCL</code>, <code>SDA</code>, <code>+3V3 OUT</code>, <code>GND</code>).</li>
+    </ul>
+
+    <details class="answer-box">
+      <summary>📋 Tables Officielles de Correspondance des Broches (Datasheet Arduino ASX00051)</summary>
+      <div class="answer-content">
+        <p><strong>Tableau 4.1.1 — Connecteur Gauche Analogique (JP1) :</strong></p>
+        <table>
+          <thead><tr><th>Broche JP1</th><th>Signal Nano</th><th>Type</th><th>Description Datasheet</th></tr></thead>
+          <tbody>
+            <tr><td>Pin 1</td><td><code>D13 / SCK</code></td><td>Digital</td><td>Serial Clock (SPI) &amp; LED L</td></tr>
+            <tr><td>Pin 2</td><td><code>+3.3 V</code></td><td>Power Out</td><td>+3.3 V Power Rail</td></tr>
+            <tr><td>Pin 3</td><td><code>B0 / AREF</code></td><td>Analog</td><td>Analog Reference</td></tr>
+            <tr><td>Pin 4</td><td><code>A0</code></td><td>Analog</td><td>Analog input 0 (Grove J7)</td></tr>
+            <tr><td>Pin 5</td><td><code>A1</code></td><td>Analog</td><td>Analog input 1 (Grove J7)</td></tr>
+            <tr><td>Pin 6</td><td><code>A2</code></td><td>Analog</td><td>Analog input 2 (Grove J5)</td></tr>
+            <tr><td>Pin 7</td><td><code>A3</code></td><td>Analog</td><td>Analog input 3 (Grove J5)</td></tr>
+            <tr><td>Pin 8</td><td><code>A4 / SDA</code></td><td>Analog/I2C</td><td>Analog input 4 / I2C Data (Grove J6)</td></tr>
+            <tr><td>Pin 9</td><td><code>A5 / SCL</code></td><td>Analog/I2C</td><td>Analog input 5 / I2C Clock (Grove J6)</td></tr>
+            <tr><td>Pin 10..11</td><td><code>A6, A7</code></td><td>Analog</td><td>Analog inputs 6 &amp; 7 (CAN pur)</td></tr>
+            <tr><td>Pin 12</td><td><code>+5V</code></td><td>Power</td><td>USB Power Rail (5 V)</td></tr>
+            <tr><td>Pin 14</td><td><code>GND</code></td><td>Power</td><td>Masse (0 V)</td></tr>
+            <tr><td>Pin 15</td><td><code>VIN</code></td><td>Power</td><td>Entrée régulateur (7–12 V)</td></tr>
+          </tbody>
+        </table>
+
+        <p><strong>Tableau 4.1.2 — Connecteur Droit Numérique (JP2) :</strong></p>
+        <table>
+          <thead><tr><th>Broche JP2</th><th>Signal Nano</th><th>Type</th><th>Rôle dans le TP NANO-DRIVECARRIER</th></tr></thead>
+          <tbody>
+            <tr><td>Pin 1</td><td><code>D1 / TX</code></td><td>Digital</td><td>Liaison Série USB &amp; Grove J4</td></tr>
+            <tr><td>Pin 2</td><td><code>D0 / RX</code></td><td>Digital</td><td>Liaison Série USB &amp; Grove J4</td></tr>
+            <tr><td>Pin 4</td><td><code>GND</code></td><td>Power</td><td>Masse commune avec la puissance Varta</td></tr>
+            <tr><td>Pin 5</td><td><code>D2</code></td><td>Digital</td><td><strong>Commande du Relais Grove</strong> (Contacteur de sécurité)</td></tr>
+            <tr><td>Pin 7</td><td><code>D4</code></td><td>Digital</td><td><strong>LED témoin d'état</strong> (Marche active)</td></tr>
+            <tr><td>Pin 9</td><td><code>D6</code></td><td>Digital</td><td><strong>Signal DI (Data) de la Grove - LED Bar</strong></td></tr>
+            <tr><td>Pin 10</td><td><code>D7</code></td><td>Digital</td><td><strong>Signal DCKI (Clock) de la Grove - LED Bar</strong></td></tr>
+            <tr><td>Pin 12</td><td><code>D9</code></td><td>Digital (PWM)</td><td><strong>Commande PWM hacheur TIP31C</strong> (Timer 1, 490 Hz)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </details>
+
+    <h3>0.3 Installation de la Bibliothèque Constructeur &laquo; Grove_LED_Bar &raquo; dans l'IDE Arduino</h3>
+    <p>
+      Le module <strong>Grove - LED Bar</strong> intègre un circuit de commande spécialisé <strong>MY9221</strong> (voir <a href="https://wiki.seeedstudio.com/Grove-LED_Bar/" target="_blank" rel="noopener">Wiki officiel Seeed Studio</a>).
+      Pour le piloter sans devoir réécrire le protocole de trame synchrone 16 bits à la main, nous utilisons la bibliothèque officielle :
+    </p>
+    <ol>
+      <li>Ouvrez l'<strong>Arduino IDE 2.x</strong>.</li>
+      <li>Dans le menu latéral gauche, cliquez sur l'icône <strong>Library Manager</strong> (ou faites <code>Ctrl + Maj + I</code>).</li>
+      <li>Dans la zone de recherche, tapez : <code>Grove LED Bar</code>.</li>
+      <li>Localisez la bibliothèque signée <strong>Seeed Studio</strong> et cliquez sur <strong>INSTALL</strong>.</li>
+    </ol>
+
+    <div class="callout callout-tip">
+      <h4>💡 Astuce Enseignant : Vérification de la Bibliothèque</h4>
+      <p>
+        Une fois installée, vérifiez sa présence en ouvrant : <em>Fichier &rarr; Exemples &rarr; Grove_LED_Bar &rarr; Level</em>.
+        Cette bibliothèque fournit une classe orientée objet très intuitive permettant d'allumer de 0 à 10 LEDs via la méthode <code>bar.setLevel(niveau)</code>.
+      </p>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- PARTIE 1 : NOTIONS DE FONCTIONS & ACQUISITION CAN                     -->
+  <!-- ===================================================================== -->
+  <div class="card-block" id="sec-p1">
+    <h2>PARTIE 1 : Notions de Fonctions en C++ &amp; Mesure Analogique Calibrée <span class="badge badge-time">45 min</span></h2>
+
+    <h3>1.1 Pourquoi Découper un Logiciel Embarqué en Fonctions ?</h3>
+    <p>
+      En programmation professionnelle, un code contenu exclusivement dans une boucle <code>void loop()</code> de 200 lignes est une source majeure de bogues,
+      impossible à maintenir, à tester unitairement ou à réutiliser. Une <strong>fonction</strong> est un sous-programme autonome qui réalise une tâche précise.
+    </p>
+
+    <!-- TABLEAU COMPARATIF SYNTAXE FONCTION -->
+    <table>
+      <thead>
+        <tr>
+          <th style="width:25%;">Composant de la Fonction</th>
+          <th style="width:35%;">Rôle &amp; Syntaxe en C++</th>
+          <th style="width:40%;">Exemple Appliqué au TP</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Type de Retour</strong></td>
+          <td>Définit la nature de la valeur renvoyée. Utilisez <code>void</code> si la fonction n'a rien à renvoyer (procédure d'action).</td>
+          <td><code>float</code> pour une tension en Volts,<br><code>uint8_t</code> pour un niveau (0 à 10),<br><code>void</code> pour initialiser le matériel.</td>
+        </tr>
+        <tr>
+          <td><strong>Identificateur</strong></td>
+          <td>Nom verbeux décrivant l'action sans ambiguïté (convention <em>camelCase</em>).</td>
+          <td><code>lireConsignePotentiometre()</code>,<br><code>afficherBargraphe()</code>.</td>
+        </tr>
+        <tr>
+          <td><strong>Paramètres Formels</strong></td>
+          <td>Données transmises par l'appelant entre parenthèses, avec leur type strict.</td>
+          <td><code>(uint8_t niveau)</code>,<br><code>(float tensionVolts)</code>.</td>
+        </tr>
+        <tr>
+          <td><strong>Corps de la Fonction</strong></td>
+          <td>Bloc d'instructions délimité par des accolades <code>{ ... }</code> avec l'instruction <code>return</code> si le type n'est pas <code>void</code>.</td>
+          <td><code>return (codeBrut / 1023.0f) * 5.0f;</code></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>1.2 Concept Fondamental : Passage par Valeur vs Passage par Référence (<code>&amp;</code>)</h3>
+    <p>
+      En C/C++, il existe deux façons de transmettre une variable à une fonction :
+    </p>
+    <ul>
+      <li><strong>Passage par Valeur (copie locale) :</strong> La fonction crée un clone de la variable en mémoire. Les modifications faites dans la fonction n'impactent pas l'original dans l'appelant.</li>
+      <li><strong>Passage par Référence (<code>&amp;</code>) :</strong> La fonction reçoit l'adresse de la variable originale. Toute modification faite à travers cette référence altère directement la variable d'origine ! C'est l'outil parfait pour <strong>renvoyer plusieurs grandeurs calculées</strong> (ex: renvoyer la tension flottante tout en modifiant le code CAN brut).</li>
+    </ul>
+
+    <div class="code-wrapper">
+      <button type="button" class="copy-code-btn no-print" onclick="copierCode(this)">Copier</button>
+      <pre><code><span style="color:#64748b;">// Exemple : La fonction renvoie la tension (float) ET modifie la variable codeCanBrut via sa référence '&amp;'</span>
+<span style="color:#38bdf8;">float</span> <span style="color:#fde047;">lireConsignePotentiometre</span>(<span style="color:#38bdf8;">uint16_t</span> &amp;codeCanBrut) {
+    codeCanBrut = <span style="color:#fde047;">analogRead</span>(PIN_POT_CONSIGNE); <span style="color:#64748b;">// 0 à 1023</span>
+    <span style="color:#38bdf8;">float</span> tension = (codeCanBrut / 1023.0f) * 5.00f;
+    <span style="color:#f472b6;">return</span> tension; <span style="color:#64748b;">// Retour scalaire</span>
+}</code></pre>
+    </div>
+
+    <h3>1.3 Câblage du Potentiomètre Grove &amp; Calcul Métrologique du CAN</h3>
+    <p>
+      La consigne de vitesse du moteur est fixée par l'opérateur à l'aide du module 
+      <strong>Grove - Rotary Angle Sensor (Potentiomètre 10 k&Omega;)</strong>, raccordé sur le 
+      <strong>Port Grove J7 (entrée analogique A0)</strong> de l'Arduino Nano Connector Carrier :
+    </p>
+
+    <!-- FIGURE 1.2 : MODULE POTENTIOMÈTRE GROVE -->
+    <div class="svg-card" style="display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:20px; text-align:left; padding:16px;">
+      <div style="flex: 0 0 240px; text-align:center;">
+        <img src="images/grove_potentiometer_photo.png" alt="Module Grove Rotary Angle Sensor Potentiomètre 10k" style="width:100%; max-width:210px; border-radius:6px; box-shadow:0 3px 10px rgba(0,0,0,0.1);">
+        <div class="svg-caption">Module Grove - Rotary Angle Sensor (10 k&Omega;)</div>
+      </div>
+      <div style="flex: 1 1 380px;">
+        <h4 style="margin-top:0; color:#0b3c5d;">Caractéristiques du Capteur de Consigne :</h4>
+        <ul style="font-size:0.88rem; margin:6px 0; padding-left:18px; line-height:1.5;">
+          <li><strong>Piste résistive :</strong> 10 k&Omega; linéaire (course angulaire utile de 300&deg;).</li>
+          <li><strong>Plage de tension analogique :</strong> 0,00 V (butée gauche) à 5,00 V (butée droite).</li>
+          <li><strong>Brochage Grove normalisé (Port J7) :</strong>
+            <br>&bull; Broche 1 (Fil Jaune) : Signal de curseur <i>V<sub>curseur</sub></i> &rarr; relié à <strong>A0</strong> (JP1:4).
+            <br>&bull; Broche 2 (Fil Blanc) : NC (Non connecté sur ce capteur).
+            <br>&bull; Broche 3 (Fil Rouge) : Alimentation <code>+5 V</code> (JP1:12).
+            <br>&bull; Broche 4 (Fil Noir) : Masse <code>GND (0 V)</code> (JP2:4).
+          </li>
+          <li><strong>Loi de commande :</strong> <i>V</i><sub><i>A</i>0</sub> = &alpha; &times; <i>V<sub>CC</sub></i> &nbsp;(avec &alpha; &isin; [0 ; 1]).</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="formula-box">
+      Quantum du CAN 10 bits de l'ATmega328P :
+      &nbsp;&nbsp;
+      <i>q</i> =
+      <span class="frac"><span class="num"><i>V<sub>REF</sub></i></span><span class="den">2<sup><i>N</i></sup> &minus; 1</span></span>
+      =
+      <span class="frac"><span class="num">5,000 V</span><span class="den">1 023</span></span>
+      &approx; <strong>4,887 mV / point</strong>
+    </div>
+
+    <details class="answer-box">
+      <summary>📝 Questions d'Analyse 1.1 à 1.3 (À rédiger sur votre Google Docs)</summary>
+      <div class="answer-content">
+        <p><strong>Question 1.1 :</strong> Quelle différence existe-t-il entre la résolution du CAN du Raspberry Pi Pico (TP 5) et celle de l'Arduino Nano ? Quel impact cela a-t-il sur la valeur maximale renvoyée ?</p>
+        <p><strong>Question 1.2 :</strong> Pourquoi a-t-on écrit <code>1023.0f</code> avec un point décimal et un <code>f</code> dans la formule C++, au lieu de simplement <code>1023</code> ? Que se passerait-il si l'on écrivait <code>(codeCanBrut / 1023) * 5</code> en C++ ?</p>
+        <p><strong>Question 1.3 :</strong> Complétez le tableau ci-dessous en mesurant au voltmètre la tension réelle sur la broche <code>A0</code> pour 3 positions du potentiomètre (Min, Milieu, Max) et en relevant le code CAN sur le Moniteur Série :</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Position Potentiomètre</th>
+              <th>Code CAN Brut (0–1023)</th>
+              <th>Tension Calculée (V)</th>
+              <th>Tension Réelle Multimètre (V)</th>
+              <th>Écart Relatif &epsilon; (%)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Butée Gauche (Min)</td><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+            <tr><td>Milieu de Course</td><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+            <tr><td>Butée Droite (Max)</td><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </details>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- PARTIE 2 : LE MODULE GROVE - LED BAR (MY9221)                        -->
+  <!-- ===================================================================== -->
+  <div class="card-block" id="sec-p2">
+    <h2>PARTIE 2 : Pilotage Dynamique de l'Afficheur Grove - LED Bar (MY9221) <span class="badge badge-time">40 min</span></h2>
+
+    <h3>2.1 Présentation &amp; Câblage du Bargraphe 10 Segments</h3>
+    <p>
+      Le module <strong>Grove - LED Bar</strong> remplace avantageusement 10 LEDs discrètes et leurs 10 résistances sur breadboard.
+      Il se compose de :
+    </p>
+    <ul>
+      <li>1 segment <strong>Rouge</strong> (LED 10 : alerte / puissance maxi),</li>
+      <li>1 segment <strong>Orange</strong> (LED 9),</li>
+      <li>1 segment <strong>Jaune</strong> (LED 8),</li>
+      <li>7 segments <strong>Verts</strong> (LEDs 1 à 7 : vitesse modérée / nominale).</li>
+    </ul>
+
+    <!-- FIGURE 3 : MODULE GROVE LED BAR -->
+    <div class="svg-card">
+      <img src="images/grove_led_bar_my9221.svg" alt="Schéma et fonctionnement du module Grove LED Bar Seeed Studio" style="width:100%; max-width:920px;">
+      <div class="svg-caption">Figure 2.1 — Brochage, organisation des couleurs et interface série du module Grove - LED Bar v2.0 (driver MY9221).</div>
+    </div>
+
+    <div class="callout callout-warning">
+      <h4>⚠️ Raccordement de la Grove - LED Bar sur le Carrier Nano</h4>
+      <p>
+        Le connecteur numérique supérieur <strong>JP2</strong> du Nano Connector Carrier distribue directement les broches du microcontrôleur. 
+        Raccordez le module <strong>Grove - LED Bar</strong> aux broches de l'Arduino Nano à l'aide d'un câble d'adaptation :
+      </p>
+      <ul>
+        <li>Fil Jaune de la LED Bar (Pin 3 : <strong>DCKI / Clock</strong>) ➜ Relié à la broche <strong>D7</strong> (Broche 10 de JP2).</li>
+        <li>Fil Blanc de la LED Bar (Pin 4 : <strong>DI / Data</strong>) ➜ Relié à la broche <strong>D6</strong> (Broche 9 de JP2).</li>
+        <li>Fil Rouge (Pin 2 : <strong>VCC 5V</strong>) ➜ Relié à la broche <code>+5V</code> (Broche 12 de JP1).</li>
+        <li>Fil Noir (Pin 1 : <strong>GND</strong>) ➜ Relié à la masse <code>GND</code> (Broche 14 de JP1 ou 4 de JP2).</li>
+      </ul>
+      <p>
+        L'instanciation de l'objet dans votre code C++ est donc parfaitement claire :<br>
+        <code>Grove_LED_Bar bar(7, 6, 0, LED_BAR_10); // Broche 7 = Clock (DCKI), Broche 6 = Data (DI)</code>
+      </p>
+    </div>
+
+    <h3>2.2 Écriture des Fonctions de Conversion et d'Affichage</h3>
+    <p>
+      Pour respecter le principe de modularité, nous écrivons deux fonctions distinctes :
+      une fonction mathématique pure (qui convertit la tension en niveau de 0 à 10) et une fonction d'action (qui met à jour la LED Bar) :
+    </p>
+
+    <div class="code-wrapper">
+      <button type="button" class="copy-code-btn no-print" onclick="copierCode(this)">Copier</button>
+      <pre><code><span style="color:#64748b;">// --- FONCTION 1 : CONVERSION MATHÉMATIQUE SÉCURISÉE ---</span>
+<span style="color:#38bdf8;">uint8_t</span> <span style="color:#fde047;">convertirTensionEnNiveau</span>(<span style="color:#38bdf8;">float</span> tensionVolts) {
+    <span style="color:#64748b;">// Zone morte basse pour garantir l'arrêt total en butée</span>
+    <span style="color:#f472b6;">if</span> (tensionVolts &lt; 0.15f) {
+        <span style="color:#f472b6;">return</span> 0;
+    }
+    <span style="color:#f472b6;">if</span> (tensionVolts &gt;= 4.90f) {
+        <span style="color:#f472b6;">return</span> 10;
+    }
+    <span style="color:#64748b;">// Échelonnement proportionnel en 10 crans réguliers de 0,5 V</span>
+    <span style="color:#38bdf8;">uint8_t</span> niveau = (<span style="color:#38bdf8;">uint8_t</span>)((tensionVolts / 5.0f) * 10.0f + 0.5f);
+    <span style="color:#f472b6;">if</span> (niveau &gt; 10) niveau = 10;
+    <span style="color:#f472b6;">return</span> niveau;
+}
+
+<span style="color:#64748b;">// --- FONCTION 2 : PILOTAGE MATÉRIEL DU DRIVER MY9221 ---</span>
+<span style="color:#38bdf8;">void</span> <span style="color:#fde047;">afficherBargraphe</span>(<span style="color:#38bdf8;">uint8_t</span> niveau) {
+    bar.<span style="color:#fde047;">setLevel</span>(niveau); <span style="color:#64748b;">// 0 = éteint, 1 à 10 = nombre de segments illuminés</span>
+}</code></pre>
+    </div>
+
+    <details class="answer-box">
+      <summary>📝 Questions d'Analyse 2.1 à 2.3 (À rédiger sur votre Google Docs)</summary>
+      <div class="answer-content">
+        <p><strong>Question 2.1 :</strong> Pourquoi intègre-t-on une "zone morte" (seuil de <code>0,15 V</code>) en bas d'échelle avant de commander les actionneurs ? Quel problème physique lié au potentiomètre et au bruit cela permet-il d'éviter ?</p>
+        <p><strong>Question 2.2 :</strong> Consultez le <a href="https://wiki.seeedstudio.com/Grove-LED_Bar/" target="_blank" rel="noopener">Wiki Grove - LED Bar</a>. Quelle méthode de la bibliothèque permet d'allumer une LED précise de manière isolée sans allumer les précédentes ? Donnez sa signature syntaxique.</p>
+        <p><strong>Question 2.3 :</strong> Que représente la valeur hexadécimale <code>0x3FF</code> passée à la méthode <code>bar.setBits(0x3FF)</code> ? Convertissez ce nombre en binaire sur 10 bits et expliquez l'effet visuel produit sur la barre de LEDs.</p>
+      </div>
+    </details>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- PARTIE 3 : COMMANDE DE PUISSANCE HYBRIDE                             -->
+  <!-- ===================================================================== -->
+  <div class="card-block" id="sec-p3">
+    <h2>PARTIE 3 : Chaîne de Puissance Hybride — Relais de Sécurité &amp; PWM Transistor <span class="badge badge-time">45 min</span></h2>
+
+    <h3>3.1 Le Schéma d'Architecture Hybride : Reprise du TP 5 sur Nano Carrier</h3>
+    <p>
+      Nous réinvestissons l'étage de puissance validé au TP 5. La <strong>Powerbank Varta 5 V</strong> alimente le moteur CC via deux étages complémentaires :
+    </p>
+    <ol>
+      <li><strong>Contacteur de ligne par Relais Grove (Broche D2 / JP2:5) :</strong> Assure l'<strong>isolation galvanique</strong>. Si le potentiomètre est à zéro (Niveau = 0), le relais s'ouvre : aucun courant résiduel ne peut circuler vers le moteur, garantissant une sécurité mécanique totale.</li>
+      <li><strong>Hacheur Série par Transistor TIP31C (Broche D9 PWM) :</strong> Dès que le niveau dépasse 0, le relais se ferme et la broche <code>D9</code> module le rapport cyclique &alpha; (Timer 1 de l'ATmega328P, fréquence 490 Hz, 8 bits : 0 à 255).</li>
+      <li><strong>Diode de Roue Libre 1N4001 :</strong> Protège impérativement le transistor des surtensions inductives d'ouverture (<i>u<sub>L</sub></i> = <i>L</i> &middot; <span class="frac"><span class="num">d<i>i</i></span><span class="den">d<i>t</i></span></span>).</li>
+    </ol>
+
+    <!-- FIGURE 4 : ARCHITECTURE GLOBALE SYNOPTIQUE -->
+    <div class="svg-card">
+      <img src="images/synoptique_nano_drivecarrier_complet.svg" alt="Synoptique complet du système NANO-DRIVECARRIER" style="width:100%; max-width:920px;">
+      <div class="svg-caption">Figure 3.1 — Synoptique d'interconnexion globale : Nano Carrier, capteurs Grove, afficheur MY9221 et chaîne de puissance Varta.</div>
+    </div>
+
+    <div class="callout callout-danger">
+      <h4>⚡ Règle d'Or de Câblage Puissance : La Masse Commune</h4>
+      <p>
+        La Powerbank Varta alimente le moteur en 5 V via le contact du relais. Pour que la commande PWM de la broche <code>D9</code> puisse polariser la base du transistor TIP31C, <strong>la borne GND (0 V) de l'Arduino Nano DOIT être impérativement reliée à l'Émetteur du transistor TIP31C et au pôle négatif (-) de la Powerbank</strong> !
+      </p>
+    </div>
+
+    <h3>3.2 Écriture de la Fonction de Commande de Puissance</h3>
+    <div class="code-wrapper">
+      <button type="button" class="copy-code-btn no-print" onclick="copierCode(this)">Copier</button>
+      <pre><code><span style="color:#64748b;">// --- FONCTION DE COMMANDE HYBRIDE AVEC DEUX RETOURS PAR RÉFÉRENCE ---</span>
+<span style="color:#38bdf8;">void</span> <span style="color:#fde047;">commanderEtagePuissance</span>(<span style="color:#38bdf8;">uint8_t</span> niveau, <span style="color:#38bdf8;">bool</span> &amp;etatRelais, <span style="color:#38bdf8;">uint8_t</span> &amp;valeurPwm) {
+    <span style="color:#f472b6;">if</span> (niveau == 0) {
+        <span style="color:#64748b;">// --- ARRÊT COMPLET DE SÉCURITÉ ---</span>
+        valeurPwm = 0;
+        <span style="color:#fde047;">analogWrite</span>(PIN_PWM_MOTEUR, 0);   <span style="color:#64748b;">// Transistor bloqué</span>
+        
+        etatRelais = <span style="color:#f472b6;">false</span>;
+        <span style="color:#fde047;">digitalWrite</span>(PIN_RELAIS, LOW);    <span style="color:#64748b;">// Relais ouvert (coupure physique)</span>
+        <span style="color:#fde047;">digitalWrite</span>(PIN_LED_ETAT, LOW);  <span style="color:#64748b;">// Témoin éteint</span>
+    } 
+    <span style="color:#f472b6;">else</span> {
+        <span style="color:#64748b;">// --- MARCHE ACTIVE ---</span>
+        etatRelais = <span style="color:#f472b6;">true</span>;
+        <span style="color:#fde047;">digitalWrite</span>(PIN_RELAIS, HIGH);   <span style="color:#64748b;">// Relais fermé (+5V Varta établi)</span>
+        <span style="color:#fde047;">digitalWrite</span>(PIN_LED_ETAT, HIGH); <span style="color:#64748b;">// Témoin allumé</span>
+
+        <span style="color:#64748b;">// Échelonnement PWM de 70 (seuil de décollage moteur) à 255 (100 %)</span>
+        valeurPwm = (<span style="color:#38bdf8;">uint8_t</span>)<span style="color:#fde047;">map</span>(niveau, 1, 10, 70, 255);
+        <span style="color:#fde047;">analogWrite</span>(PIN_PWM_MOTEUR, valeurPwm);
+    }
+}</code></pre>
+    </div>
+
+    <details class="answer-box">
+      <summary>📝 Questions d'Analyse 3.1 à 3.4 (À rédiger sur votre Google Docs)</summary>
+      <div class="answer-content">
+        <p><strong>Question 3.1 :</strong> Pourquoi commence-t-on la PWM à une valeur de <code>70</code> (environ 27 %) au niveau 1, au lieu de démarrer à <code>1</code> ? Quel phénomène mécanique sur l'arbre du moteur CC cela compense-t-il ?</p>
+        <p><strong>Question 3.2 :</strong> Pourquoi a-t-on conservé le <strong>Relais Grove</strong> en série si le <strong>transistor TIP31C</strong> est déjà capable de couper le courant en le bloquant (<i>I<sub>B</sub></i> = 0) ? Justifiez du point de vue de la sécurité des personnes et de la maintenance industrielle.</p>
+        <p><strong>Question 3.3 :</strong> Mesurez au voltmètre en position DC la tension moyenne &lang;<i>U<sub>mot</sub></i>&rang; aux bornes du moteur pour les niveaux suivants et comparez avec la théorie :</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Niveau Bargraphe</th>
+              <th>Rapport Cyclique &alpha; (%)</th>
+              <th>Valeur <code>analogWrite</code> (0–255)</th>
+              <th>Tension Moyenne Mesurée &lang;<i>U<sub>mot</sub></i>&rang; (V)</th>
+              <th>État Visuel / Sonore du Moteur</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Niveau 0 (Arrêt)</td><td>0 %</td><td>0</td><td>0,00 V</td><td>Moteur immobile, Relais décollé</td></tr>
+            <tr><td>Niveau 2</td><td>...</td><td>...</td><td>...</td><td>Rotation lente</td></tr>
+            <tr><td>Niveau 5</td><td>...</td><td>...</td><td>...</td><td>Vitesse moyenne</td></tr>
+            <tr><td>Niveau 8</td><td>...</td><td>...</td><td>...</td><td>Vitesse soutenue</td></tr>
+            <tr><td>Niveau 10 (Max)</td><td>100 %</td><td>255</td><td>...</td><td>Pleine puissance</td></tr>
+          </tbody>
+        </table>
+        <p><strong>Question 3.4 :</strong> À l'aide de l'oscilloscope ou des formules du TP 5, calculez la puissance moyenne dissipée par conduction dans le TIP31C à pleine vitesse (<i>I<sub>mot</sub></i> &approx; 200 mA, <i>V<sub>CE,sat</sub></i> &approx; 0,35 V). Un dissipateur thermique est-il nécessaire ici ?</p>
+      </div>
+    </details>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- PARTIE 4 : SYNTHÈSE MODULAIRE & ÉVALUATION                            -->
+  <!-- ===================================================================== -->
+  <div class="card-block" id="sec-p4">
+    <h2>PARTIE 4 : Synthèse Modulaire, Télémétrie Série &amp; Évaluation <span class="badge badge-time">25 min</span></h2>
+
+    <h3>4.1 Code Complet Intégré : <code>sketch_nano_drivecarrier.ino</code></h3>
+    <p>
+      Admirez la clarté et l'élégance de la fonction <code>void loop()</code> finale : elle tient en seulement <strong>5 lignes d'appels de fonctions</strong> !
+      Chaque bloc technique est encapsulé, lisible et testable unitairement :
+    </p>
+
+    <div class="code-wrapper">
+      <button type="button" class="copy-code-btn no-print" onclick="copierCode(this)">Copier Tout le Sketch</button>
+      <pre><code><span style="color:#64748b;">// ==============================================================================
+// TP 5 bis : NANO-DRIVECARRIER — BTS CIEL 1re Année (Option B)
+// Cible : Arduino Nano v3 sur Arduino Nano Connector Carrier (ASX00051)
+// ==============================================================================</span>
+<span style="color:#0f766e;">#include</span> <span style="color:#86efac;">&lt;Arduino.h&gt;</span>
+<span style="color:#0f766e;">#include</span> <span style="color:#86efac;">&lt;Grove_LED_Bar.h&gt;</span>
+
+<span style="color:#38bdf8;">const uint8_t</span> PIN_RELAIS       = 2;
+<span style="color:#38bdf8;">const uint8_t</span> PIN_LED_ETAT     = 4;
+<span style="color:#38bdf8;">const uint8_t</span> PIN_PWM_MOTEUR   = 9;
+<span style="color:#38bdf8;">const uint8_t</span> PIN_POT_CONSIGNE = A0;
+
+<span style="color:#64748b;">// Connexions Carrier : D7 = Clock (Jaune), D6 = Data (Blanc)</span>
+<span style="color:#00979d; font-weight:bold;">Grove_LED_Bar</span> bar(7, 6, 0, LED_BAR_10);
+
+<span style="color:#38bdf8;">void</span> <span style="color:#fde047;">setup</span>() {
+    initialiserMateriel();
+    animationAccueilChenillard();
+}
+
+<span style="color:#38bdf8;">void</span> <span style="color:#fde047;">loop</span>() {
+    <span style="color:#38bdf8;">static uint32_t</span> dateDerniereTelemetrie = 0;
+    <span style="color:#38bdf8;">uint16_t</span> codeCan = 0;
+    <span style="color:#38bdf8;">bool</span> relaisEnclenche = <span style="color:#f472b6;">false</span>;
+    <span style="color:#38bdf8;">uint8_t</span> commandePwm = 0;
+
+    <span style="color:#64748b;">// 1. Acquisition consigne analogique (Passage par référence)</span>
+    <span style="color:#38bdf8;">float</span> tension = lireConsignePotentiometre(codeCan);
+
+    <span style="color:#64748b;">// 2. Conversion mathématique en niveau discret (0 à 10)</span>
+    <span style="color:#38bdf8;">uint8_t</span> niveau = convertirTensionEnNiveau(tension);
+
+    <span style="color:#64748b;">// 3. Mise à jour de l'afficheur dynamique (Grove - LED Bar)</span>
+    afficherBargraphe(niveau);
+
+    <span style="color:#64748b;">// 4. Pilotage puissance (Relais de sécurité + PWM TIP31C)</span>
+    commanderEtagePuissance(niveau, relaisEnclenche, commandePwm);
+
+    <span style="color:#64748b;">// 5. Télémétrie périodique non-bloquante (115200 bauds)</span>
+    <span style="color:#f472b6;">if</span> (<span style="color:#fde047;">millis</span>() - dateDerniereTelemetrie &gt;= 250) {
+        dateDerniereTelemetrie = <span style="color:#fde047;">millis</span>();
+        envoyerTelemetrieSerie(tension, codeCan, niveau, relaisEnclenche, commandePwm);
+    }
+}</code></pre>
+    </div>
+
+    <h3>4.2 Télémétrie Formatée sur le Moniteur Série</h3>
+    <p>
+      Ouvrez le Moniteur Série de l'Arduino IDE réglé sur <strong>115200 bauds</strong>.
+      Vous devez observer défiler une trame diagnostique toutes les 250 ms reflétant en temps réel la dynamique de votre banc d'essai :
+    </p>
+    <pre><code>[TELEM] U_pot: 0.00 V (CAN: 0/1023) | Niveau: 0/10 | Relais: OUVERT [OFF] | PWM TIP31C: 0/255 (0 %)
+[TELEM] U_pot: 1.48 V (CAN: 303/1023) | Niveau: 3/10 | Relais: FERME [ON]  | PWM TIP31C: 111/255 (43 %)
+[TELEM] U_pot: 3.52 V (CAN: 720/1023) | Niveau: 7/10 | Relais: FERME [ON]  | PWM TIP31C: 193/255 (75 %)
+[TELEM] U_pot: 5.00 V (CAN: 1023/1023) | Niveau: 10/10 | Relais: FERME [ON]  | PWM TIP31C: 255/255 (100 %)</code></pre>
+
+    <!-- GRILLE D'ÉVALUATION SUR 20 PTS -->
+    <h2 id="sec-eval">📋 Grille d'Évaluation par Compétences BTS CIEL (sur 20 pts)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Critère &amp; Compétence Ciblée</th>
+          <th>Barème</th>
+          <th>Éléments Observés par l'Enseignant</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>1. Câblage Matériel &amp; Respect des Règles de Sécurité (C3.1)</strong></td>
+          <td>4 pts</td>
+          <td>Enfichage propre du Nano sur le Shield Grove, affectation exacte des ports (<code>A0</code>, <code>D2</code>, <code>D6</code>, <code>D9</code>), masse commune reliée avec la Powerbank Varta.</td>
+        </tr>
+        <tr>
+          <td><strong>2. Maîtrise des Fonctions C++ &amp; Typage Strict (C1.2)</strong></td>
+          <td>5 pts</td>
+          <td>Compréhension du passage par valeur vs référence <code>&amp;</code>, choix adéquat des types scalaires (<code>float</code>, <code>uint8_t</code>, <code>bool</code>), code propre sans variables globales superflues.</td>
+        </tr>
+        <tr>
+          <td><strong>3. Pilotage de la Bibliothèque Grove_LED_Bar (C1.2)</strong></td>
+          <td>4 pts</td>
+          <td>Déclaration correcte des broches Clock/Data (<code>7, 6</code>), chenillard d'accueil fonctionnel, synchronisation fluide entre potentiomètre et affichage 10 crans.</td>
+        </tr>
+        <tr>
+          <td><strong>4. Validation Électrique de la Chaîne de Puissance (C2.1)</strong></td>
+          <td>4 pts</td>
+          <td>Fonctionnement irréprochable du coupe-circuit Relais à consigne nulle, modulation progressive du moteur par le TIP31C, mesure cohérente des tensions moyennes.</td>
+        </tr>
+        <tr>
+          <td><strong>5. Télémétrie Série &amp; Rigueur du Compte Rendu (C4.2)</strong></td>
+          <td>3 pts</td>
+          <td>Trame série lisible à 115200 bauds, tableaux de mesures complétés avec calculs d'écarts relatifs, dépôt ponctuel sur Google Classroom.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div id="toast-msg">Notification</div>
+
+  <!-- SCRIPT JS INTERACTIF -->
+  <script>
+    function actualiserProgression() {
+      const cases = document.querySelectorAll('.check-list input[type="checkbox"]');
+      const total = cases.length;
+      let cochees = 0;
+      cases.forEach(c => { if(c.checked) cochees++; });
+      const pct = Math.round((cochees / total) * 100);
+      document.getElementById('p-bar').style.width = pct + '%';
+      document.getElementById('p-text').textContent = pct + '%';
+    }
+
+    function copierCode(btn) {
+      const code = btn.nextElementSibling.innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        const ancText = btn.textContent;
+        btn.textContent = "Copié !";
+        btn.style.background = "#15803d";
+        setTimeout(() => {
+          btn.textContent = ancText;
+          btn.style.background = "";
+        }, 2000);
+      });
+    }
+
+    function basculerReponses() {
+      const details = document.querySelectorAll('details.answer-box');
+      const allOpen = Array.from(details).every(d => d.open);
+      details.forEach(d => d.open = !allOpen);
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast-msg');
+      toast.textContent = msg;
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 3000);
+    }
+
+    function copierCompteRenduGoogleDocs() {
+      const modele = `COMPTE RENDU DE TP (3H) — BTS CIEL OPTION B (1re Année)
+TP 5 bis : NANO-DRIVECARRIER — Transition C++ Embarqué, Nano Carrier & Moteur
+Binôme : ............................................   Date : ....................
+Tension Powerbank Varta mesurée : ........ V
+
+1. RÉPONSES AUX QUESTIONS PARTIE 1 (FONCTIONS & CAN A0) :
+- Q1.1 (Résolution CAN Pico vs Nano) :
+- Q1.2 (Typage 1023.0f vs 1023 en C++) :
+- Q1.3 (Tableau de mesure CAN vs Multimètre) :
+  * Min (0 V)     : Code CAN = ...... | U_calc = ...... V | U_mes = ...... V | Epsilon = ...... %
+  * Milieu (~2.5V): Code CAN = ...... | U_calc = ...... V | U_mes = ...... V | Epsilon = ...... %
+  * Max (5 V)     : Code CAN = ...... | U_calc = ...... V | U_mes = ...... V | Epsilon = ...... %
+
+2. RÉPONSES AUX QUESTIONS PARTIE 2 (GROVE - LED BAR MY9221) :
+- Q2.1 (Zone morte 0.15V) :
+- Q2.2 (Méthode LED individuelle) :
+- Q2.3 (Valeur hexadécimale 0x3FF) :
+
+3. RÉPONSES AUX QUESTIONS PARTIE 3 (CHAÎNE DE PUISSANCE & PWM) :
+- Q3.1 (Décollage PWM à 70) :
+- Q3.2 (Nécessité de conserver le Relais de sécurité) :
+- Q3.3 (Tableau de mesure tension moyenne moteur) :
+  * Niveau 0  (0 %)   : analogWrite = 0   | <U_mot> = ...... V | État :
+  * Niveau 2  (37 %)  : analogWrite = ... | <U_mot> = ...... V | État :
+  * Niveau 5  (59 %)  : analogWrite = ... | <U_mot> = ...... V | État :
+  * Niveau 8  (82 %)  : analogWrite = ... | <U_mot> = ...... V | État :
+  * Niveau 10 (100 %) : analogWrite = 255 | <U_mot> = ...... V | État :
+- Q3.4 (Puissance dissipée dans le TIP31C) :
+
+4. BILAN DE VALIDATION & CONCLUSION PERSONNELLE :
+- Apports du découpage en fonctions C++ :
+- Difficultés rencontrées et solutions apportées :`;
+
+      navigator.clipboard.writeText(modele).then(() => {
+        showToast("✅ Modèle de compte rendu copié dans le presse-papier !");
+      }).catch(err => {
+        alert("Erreur lors de la copie : " + err);
+      });
+    }
+  </script>
+</body>
+</html>
