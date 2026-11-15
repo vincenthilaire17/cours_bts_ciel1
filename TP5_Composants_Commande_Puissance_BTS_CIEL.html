@@ -1978,7 +1978,7 @@
   </div>
 
   <div class="student-answer">
-    <strong>💡 Question d'ingénierie n°3 — Synthèse Relais Grove sous Proteus (Régimes Statique &amp; Transitoire) :</strong><br>
+    <strong>💡 Question d'ingénierie n°3.A — Analyse Transitoire Proteus : Commutation &amp; Surtension Sans Protection :</strong><br>
     Répondez aux questions suivantes dans votre compte-rendu Google Docs à partir de vos simulations sous Proteus ISIS :
     <ol style="margin:6px 0 0 0; padding-left:18px; line-height:1.65;">
       <li><strong>Comportement statique &amp; Isolation galvanique (&sect; 3.2) :</strong>
@@ -2009,9 +2009,133 @@
     </ol>
   </div>
 
+  <h3>3.4 Écrêtage &amp; Protection Inductive : Raccordement de la LED Témoin puis Comparaison de Deux Diodes de Roue Libre (1N4001 vs 1N5819)</h3>
+  <p>
+    L'analyse précédente a démontré la dangerosité extrême de la surtension inductive à l'ouverture en l'absence de protection.
+    Nous allons maintenant étudier successivement sous Proteus ISIS l'impact de <strong>la remise en place de la LED témoin</strong>, puis le raccordement d'une <strong>diode de roue libre</strong> en comparant deux technologies de diodes différentes (diode silicium PN standard <code>1N4001</code> vs diode Schottky <code>1N5819</code>) avec confrontation aux données constructeurs (datasheets).
+  </p>
+
+  <div class="callout callout-proteus">
+    <strong>🔬 EXPÉRIMENTATION 1 — Rebranchement de la branche LED témoin (Résistance 1 k&Omega; + LED rouge) :</strong>
+    <ol style="margin:6px 0 0 0; padding-left:20px; line-height:1.65;">
+      <li><strong>Modification sous Proteus :</strong> Dans le schéma de la Figure 3.3, rétablissez le fil reliant la cathode de la LED rouge (en série avec sa résistance de <code>1 k&Omega;</code>) au nœud de collecteur <strong><code>Q1(C)</code></strong>. <em>(Attention : aucune diode de roue libre n'est encore raccordée sur la bobine)</em>.</li>
+      <li><strong>Simulation transitoire :</strong> Cliquez sur le graphe <em>ANALOGUE ANALYSIS</em> et appuyez sur la touche <strong>Espace</strong> pour relancer le tracé SPICE.</li>
+      <li><strong>Observation de la sonde <code>Q1(C)</code> :</strong>
+        <ul>
+          <li>Lorsque la commande <code>R5(1)</code> est à l'état haut (5 V), le transistor est saturé : la LED s'allume avec un courant direct <i>I<sub>F</sub> &approx; (5 &minus; 1,8 &minus; 0,2) / 1 000 &approx; 3 mA</i>.</li>
+          <li>À l'instant de coupure (5 V &rarr; 0 V), observez la tension crête sur <code>Q1(C)</code> : le pic de surtension disparaît-il ?</li>
+        </ul>
+      </li>
+      <li><strong>Analyse physique &amp; Confrontation à la DataSheet de la LED :</strong>
+        L'anode de la LED étant polarisée au rail +5 V et sa cathode au collecteur <i>Q</i><sub>1</sub>(<i>C</i>), dès que le collecteur grimpe au-delà de +5 V, la diode LED se retrouve polarisée en <strong>sens INVERSE</strong> (tension <i>V<sub>AK</sub> = V<sub>anode</sub> &minus; V<sub>cathode</sub> &lt; 0</i>).<br>
+        La LED est donc <strong>bloquée</strong> : elle n'offre strictement aucun passage pour le courant de décharge de l'inductance ! Le pic de surtension persiste intégralement.<br>
+        De plus, en consultant la datasheet d'une LED rouge classique (ex. Kingbright L-7113ID ou Vishay TLHR5400), la tension inverse maximale admissible n'est que de <strong><i>V<sub>R,max</sub></i> = 5 V</strong> ! Une telle surtension risque de détruire la LED par claquage inverse. <em>Une simple LED de signalisation ne protège donc absolument pas l'électronique de puissance.</em>
+      </li>
+    </ol>
+  </div>
+
+  <div class="callout callout-proteus">
+    <strong>🛡️ EXPÉRIMENTATION 2 — Câblage d'une Vraie Diode de Roue Libre &amp; Comparaison de Deux Références :</strong>
+    <p style="margin:6px 0 8px 0; line-height:1.6;">
+      Pour protéger le circuit, une diode de roue libre doit être connectée en <strong>anti-parallèle</strong> aux bornes de l'ensemble inductif bobine + <i>L</i><sub>1</sub> :
+      sa <strong>Cathode (K, anneau repère)</strong> est reliée au rail <code>+5V</code> (sonde <code>RL1(C1)</code>) et son <strong>Anode (A)</strong> est reliée au collecteur <strong><code>Q1(C)</code></strong>.
+      En régime passant, elle est bloquée (cathode à 5 V, anode à 0,2 V) ; lors du blocage du transistor, elle devient immédiatement passante et bride la tension au collecteur à :
+      <span style="font-weight:bold; color:#0369a1;"><i>V</i><sub><i>Q</i>1(<i>C</i>),max</sub> = <i>V<sub>CC</sub></i> + <i>V<sub>F</sub></i></span>.
+    </p>
+    <p style="margin:0 0 8px 0;">
+      Testez successivement sous Proteus les deux diodes suivantes en relevant la tension crête maximale d'écrêtage au curseur sur la trace <code>Q1(C)</code> :
+    </p>
+    <ul style="margin:6px 0 0 0; padding-left:20px; line-height:1.65;">
+      <li><strong>Diode Référence 1 : <code>1N4001</code> (Diode de redressement silicium standard à jonction PN — fournie dans le kit TI) :</strong>
+        <ul>
+          <li><strong>Technologie :</strong> Jonction PN Silicium standard.</li>
+          <li><strong>DataSheet constructeur (Vishay / Diodes Inc.) :</strong> Tension directe <i>V<sub>F</sub> &le; 1,1 V</i> à <i>I<sub>F</sub> = 1 A</i> ; pour un courant d'excitation de bobine de relais de l'ordre de <i>I<sub>bobine</sub> &approx; 70 à 100 mA</i>, la caractéristique directe donne typiquement <strong><i>V<sub>F</sub></i> &approx; 0,75 à 0,82 V</strong> (à 25 &deg;C). Temps de recouvrement <i>t<sub>rr</sub> &approx; 2 &mu;s</i>.</li>
+          <li><strong>Seuil d'écrêtage théorique :</strong> <i>V<sub>Q1(C),clamp</sub> = 5,0 V + 0,80 V &approx; <strong>5,80 V</strong></i>.</li>
+        </ul>
+      </li>
+      <li><strong>Diode Référence 2 : <code>1N5819</code> (Diode Schottky de puissance à barrière métal-semiconducteur) :</strong>
+        <ul>
+          <li><strong>Technologie :</strong> Jonction Schottky (métal / silicium dopé N), conduction exclusive par porteurs majoritaires.</li>
+          <li><strong>DataSheet constructeur (STMicroelectronics / Vishay) :</strong> Tension directe crête extrêmement basse : <strong><i>V<sub>F</sub></i> &approx; 0,34 à 0,38 V</strong> pour <i>I<sub>F</sub> = 100 mA</i> (et <i>V<sub>F</sub> &le; 0,60 V</i> à plein courant 1 A). Temps de recouvrement inverse quasi-nul <strong><i>t<sub>rr</sub> &lt; 10 ns</i></strong> (absence de stockage de porteurs minoritaires).</li>
+          <li><strong>Seuil d'écrêtage théorique :</strong> <i>V<sub>Q1(C),clamp</sub> = 5,0 V + 0,38 V &approx; <strong>5,38 V</strong></i>.</li>
+        </ul>
+      </li>
+    </ul>
+    <p style="margin:8px 0 0 0; font-size:9.2pt; color:#475569;">
+      <em>Note documentaire :</em> Le module commercial <em>Seeed Grove Relay</em> intègre quant à lui une diode <strong><code>1N4148</code></strong> (diode rapide petit signal au silicium, <i>V<sub>F</sub> &approx; 0,72 V</i>, <i>t<sub>rr</sub> = 4 ns</i>, <i>I<sub>F,max</sub> = 200 mA</i>), optimisée pour commuter très rapidement sur de petits relais dont le courant reste sous 150 mA.
+    </p>
+  </div>
+
+  <!-- TABLEAU COMPARATIF DES ÉCRÊTAGES -->
+  <table style="margin-top:14px;">
+    <thead>
+      <tr>
+        <th>Configuration de Protection testée</th>
+        <th>Composant inséré</th>
+        <th>Technologie de Jonction</th>
+        <th>Tension directe <i>V<sub>F</sub></i> (Datasheet)</th>
+        <th class="col-sim">Tension crête mesurée <i>V</i><sub><i>Q</i>1(<i>C</i>),max</sub> (Proteus)</th>
+        <th>Verdict Protection &amp; Sécurité Transistor (<i>V<sub>CEO,max</sub> = 40 V</i>)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Sans aucune protection (&sect; 3.3)</strong></td>
+        <td>Aucun</td>
+        <td>-</td>
+        <td>-</td>
+        <td class="center" style="color:#b91c1c; font-weight:bold;">&gt;&gt; 40 V (pic destructeur)</td>
+        <td>❌ <strong>Destruction immédiate par claquage d'avalanche</strong></td>
+      </tr>
+      <tr>
+        <td><strong>Avec LED témoin seule (Expér. 1)</strong></td>
+        <td>LED Rouge + 1 k&Omega;</td>
+        <td>GaP / GaAsP (LED)</td>
+        <td><i>V<sub>F</sub> &approx; 1,8 V</i> (en direct) / <strong><i>V<sub>R,max</sub> = 5 V</i></strong></td>
+        <td class="center" style="color:#b91c1c; font-weight:bold;">&gt;&gt; 40 V (non écrêté)</td>
+        <td>❌ <strong>Inopérant : LED polarisée en inverse, risque de claquage LED</strong></td>
+      </tr>
+      <tr>
+        <td><strong>Diode de roue libre Silicium (Expér. 2A)</strong></td>
+        <td><strong><code>1N4001</code></strong> (Kit TI)</td>
+        <td>Jonction PN Silicium standard</td>
+        <td><i>V<sub>F</sub> &approx; 0,78 V</i> (à 100 mA)</td>
+        <td class="center" style="color:#166534; font-weight:bold;">&approx; 5,78 V à 5,82 V</td>
+        <td>✅ <strong>Sécurisé : Écrêtage propre à <i>V<sub>CC</sub> + V<sub>F</sub></i></strong></td>
+      </tr>
+      <tr>
+        <td><strong>Diode de roue libre Schottky (Expér. 2B)</strong></td>
+        <td><strong><code>1N5819</code></strong> (Schottky)</td>
+        <td>Barrière Métal-Semiconducteur</td>
+        <td><i>V<sub>F</sub> &approx; 0,36 V</i> (à 100 mA)</td>
+        <td class="center" style="color:#166534; font-weight:bold;">&approx; 5,36 V à 5,40 V</td>
+        <td>✅ <strong>Optimal : Seuil d'écrêtage au plus bas, zéro pertes de commutation</strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="student-answer">
+    <strong>💡 Question d'ingénierie n°3.B — Comparaison des Seuils d'Écrêtage &amp; Validation par les DataSheets :</strong><br>
+    Répondez aux questions suivantes dans votre compte-rendu Google Docs :
+    <ol style="margin:6px 0 0 0; padding-left:18px; line-height:1.65;">
+      <li><strong>Comportement de la LED témoin :</strong>
+        Pourquoi la LED témoin rouge normale ne participe-t-elle à aucun moment à l'écrêtage de la surtension lors de l'ouverture du circuit ? Comparez la tension appliquée à ses bornes lors de la coupure avec la tension inverse limite <i>V<sub>R,max</sub></i> issue de sa documentation technique.
+      </li>
+      <li><strong>Confrontation Simulation Proteus vs Datasheets constructeur :</strong>
+        Relevez sur votre analyseur graphique <em>ANALOGUE ANALYSIS</em> la tension d'écrêtage exacte avec la diode <code>1N4001</code> puis avec la diode <code>1N5819</code>.
+        Calculez la différence de seuil mesurée :
+        <div style="margin:4px 0;">&Delta;<i>V<sub>clamp</sub></i> = <i>V</i><sub><i>Q</i>1(<i>C</i>),1N4001</sub> &minus; <i>V</i><sub><i>Q</i>1(<i>C</i>),1N5819</sub></div>
+        Cette différence correspond-elle à l'écart de tension directe &Delta;<i>V<sub>F</sub></i> issu des courbes des deux datasheets ? Justifiez précisément.
+      </li>
+      <li><strong>Choix technologique en génie électronique :</strong>
+        Pourquoi privilégie-t-on impérativement une <strong>diode Schottky</strong> (comme la <code>1N5819</code>) plutôt qu'une diode standard PN (comme la <code>1N4001</code>) lorsqu'on commute une charge inductive à fréquence élevée (par exemple dans un variateur PWM à plusieurs dizaines de kilohertz ou une alimentation à découpage) ? (Indice : comparez les temps de recouvrement inverse <i>t<sub>rr</sub></i> et les pertes de commutation).
+      </li>
+    </ol>
+  </div>
+
   <label class="step-check no-print">
     <input type="checkbox" class="tp-step-cb" data-step="3" onchange="updateProgress()">
-    <span>Partie 3 validée : Simulations Proteus du Relais Grove (Régimes Statique &amp; Transitoire ANALOGUE) complétées dans Google Docs.</span>
+    <span>Partie 3 validée : Simulations Proteus du Relais Grove (Régimes Statique, Transitoire &amp; Comparaison des Diodes d'Écrêtage) complétées dans Google Docs.</span>
   </label>
 </div>
 
@@ -2750,10 +2874,10 @@ puissance_autorisee = <span class="kw">False</span>          <span class="co"># 
         <p><b>Réponse Question d'ingénierie n°2 (Non-linéarité V_F et différence LED Rouge / Verte) :</b><br>........................................................................................................</p>
 
         <h2 style="color:#0b3c5d;">PARTIE 3 — Commande / Puissance par Relais Grove (Simulation Proteus &amp; Isolation Galvanique)</h2>
-        <p><i>[📷 Insérer ici la capture Proteus statique du projet « Grove Relay moteur.pdsprj » (OFF et ON) + la capture du graphe transitoire « ANALOGUE ANALYSIS » (Figure 3.3 : pic de surtension sur Q1(C) sans diode de roue libre)]</i></p>
-        <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; width:100%;">
+        <p><i>[📷 Insérer ici la capture Proteus statique du projet « Grove Relay moteur.pdsprj » (OFF et ON) + la capture du graphe transitoire sans diode (Figure 3.3) + la capture comparative des écrêtages avec 1N4001 et 1N5819]</i></p>
+        <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; width:100%; margin-bottom:10px;">
           <tr style="background:#fee2e2; font-weight:bold;">
-            <th>Zone</th><th>Grandeur mesurée sous Proteus</th><th>État REPOS (D2 = 0 V)</th><th>État TRAVAIL (D2 = 5 V)</th>
+            <th>Zone</th><th>Grandeur mesurée sous Proteus (Régime Statique)</th><th>État REPOS (D2 = 0 V)</th><th>État TRAVAIL (D2 = 5 V)</th>
           </tr>
           <tr><td>Commande</td><td>U_cmd D2 (V)</td><td>0,00 V</td><td>5,00 V</td></tr>
           <tr><td>Commande</td><td>I_B base transistor (mA)</td><td></td><td></td></tr>
@@ -2762,7 +2886,19 @@ puissance_autorisee = <span class="kw">False</span>          <span class="co"># 
           <tr><td>Puissance</td><td>I_moteur (mA)</td><td></td><td></td></tr>
           <tr><td>Signalisation</td><td>État LED rouge témoin</td><td>Éteinte</td><td>Allumée</td></tr>
         </table>
-        <p><b>Réponses Question d'ingénierie n°3 (Comportement contact sec, impossibilité PWM 1 kHz, analyse transitoire 0V→5V, loi u_L = L·di/dt et pic négatif/surtension sans diode, rôle de la diode de roue libre) :</b><br>........................................................................................................</p>
+        <p><b>Réponses Question d'ingénierie n°3.A (Simulation transitoire Proteus sans diode : fermeture 0V→5V, loi u_L = L·di/dt, pic de surtension, risque V_CEO) :</b><br>........................................................................................................</p>
+        
+        <h3>Comparatif des seuils d'écrêtage (Simulation Proteus vs Datasheets) :</h3>
+        <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; width:100%; margin-bottom:10px;">
+          <tr style="background:#fee2e2; font-weight:bold;">
+            <th>Configuration</th><th>Composant</th><th>Technologie</th><th>V_F Datasheet</th><th>V_Q1(C),max Proteus</th><th>Verdict protection</th>
+          </tr>
+          <tr><td>Sans protection</td><td>Aucun</td><td>-</td><td>-</td><td></td><td>Destruction V_CEO</td></tr>
+          <tr><td>LED témoin seule</td><td>LED Rouge + 1 kΩ</td><td>LED</td><td>V_R,max = 5 V</td><td></td><td>Inopérant (bloquée en inverse)</td></tr>
+          <tr><td>Diode Silicium standard</td><td>1N4001</td><td>PN Silicium</td><td>~0,80 V</td><td></td><td>Sécurisé (écrêtage V_CC + V_F)</td></tr>
+          <tr><td>Diode Schottky</td><td>1N5819</td><td>Barrière Schottky</td><td>~0,36 V</td><td></td><td>Optimal (faible seuil, rapide)</td></tr>
+        </table>
+        <p><b>Réponses Question d'ingénierie n°3.B (LED témoin en inverse, comparaison des seuils 1N4001 vs 1N5819, confrontation aux datasheets et supériorité Schottky en haute fréquence) :</b><br>........................................................................................................</p>
 
         <h2 style="color:#0b3c5d;">PARTIE 4 — Commande / Puissance par Transistor TIP31C &amp; Diode 1N4001</h2>
         <p><i>[📷 Insérer ici la capture Proteus TIP31C + photo du câblage Breadboard TIP31C + 1N4001]</i></p>
