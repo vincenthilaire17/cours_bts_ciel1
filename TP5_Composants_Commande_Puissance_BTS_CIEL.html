@@ -1855,6 +1855,39 @@
     <div class="svg-caption">Figure 3.2 — Synoptique fonctionnel et barrière d'isolation galvanique : séparation stricte entre la Partie Commande (Raspberry Pi Pico 3,3 V) et la Partie Puissance (5 V Powerbank Varta + Moteur CC jaune) avec emplacement des multimètres.</div>
   </div>
 
+  <div class="callout callout-info" style="border-left:4px solid #0284c7; background:#f0f9ff; padding:14px 18px; border-radius:8px; margin:16px 0;">
+    <h4 style="margin:0 0 10px 0; color:#0369a1;">⚡ Rôle Clé du Transistor NPN : Étage Driver &amp; Amplification en Courant pour la Bobine</h4>
+    <p style="margin:0 0 8px 0; line-height:1.65;">
+      Une question d'ingénierie fondamentale se pose : <strong>pourquoi ne pas brancher directement la bobine du relais sur la broche logique D2 du microcontrôleur ?</strong>
+    </p>
+    <ul style="margin:6px 0 8px 0; padding-left:20px; line-height:1.65;">
+      <li><strong>Incompatibilité en courant des sorties logiques GPIO :</strong>
+        La bobine d'un relais électromécanique 5 V présente une résistance d'enroulement d'environ <i>R<sub>bobine</sub> &approx; 60 à 70 &Omega;</i>. Pour créer un flux magnétique suffisant afin de vaincre le ressort de rappel et fermer le contact sec, la bobine réclame un courant de commande :
+        <div style="margin:4px 0; font-weight:bold; color:#b91c1c;">
+          <i>I<sub>bobine</sub></i> = <span class="frac"><span class="num"><i>V<sub>CC</sub></i> &minus; <i>V<sub>CE,sat</sub></i></span><span class="den"><i>R<sub>bobine</sub></i></span></span> &approx; <span class="frac"><span class="num">5,0 V &minus; 0,2 V</span><span class="den">65 &Omega;</span></span> &approx; <strong>74 mA</strong> (jusqu'à ~80 mA avec la LED témoin).
+        </div>
+        Or, une broche GPIO de microcontrôleur moderne (Raspberry Pi Pico : max <strong>12 mA</strong> ; Arduino Nano : max 20 mA) est totalement incapable de fournir une telle intensité ! Tenter un branchement direct écraserait la tension logique du GPIO et provoquerait la <strong>destruction thermique immédiate du port interne du microcontrôleur</strong>.
+      </li>
+      <li><strong>Le transistor NPN comme multiplicateur de courant (Étage Driver / Buffer) :</strong>
+        Le transistor NPN résout parfaitement cette contradiction énergétique :
+        <ul style="margin:4px 0 0 0;">
+          <li><strong>Courant d'entrée prélevé sur la commande D2 (Base) :</strong>
+            <i>I<sub>B</sub> = <span class="frac"><span class="num"><i>U<sub>cmd</sub></i> &minus; <i>V<sub>BE</sub></i></span><span class="den"><i>R<sub>B</sub></i></span></span> = <span class="frac"><span class="num">5,0 V &minus; 0,7 V</span><span class="den">4 700 &Omega;</span></span> &approx; <strong>0,91 mA</strong></i> (charge infime, sans danger pour le microcontrôleur).
+          </li>
+          <li><strong>Courant de puissance distribué à la bobine (Collecteur) :</strong>
+            <i>I<sub>C</sub> &approx; <strong>74 mA</strong></i>, directement soutiré du rail d'alimentation +5 V.
+          </li>
+          <li><strong>Gain en courant effectif en commutation :</strong>
+            <div style="margin:4px 0; font-weight:bold; color:#0369a1;">
+              <i>k<sub>driver</sub></i> = <span class="frac"><span class="num"><i>I<sub>C</sub></i></span><span class="den"><i>I<sub>B</sub></i></span></span> &approx; <span class="frac"><span class="num">74 mA</span><span class="den">0,91 mA</span></span> &approx; <strong>81</strong> !
+            </div>
+            Le transistor agit comme un <strong>amplificateur de courant</strong> qui multiplie par plus de <strong>80</strong> la capacité du signal logique, permettant à une commande de seulement 4,5 mW de piloter un composant mécanique absorbant près de 370 mW.
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+
   <table style="margin-top:14px;">
     <thead>
       <tr>
@@ -1862,7 +1895,7 @@
         <th>Grandeur mesurée sous Proteus (Projet fourni « Grove Relay moteur.pdsprj »)</th>
         <th class="col-sim">État REPOS (Commande D2 = 0 V)</th>
         <th class="col-sim">État TRAVAIL (Commande D2 = 5 V)</th>
-        <th>Interprétation &amp; Rôle</th>
+        <th>Interprétation &amp; Rôle du Transistor Driver</th>
       </tr>
     </thead>
     <tbody>
@@ -1871,14 +1904,35 @@
         <td>Tension logique de commande <i>U<sub>cmd (D2)</sub></i></td>
         <td class="center">0,00 V</td>
         <td class="center">5,00 V</td>
-        <td>Niveau logique haut / bas issu du microcontrôleur</td>
+        <td>Niveau logique de sortie du microcontrôleur</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-cmd">Transistor Q1</span></td>
+        <td>Tension Collecteur-Émetteur <i>V<sub>CE</sub> = V<sub>Q1(C)</sub></i></td>
+        <td class="center">5,00 V</td>
+        <td class="center">&approx; 0,15 à 0,20 V</td>
+        <td>Transistor <strong>Bloqué</strong> (interrupteur ouvert) / <strong>Saturé</strong> (interrupteur fermé)</td>
       </tr>
       <tr>
         <td><span class="badge badge-cmd">Commande</span></td>
-        <td>Courant de base du transistor <i>I<sub>B</sub></i></td>
+        <td>Courant de base <i>I<sub>B</sub></i> (prélevé sur D2)</td>
         <td class="center">0,00 mA</td>
-        <td class="center">____ mA</td>
-        <td><i>I<sub>B</sub> &approx; (5 &minus; 0,7) / 4,7 k&Omega; &approx; 0,91 mA</i> (saturation)</td>
+        <td class="center">____ mA (&approx; 0,91 mA)</td>
+        <td>Courant de commande très faible issu du GPIO (inoffensif pour la puce)</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-cmd">Driver Bobine</span></td>
+        <td>Courant collecteur <i>I<sub>C</sub></i> (distribué à la bobine)</td>
+        <td class="center">0,00 mA</td>
+        <td class="center">____ mA (&approx; 74 à 80 mA)</td>
+        <td>Courant indispensable pour magnétiser et coller le relais mécanique</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-cmd">Amplification</span></td>
+        <td>Rapport d'amplification en courant <i>k = I<sub>C</sub> / I<sub>B</sub></i></td>
+        <td class="center">-</td>
+        <td class="center"><strong>&approx; 80 à 85</strong></td>
+        <td><strong>Rôle de driver : amplification en courant x80 !</strong></td>
       </tr>
       <tr>
         <td><span class="badge badge-pwr">Puissance</span></td>
@@ -1899,7 +1953,7 @@
         <td>Courant moteur <i>I<sub>moteur</sub></i></td>
         <td class="center">0,00 mA</td>
         <td class="center">____ mA</td>
-        <td>Courant fourni par la source BAT1 (5 V isolée)</td>
+        <td>Courant de puissance fourni par la source BAT1 5V isolée</td>
       </tr>
       <tr>
         <td><span class="badge badge-cmd">Signalisation</span></td>
@@ -1987,9 +2041,17 @@
           <li>Pourquoi est-il <strong>strictement impossible</strong> d'utiliser ce relais électromécanique pour faire varier la vitesse du moteur par MLI/PWM à une fréquence de 1 000 commutations par seconde (1 kHz) ? (Citez les limites physiques : inertie mécanique des lames, rebonds, usure prématurée).</li>
         </ul>
       </li>
+      <li><strong>Rôle de driver &amp; amplification en courant du transistor NPN (&sect; 3.2) :</strong>
+        <ul>
+          <li>Comparez la valeur mesurée du courant de base <i>I<sub>B</sub></i> (fourni par la sortie D2) et celle du courant de collecteur <i>I<sub>C</sub></i> (alimentant la bobine). Calculez le rapport d'amplification de courant effectif :
+            <div style="margin:4px 0;"><i>k</i> = <span class="frac"><span class="num"><i>I<sub>C</sub></i></span><span class="den"><i>I<sub>B</sub></i></span></span></div>
+          </li>
+          <li>Que se passerait-il si l'on branchait directement la bobine du relais sur une broche GPIO du microcontrôleur (limitée à 12 mA sur Raspberry Pi Pico) sans passer par le transistor ? Expliquez précisément pourquoi le transistor NPN est qualifié d'étage <strong>Driver de puissance</strong>.</li>
+        </ul>
+      </li>
       <li><strong>Analyse de la fermeture en régime transitoire (Front montant 0 V &rarr; 5 V sur D2) :</strong>
         <ul>
-          <li>Lorsque la commande <code>R5(1)</code> passe de 0 V à 5 V, dans quel régime de fonctionnement bascule le transistor <i>Q</i><sub>1</sub> (Bloqué ou Saturé) ? Justifiez en calculant le courant de base <i>I<sub>B</sub> &approx; (5 &minus; 0,7) / 4,7 k&Omega;</i> et donnez la valeur théorique de la tension de collecteur <i>V<sub>CE,sat</sub></i>.</li>
+          <li>Lorsque la commande <code>R5(1)</code> passe de 0 V à 5 V, dans quel régime de fonctionnement bascule le transistor <i>Q</i><sub>1</sub> (Bloqué ou Saturé) ? Justifiez avec la valeur mesurée de la tension de saturation <i>V<sub>CE,sat</sub></i>.</li>
           <li>Pourquoi le courant dans la branche de la bobine ne monte-t-il pas instantanément à sa valeur maximale ? Rappelez l'expression de la constante de temps d'un circuit <i>RL</i> série :
             <div style="margin:4px 0;">&tau; = <span class="frac"><span class="num"><i>L</i></span><span class="den"><i>R</i></span></span></div>
             (où <i>R</i> est la résistance totale de la branche de bobine). Décrivez l'allure de la tension aux bornes de la bobine lors de ce front montant.</li>
@@ -2880,13 +2942,16 @@ puissance_autorisee = <span class="kw">False</span>          <span class="co"># 
             <th>Zone</th><th>Grandeur mesurée sous Proteus (Régime Statique)</th><th>État REPOS (D2 = 0 V)</th><th>État TRAVAIL (D2 = 5 V)</th>
           </tr>
           <tr><td>Commande</td><td>U_cmd D2 (V)</td><td>0,00 V</td><td>5,00 V</td></tr>
-          <tr><td>Commande</td><td>I_B base transistor (mA)</td><td></td><td></td></tr>
+          <tr><td>Transistor Q1</td><td>V_CE collecteur-émetteur (V)</td><td>5,00 V</td><td>~0,18 V (saturé)</td></tr>
+          <tr><td>Commande</td><td>I_B base transistor (fourni par D2) (mA)</td><td>0,00 mA</td><td></td></tr>
+          <tr><td>Driver Bobine</td><td>I_C collecteur (distribué à la bobine) (mA)</td><td>0,00 mA</td><td></td></tr>
+          <tr><td>Amplification</td><td>Facteur de gain driver k = I_C / I_B</td><td>-</td><td></td></tr>
           <tr><td>Puissance</td><td>U_contact contact sec relais (V)</td><td></td><td></td></tr>
           <tr><td>Puissance</td><td>U_moteur (V)</td><td></td><td></td></tr>
           <tr><td>Puissance</td><td>I_moteur (mA)</td><td></td><td></td></tr>
           <tr><td>Signalisation</td><td>État LED rouge témoin</td><td>Éteinte</td><td>Allumée</td></tr>
         </table>
-        <p><b>Réponses Question d'ingénierie n°3.A (Simulation transitoire Proteus sans diode : fermeture 0V→5V, loi u_L = L·di/dt, pic de surtension, risque V_CEO) :</b><br>........................................................................................................</p>
+        <p><b>Réponses Question d'ingénierie n°3.A (Rôle du transistor driver en courant k = I_C / I_B, fermeture 0V→5V, loi u_L = L·di/dt et surtension sans diode, risque V_CEO) :</b><br>........................................................................................................</p>
         
         <h3>Comparatif des seuils d'écrêtage (Simulation Proteus vs Datasheets) :</h3>
         <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; width:100%; margin-bottom:10px;">
