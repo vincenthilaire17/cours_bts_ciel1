@@ -1855,6 +1855,62 @@
     <div class="svg-caption">Figure 3.2 — Synoptique fonctionnel et barrière d'isolation galvanique : séparation stricte entre la Partie Commande (Raspberry Pi Pico 3,3 V) et la Partie Puissance (5 V Powerbank Varta + Moteur CC jaune) avec emplacement des multimètres.</div>
   </div>
 
+  <table style="margin-top:14px;">
+    <thead>
+      <tr>
+        <th>Zone</th>
+        <th>Grandeur mesurée sous Proteus (Projet fourni « Grove Relay moteur.pdsprj »)</th>
+        <th class="col-sim">État REPOS (Commande D2 = 0 V)</th>
+        <th class="col-sim">État TRAVAIL (Commande D2 = 5 V)</th>
+        <th>Interprétation &amp; Rôle</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="badge badge-cmd">Commande</span></td>
+        <td>Tension logique de commande <i>U<sub>cmd (D2)</sub></i></td>
+        <td class="center">0,00 V</td>
+        <td class="center">5,00 V</td>
+        <td>Niveau logique haut / bas issu du microcontrôleur</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-cmd">Commande</span></td>
+        <td>Courant de base du transistor <i>I<sub>B</sub></i></td>
+        <td class="center">0,00 mA</td>
+        <td class="center">____ mA</td>
+        <td><i>I<sub>B</sub> &approx; (5 &minus; 0,7) / 4,7 k&Omega; &approx; 0,91 mA</i> (saturation)</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-pwr">Puissance</span></td>
+        <td>Tension aux bornes du contact sec <i>U<sub>contact</sub></i></td>
+        <td class="center">____ V</td>
+        <td class="center">____ V</td>
+        <td>5 V au repos (circuit ouvert) / ~0,00 V au travail (contact fermé)</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-pwr">Puissance</span></td>
+        <td>Tension aux bornes du moteur jaune <i>U<sub>moteur</sub></i></td>
+        <td class="center">____ V</td>
+        <td class="center">____ V</td>
+        <td>0 V à l'arrêt / ~5 V en rotation active</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-pwr">Puissance</span></td>
+        <td>Courant moteur <i>I<sub>moteur</sub></i></td>
+        <td class="center">0,00 mA</td>
+        <td class="center">____ mA</td>
+        <td>Courant fourni par la source BAT1 (5 V isolée)</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-cmd">Signalisation</span></td>
+        <td>État de la LED rouge témoin du module</td>
+        <td class="center">Éteinte</td>
+        <td class="center">Allumée</td>
+        <td>Visualisation de l'excitation de la bobine</td>
+      </tr>
+    </tbody>
+  </table>
+
   <h3>3.3 Simulation Transitoire sous Proteus ISIS : Analyseur Graphique ANALOGUE &amp; Surtension Inductive (Sans Diode de Protection)</h3>
   <p>
     En régime continu établi (&sect; 3.2), le relais est soit excité en permanence, soit au repos. Cependant, la bobine d'un relais constitue une charge fortement <strong>inductive</strong>.
@@ -1922,10 +1978,16 @@
   </div>
 
   <div class="student-answer">
-    <strong>💡 Question d'ingénierie n°3.A — Analyse Transitoire Proteus : Commutation &amp; Surtension Inductive (Simulation Exclusive) :</strong><br>
-    À partir des courbes obtenues sur votre analyseur <em>ANALOGUE ANALYSIS</em> sous Proteus, répondez aux questions ci-dessous dans votre compte-rendu Google Docs :
+    <strong>💡 Question d'ingénierie n°3 — Synthèse Relais Grove sous Proteus (Régimes Statique &amp; Transitoire) :</strong><br>
+    Répondez aux questions suivantes dans votre compte-rendu Google Docs à partir de vos simulations sous Proteus ISIS :
     <ol style="margin:6px 0 0 0; padding-left:18px; line-height:1.65;">
-      <li><strong>Analyse de la fermeture (Transition de 0 V à 5 V sur D2) :</strong>
+      <li><strong>Comportement statique &amp; Isolation galvanique (&sect; 3.2) :</strong>
+        <ul>
+          <li>Pourquoi mesure-t-on environ <strong>5 V aux bornes du contact du relais lorsqu'il est ouvert</strong> et <strong>0,00 V lorsqu'il est fermé</strong> ?</li>
+          <li>Pourquoi est-il <strong>strictement impossible</strong> d'utiliser ce relais électromécanique pour faire varier la vitesse du moteur par MLI/PWM à une fréquence de 1 000 commutations par seconde (1 kHz) ? (Citez les limites physiques : inertie mécanique des lames, rebonds, usure prématurée).</li>
+        </ul>
+      </li>
+      <li><strong>Analyse de la fermeture en régime transitoire (Front montant 0 V &rarr; 5 V sur D2) :</strong>
         <ul>
           <li>Lorsque la commande <code>R5(1)</code> passe de 0 V à 5 V, dans quel régime de fonctionnement bascule le transistor <i>Q</i><sub>1</sub> (Bloqué ou Saturé) ? Justifiez en calculant le courant de base <i>I<sub>B</sub> &approx; (5 &minus; 0,7) / 4,7 k&Omega;</i> et donnez la valeur théorique de la tension de collecteur <i>V<sub>CE,sat</sub></i>.</li>
           <li>Pourquoi le courant dans la branche de la bobine ne monte-t-il pas instantanément à sa valeur maximale ? Rappelez l'expression de la constante de temps d'un circuit <i>RL</i> série :
@@ -1933,10 +1995,10 @@
             (où <i>R</i> est la résistance totale de la branche de bobine). Décrivez l'allure de la tension aux bornes de la bobine lors de ce front montant.</li>
         </ul>
       </li>
-      <li><strong>Analyse de l'ouverture et pic de surtension / pic négatif (Transition de 5 V à 0 V sur D2) :</strong>
+      <li><strong>Analyse de l'ouverture et pic de surtension / pic négatif (Front descendant 5 V &rarr; 0 V sur D2) :</strong>
         <ul>
           <li>Lorsque la commande <code>R5(1)</code> retombe brutalement à 0 V, le transistor <i>Q</i><sub>1</sub> se bloque. Le courant <i>i<sub>C</sub></i> tente de s'annuler instantanément (<span class="frac"><span class="num">d<i>i</i></span><span class="den">d<i>t</i></span></span> &ll; 0 en un temps <i>dt &rarr; 0</i>).</li>
-          <li>Rappelez la loi fondamentale de l'inductance :
+          <li>Rappelez la relation fondamentale de l'inductance :
             <div style="margin:4px 0;"><i>u<sub>L</sub></i> = <i>L</i> &middot; <span class="frac"><span class="num">d<i>i</i></span><span class="den">d<i>t</i></span></span></div>
             Expliquez pourquoi le terme <span class="frac"><span class="num">d<i>i</i></span><span class="den">d<i>t</i></span></span> étant très fortement négatif, la tension induite <i>u<sub>L</sub></i> prend une valeur gigantesque et inverse sa polarité par rapport au régime établi (loi de modération de Lenz).</li>
           <li>En déduire le potentiel au nœud de collecteur <i>V<sub>Q1(C)</sub> = V<sub>CC</sub> &minus; u<sub>L</sub> = V<sub>CC</sub> + L &middot; |<span class="frac"><span class="num">d<i>i</i></span><span class="den">d<i>t</i></span></span>|</i>. Quelle est la valeur crête du pic de surtension mesurée au curseur sur votre graphe Proteus sur la trace <code>Q1(C)</code> ? Pourquoi parle-t-on également de « pic négatif » si l'on mesure la tension aux bornes de la bobine en convention récepteur ?</li>
@@ -1947,96 +2009,9 @@
     </ol>
   </div>
 
-  <h3>3.4 Prototypage Réel avec le Raspberry Pi Pico &amp; Banc d'Essai Puissance</h3>
-  <ol>
-    <li><strong>Simulation Proteus préalable (Projet fourni « Grove Relay moteur ») :</strong> Comme étudié et mesuré au paragraphe 3.2 sur le fichier <strong><code>Grove Relay moteur.pdsprj</code></strong>, vous avez validé le basculement du contact sec, la protection par diode de roue libre et relevé l'ensemble des grandeurs électriques OFF/ON avant de raccorder le matériel réel sur votre paillasse.</li>
-    <li><strong>Câblage Réel sur Paillasse :</strong>
-      <ul>
-        <li>Branchez le module <strong>Grove Relay</strong> sur le port <strong><code>D16</code></strong> du <em>Grove Shield for Pi Pico</em> (switch vérifié sur <strong><code>3V3</code></strong> !).</li>
-        <li><strong>Côté bornier vert à vis du relais (Partie Puissance) :</strong> Reliez le fil <code>+5V</code> de la Powerbank Varta (en passant en série par votre multimètre sur la borne <strong><code>10A</code></strong> !) à la borne 1 du bornier vert ; reliez la borne 2 du bornier vert à un fil du <strong>moteur CC jaune 3–6 V</strong> ; reliez le second fil du moteur au <code>GND (&minus;)</code> de la Powerbank Varta. <em>Notez qu'aucun fil ne relie la Varta au Pico !</em></li>
-      </ul>
-    </li>
-    <li><strong>Script MicroPython de test TOR (Tout-Ou-Rien) :</strong> Exécutez sous Thonny le script ci-dessous qui commute lentement toutes les <strong>8 secondes</strong> afin de vous laisser tout le temps de relever vos tensions et courants au multimètre :</li>
-  </ol>
-
-  <div class="code-wrapper">
-    <button type="button" class="copy-code-btn no-print" onclick="copierCode(this)">Copier</button>
-    <pre><code><span class="co"># test_relais_tor.py — Pilotage Partie Commande (GP16) / Partie Puissance isolée (Relais Grove)</span>
-<span class="im">from</span> machine <span class="im">import</span> Pin
-<span class="im">import</span> time
-
-relais_grove = Pin(<span class="dv">16</span>, Pin.OUT)  <span class="co"># Port D16 du Grove Shield (3,3 V logique)</span>
-
-<span class="fu">print</span>(<span class="st">"=== BANC D'ESSAI RELAIS GROVE (8s OFF / 8s ON) ==="</span>)
-<span class="kw">while</span> <span class="kw">True</span>:
-    relais_grove.value(<span class="dv">0</span>)
-    <span class="fu">print</span>(<span class="st">"[COMMANDE = 0 (0V)]   -&gt; Relais OUVERT  | Mesurez l'état REPOS..."</span>)
-    time.sleep(<span class="dv">8</span>)
-
-    relais_grove.value(<span class="dv">1</span>)
-    <span class="fu">print</span>(<span class="st">"[COMMANDE = 1 (3.3V)] -&gt; Relais FERMÉ   | Mesurez l'état TRAVAIL (à vide puis freiné)..."</span>)
-    time.sleep(<span class="dv">8</span>)</code></pre>
-  </div>
-
-  <table>
-    <thead>
-      <tr>
-        <th>Zone</th>
-        <th>Grandeur mesurée</th>
-        <th class="col-sim">Proteus (« Grove Relay moteur ») : OFF / ON</th>
-        <th class="col-real">Réel (Pico + Varta) : OFF / ON</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><span class="badge badge-cmd">Commande</span></td>
-        <td>Tension de sortie logique Pico <i>U<sub>cmd (GP16)</sub></i> (V)</td>
-        <td>____ V &nbsp;/&nbsp; ____ V</td>
-        <td>____ V &nbsp;/&nbsp; ____ V</td>
-      </tr>
-      <tr>
-        <td><span class="badge badge-cmd">Commande</span></td>
-        <td>Courant d'entrée signal <i>I<sub>SIG</sub></i> (mA) / État LED témoin</td>
-        <td>____ mA &nbsp;/&nbsp; ____ mA</td>
-        <td>LED : OFF / ON (clic audible)</td>
-      </tr>
-      <tr>
-        <td><span class="badge badge-pwr">Puissance</span></td>
-        <td>Tension aux bornes du contact du relais <i>U<sub>contact (V2)</sub></i> (V)</td>
-        <td>____ V &nbsp;/&nbsp; ____ V</td>
-        <td>____ V &nbsp;/&nbsp; ____ V</td>
-      </tr>
-      <tr>
-        <td><span class="badge badge-pwr">Puissance</span></td>
-        <td>Tension aux bornes du moteur jaune <i>U<sub>moteur (V3)</sub></i> (V)</td>
-        <td>____ V &nbsp;/&nbsp; ____ V</td>
-        <td>____ V &nbsp;/&nbsp; ____ V</td>
-      </tr>
-      <tr>
-        <td><span class="badge badge-pwr">Puissance</span></td>
-        <td>Courant moteur <strong>à vide</strong> <i>I<sub>moteur,vide</sub></i> (mA — calibre <code>10A</code>)</td>
-        <td>____ mA &nbsp;/&nbsp; ____ mA</td>
-        <td>____ mA &nbsp;/&nbsp; ____ mA</td>
-      </tr>
-      <tr>
-        <td><span class="badge badge-pwr">Puissance</span></td>
-        <td>Courant moteur <strong>légèrement freiné au doigt</strong> <i>I<sub>moteur,charge</sub></i></td>
-        <td><em>(Augmenter charge)</em></td>
-        <td>&rarr; monte jusqu'à ______ mA !</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <div class="student-answer">
-    <strong>💡 Question d'ingénierie n°3.B — Banc Réel &amp; Caractérisation Électromécanique du Relais :</strong><br>
-    1. Pourquoi mesure-t-on environ <strong>5 V aux bornes du contact du relais lorsqu'il est ouvert</strong> et <strong>0,00 V lorsqu'il est fermé</strong> ?<br>
-    2. Expliquez physiquement pourquoi le courant <i>I<sub>moteur</sub></i> augmente fortement lorsque vous freinez légèrement l'axe jaune avec les doigts (rappel de Physique Appliquée : modèle de l'induit <i>U = E + R<sub>induit</sub>&middot;I</i> avec <i>E = k&middot;&Omega;</i>).<br>
-    3. Pourquoi est-il <strong>impossible</strong> d'utiliser ce relais mécanique pour faire varier la vitesse du moteur par MLI/PWM à 1 000 commutations par seconde (1 kHz) ?
-  </div>
-
   <label class="step-check no-print">
     <input type="checkbox" class="tp-step-cb" data-step="3" onchange="updateProgress()">
-    <span>Partie 3 validée : Mesures Partie Commande / Partie Puissance du Relais Grove (Proteus + Réel) complétées dans Google Docs.</span>
+    <span>Partie 3 validée : Simulations Proteus du Relais Grove (Régimes Statique &amp; Transitoire ANALOGUE) complétées dans Google Docs.</span>
   </label>
 </div>
 
@@ -2774,20 +2749,20 @@ puissance_autorisee = <span class="kw">False</span>          <span class="co"># 
         </table>
         <p><b>Réponse Question d'ingénierie n°2 (Non-linéarité V_F et différence LED Rouge / Verte) :</b><br>........................................................................................................</p>
 
-        <h2 style="color:#0b3c5d;">PARTIE 3 — Commande / Puissance par Relais Grove (Isolation Galvanique)</h2>
-        <p><i>[📷 Insérer ici la capture Proteus statique du projet « Grove Relay moteur.pdsprj » (OFF et ON) + la capture du graphe transitoire « ANALOGUE ANALYSIS » (Figure 3.3 : pic de surtension sur Q1(C) sans diode de roue libre) + photo du banc réel Pico + Relais Grove + Varta + Moteur jaune]</i></p>
-        <p><b>Réponses Question d'ingénierie n°3.A (Simulation transitoire Proteus : transition 0V→5V, loi u_L = L·di/dt, pic de surtension/pic négatif à la coupure sans diode, risque de claquage V_CEO et rôle de la diode de roue libre) :</b><br>........................................................................................................</p>
+        <h2 style="color:#0b3c5d;">PARTIE 3 — Commande / Puissance par Relais Grove (Simulation Proteus &amp; Isolation Galvanique)</h2>
+        <p><i>[📷 Insérer ici la capture Proteus statique du projet « Grove Relay moteur.pdsprj » (OFF et ON) + la capture du graphe transitoire « ANALOGUE ANALYSIS » (Figure 3.3 : pic de surtension sur Q1(C) sans diode de roue libre)]</i></p>
         <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; width:100%;">
           <tr style="background:#fee2e2; font-weight:bold;">
-            <th>Zone</th><th>Grandeur</th><th>Proteus (« Grove Relay moteur » : OFF / ON)</th><th>Réel Pico + Varta (OFF / ON)</th>
+            <th>Zone</th><th>Grandeur mesurée sous Proteus</th><th>État REPOS (D2 = 0 V)</th><th>État TRAVAIL (D2 = 5 V)</th>
           </tr>
-          <tr><td>Commande</td><td>U_cmd GP16 / D2 (V)</td><td></td><td></td></tr>
-          <tr><td>Puissance</td><td>U_contact bornier relais (V)</td><td></td><td></td></tr>
+          <tr><td>Commande</td><td>U_cmd D2 (V)</td><td>0,00 V</td><td>5,00 V</td></tr>
+          <tr><td>Commande</td><td>I_B base transistor (mA)</td><td></td><td></td></tr>
+          <tr><td>Puissance</td><td>U_contact contact sec relais (V)</td><td></td><td></td></tr>
           <tr><td>Puissance</td><td>U_moteur (V)</td><td></td><td></td></tr>
-          <tr><td>Puissance</td><td>I_moteur à vide (mA)</td><td></td><td></td></tr>
-          <tr><td>Puissance</td><td>I_moteur freiné au doigt (mA)</td><td>-</td><td></td></tr>
+          <tr><td>Puissance</td><td>I_moteur (mA)</td><td></td><td></td></tr>
+          <tr><td>Signalisation</td><td>État LED rouge témoin</td><td>Éteinte</td><td>Allumée</td></tr>
         </table>
-        <p><b>Réponse Question d'ingénierie n°3.B (U_contact, hausse de I_moteur en charge, impossibilité du PWM sur relais mécanique) :</b><br>........................................................................................................</p>
+        <p><b>Réponses Question d'ingénierie n°3 (Comportement contact sec, impossibilité PWM 1 kHz, analyse transitoire 0V→5V, loi u_L = L·di/dt et pic négatif/surtension sans diode, rôle de la diode de roue libre) :</b><br>........................................................................................................</p>
 
         <h2 style="color:#0b3c5d;">PARTIE 4 — Commande / Puissance par Transistor TIP31C &amp; Diode 1N4001</h2>
         <p><i>[📷 Insérer ici la capture Proteus TIP31C + photo du câblage Breadboard TIP31C + 1N4001]</i></p>
