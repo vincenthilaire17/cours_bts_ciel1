@@ -1855,7 +1855,99 @@
     <div class="svg-caption">Figure 3.2 — Synoptique fonctionnel et barrière d'isolation galvanique : séparation stricte entre la Partie Commande (Raspberry Pi Pico 3,3 V) et la Partie Puissance (5 V Powerbank Varta + Moteur CC jaune) avec emplacement des multimètres.</div>
   </div>
 
-  <h3>3.3 Prototypage Réel avec le Raspberry Pi Pico &amp; Banc d'Essai Puissance</h3>
+  <h3>3.3 Simulation Transitoire sous Proteus ISIS : Analyseur Graphique ANALOGUE &amp; Surtension Inductive (Sans Diode de Protection)</h3>
+  <p>
+    En régime continu établi (&sect; 3.2), le relais est soit excité en permanence, soit au repos. Cependant, la bobine d'un relais constitue une charge fortement <strong>inductive</strong>.
+    Pour visualiser la dynamique temporelle lors des commutations et appréhender la nécessité absolue des composants de roue libre, nous mettons en œuvre une <strong>analyse transitoire analogique</strong> sous Proteus ISIS sur un schéma où la diode de protection a été retirée.
+  </p>
+
+  <!-- NOUVELLE ILLUSTRATION FOURNIE : SCHÉMA PROTEUS DU RELAIS AVEC INDUCTANCE + ANALYSEUR ANALOGUE -->
+  <div class="image-card">
+    <img src="images/grove_relay_moteur_proteus_transient.png" alt="Schéma Proteus ISIS avec générateur PULSE, inductance L1=100mH, sondes et graphe ANALOGUE ANALYSIS" style="max-width:100%; height:auto; border-radius:8px; border:1px solid #cbd5e1; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+    <div class="image-caption">Figure 3.3 — Simulation transitoire sous Proteus ISIS : schéma modifié du module Grove Relay avec générateur d'impulsions PULSE sur D2, inductance équivalente <i>L</i><sub>1</sub> = 100 mH en série, sondes virtuelles <code>RL1(C1)</code> et <code>Q1(C)</code> sans diode de roue libre, et fenêtre de l'analyseur graphique « ANALOGUE ANALYSIS » (fenêtre temporelle 0,00 à 200 ms).</div>
+  </div>
+
+  <div class="callout callout-info" style="border-left:4px solid #0284c7; background:#f0f9ff; padding:14px 18px; border-radius:8px; margin:16px 0;">
+    <h4 style="margin:0 0 10px 0; color:#0369a1;">🔍 Analyse Détaillée des Modifications du Schéma de Simulation</h4>
+    <p style="margin:0 0 8px 0;">
+      Par rapport au schéma statique initial (Figure 3.1), plusieurs modifications stratégiques ont été apportées sous Proteus ISIS pour observer la réponse dynamique :
+    </p>
+    <ul style="margin:6px 0 0 0; padding-left:20px; line-height:1.65;">
+      <li><strong>Générateur d'impulsions <code>PULSE</code> sur la commande D2 (sonde <code>R5(1)</code>) :</strong> L'interrupteur statique continu est remplacé par un générateur logique impulsionnel <code>PULSE</code>. Ce générateur bascule automatiquement de 0 V à 5 V pendant 100 ms puis revient à 0 V, permettant d'exciter dynamiquement le transistor et de synchroniser le graphe transitoire.</li>
+      <li><strong>Modélisation de l'inductance de bobine <code>L1 = 100mH</code> :</strong> La bobine d'un relais électromécanique réel présente une inductance d'enroulement significative. L'inductance discrète <strong><i>L</i><sub>1</sub> = 100 mH</strong> placée en série avec le bobinage du relais modélise l'accumulation d'énergie électromagnétique sous la forme <i>E<sub>mag</sub></i> = &frac12; &middot; <i>L</i> &middot; <i>I</i><sup>2</sup>.</li>
+      <li><strong>Suppression DÉLIBÉRÉE de la diode de roue libre :</strong> Sur le module Grove Relay commercial standard (voir Figure 3.1), une diode 1N4148 est câblée en anti-parallèle sur la bobine. Dans cette simulation d'étude, <strong>cette diode a été volontairement supprimée</strong> afin d'observer la surtension inductive naturelle (kickback inductif) lors du blocage du transistor.</li>
+      <li><strong>Implantation des sondes de tension virtuelles (Voltage Probes) :</strong>
+        <ul style="margin:4px 0 0 0;">
+          <li><code>R5(1)</code> : Mesure le signal impulsionnel de commande (créneau 0 V &rarr; 5 V &rarr; 0 V) à l'entrée de la résistance de base de 4,7 k&Omega;.</li>
+          <li><code>RL1(C1)</code> : Mesure le potentiel d'alimentation du sommet de la bobine (+5 V DC fixe).</li>
+          <li><code>Q1(C)</code> : Mesure le potentiel du nœud de collecteur du transistor NPN <i>Q</i><sub>1</sub>, situé directement entre l'inductance <i>L</i><sub>1</sub> et le collecteur.</li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+
+  <div class="callout callout-proteus">
+    <strong>🛠️ TUTO PROTEUS ISIS : Paramétrage &amp; Exécution de l'Analyseur « ANALOGUE ANALYSIS »</strong><br>
+    Suivez précisément ces étapes pour reproduire le graphe de la Figure 3.3 sous Proteus ISIS :
+    <ol style="margin:8px 0 0 0; padding-left:22px; line-height:1.65;">
+      <li><strong>Sélection du mode graphique :</strong> Dans la boîte à outils verticale à gauche de Proteus ISIS, cliquez sur l'icône <strong>Graph Mode</strong> (icône représentant des axes avec une courbe).</li>
+      <li><strong>Choix du type d'analyseur :</strong> Cliquez sur <strong><code>ANALOGUE</code></strong> dans la liste des graphes disponibles.</li>
+      <li><strong>Dessin de la fenêtre graphique :</strong> Cliquez sur votre feuille de schéma sous le montage, maintenez le bouton gauche de la souris enfoncé et glissez pour délimiter une zone rectangulaire (environ 14 cm &times; 8 cm). Relâchez le clic.</li>
+      <li><strong>Ajout des sondes de tension (Traces) :</strong>
+        <ul>
+          <li><strong>Méthode Glisser-Déposer (Drag &amp; Drop) :</strong> Cliquez sur la sonde de tension <strong><code>RL1(C1)</code></strong> sur le schéma, maintenez le clic gauche et déposez-la directement sur le bandeau vert supérieur <code>ANALOGUE ANALYSIS</code> du graphique. Le label vert <code>RL1(C1)</code> apparaît en haut à gauche du graphe.</li>
+          <li>Répétez la même opération pour la sonde de collecteur <strong><code>Q1(C)</code></strong> et la sonde de commande <strong><code>R5(1)</code></strong>.</li>
+          <li><em>Alternative :</em> Clic droit sur le graphe &rarr; <strong>Add Traces</strong> &rarr; sélectionnez les sondes <code>RL1(C1)</code>, <code>Q1(C)</code> et <code>R5(1)</code>.</li>
+        </ul>
+      </li>
+      <li><strong>Configuration de l'échelle temporelle (Edit Properties) :</strong>
+        Faites un clic droit sur la barre de titre verte <code>ANALOGUE ANALYSIS</code> et sélectionnez <strong>Edit Properties</strong> (ou double-cliquez sur le graphe) :
+        <ul>
+          <li><strong>Start time :</strong> <code>0.00</code> (instant initial t = 0 s)</li>
+          <li><strong>Stop time :</strong> <code>200m</code> (soit 200 millisecondes, gradué de <code>0.00</code> à <code>200m</code> par pas de <code>50.0m</code>).</li>
+          <li>Cliquez sur <strong>OK</strong> pour valider.</li>
+        </ul>
+      </li>
+      <li><strong>Lancement du tracé SPICE :</strong>
+        Cliquez sur le graphique pour le sélectionner (contour vert mis en surbrillance), puis appuyez simplement sur la touche <strong>Espace (Spacebar)</strong> du clavier (ou faites un clic droit &rarr; <strong>Simulate Graph</strong>). Proteus calcule la réponse transitoire et affiche les courbes.</li>
+      <li><strong>Mesures fines aux curseurs (Maximize) :</strong> Faites un clic droit sur la barre de titre verte du graphe &rarr; <strong>Maximize</strong> pour ouvrir la fenêtre graphique en plein écran. Utilisez la molette pour zoomer sur les fronts de transition et utilisez les curseurs interactifs pour mesurer précisément la tension crête et la durée du phénomène.</li>
+    </ol>
+  </div>
+
+  <div class="callout callout-danger">
+    <strong>⛔ AVERTISSEMENT DE SÉCURITÉ MATÉRIELLE : MANIPULATION STRICTEMENT EN SIMULATION !</strong><br>
+    Cette manipulation sans diode de protection est <strong>RÉALISÉE EXCLUSIVEMENT EN SIMULATION PROTEUS ISIS</strong>.<br>
+    <strong>Il est FORMELLEMENT INTERDIT de réaliser ce montage sans diode de roue libre sur le banc d'essai réel de la paillasse !</strong><br>
+    <em>Explication physique du danger :</em> En situation réelle, lorsqu'on coupe le courant dans une inductance sans voie de décharge, la disparition brutale du courant engendre un pic de surtension de plusieurs dizaines voire centaines de volts. Cette impulsion détruirait instantanément le transistor de commande par claquage d'avalanche de la jonction collecteur-émetteur (claquage <i>V<sub>CEO</sub></i>) et risquerait de remonter vers la carte Raspberry Pi Pico et le port USB du PC hôte ! La simulation Proteus permet d'observer et de quantifier ce phénomène destructeur en toute sécurité.
+  </div>
+
+  <div class="student-answer">
+    <strong>💡 Question d'ingénierie n°3.A — Analyse Transitoire Proteus : Commutation &amp; Surtension Inductive (Simulation Exclusive) :</strong><br>
+    À partir des courbes obtenues sur votre analyseur <em>ANALOGUE ANALYSIS</em> sous Proteus, répondez aux questions ci-dessous dans votre compte-rendu Google Docs :
+    <ol style="margin:6px 0 0 0; padding-left:18px; line-height:1.65;">
+      <li><strong>Analyse de la fermeture (Transition de 0 V à 5 V sur D2) :</strong>
+        <ul>
+          <li>Lorsque la commande <code>R5(1)</code> passe de 0 V à 5 V, dans quel régime de fonctionnement bascule le transistor <i>Q</i><sub>1</sub> (Bloqué ou Saturé) ? Justifiez en calculant le courant de base <i>I<sub>B</sub> &approx; (5 &minus; 0,7) / 4,7 k&Omega;</i> et donnez la valeur théorique de la tension de collecteur <i>V<sub>CE,sat</sub></i>.</li>
+          <li>Pourquoi le courant dans la branche de la bobine ne monte-t-il pas instantanément à sa valeur maximale ? Rappelez l'expression de la constante de temps d'un circuit <i>RL</i> série :
+            <div style="margin:4px 0;">&tau; = <span class="frac"><span class="num"><i>L</i></span><span class="den"><i>R</i></span></span></div>
+            (où <i>R</i> est la résistance totale de la branche de bobine). Décrivez l'allure de la tension aux bornes de la bobine lors de ce front montant.</li>
+        </ul>
+      </li>
+      <li><strong>Analyse de l'ouverture et pic de surtension / pic négatif (Transition de 5 V à 0 V sur D2) :</strong>
+        <ul>
+          <li>Lorsque la commande <code>R5(1)</code> retombe brutalement à 0 V, le transistor <i>Q</i><sub>1</sub> se bloque. Le courant <i>i<sub>C</sub></i> tente de s'annuler instantanément (<span class="frac"><span class="num">d<i>i</i></span><span class="den">d<i>t</i></span></span> &ll; 0 en un temps <i>dt &rarr; 0</i>).</li>
+          <li>Rappelez la loi fondamentale de l'inductance :
+            <div style="margin:4px 0;"><i>u<sub>L</sub></i> = <i>L</i> &middot; <span class="frac"><span class="num">d<i>i</i></span><span class="den">d<i>t</i></span></span></div>
+            Expliquez pourquoi le terme <span class="frac"><span class="num">d<i>i</i></span><span class="den">d<i>t</i></span></span> étant très fortement négatif, la tension induite <i>u<sub>L</sub></i> prend une valeur gigantesque et inverse sa polarité par rapport au régime établi (loi de modération de Lenz).</li>
+          <li>En déduire le potentiel au nœud de collecteur <i>V<sub>Q1(C)</sub> = V<sub>CC</sub> &minus; u<sub>L</sub> = V<sub>CC</sub> + L &middot; |<span class="frac"><span class="num">d<i>i</i></span><span class="den">d<i>t</i></span></span>|</i>. Quelle est la valeur crête du pic de surtension mesurée au curseur sur votre graphe Proteus sur la trace <code>Q1(C)</code> ? Pourquoi parle-t-on également de « pic négatif » si l'on mesure la tension aux bornes de la bobine en convention récepteur ?</li>
+          <li>Consultez la documentation technique d'un transistor NPN standard (ex. 2N3904 ou 2N2222) et relevez sa tension de claquage maximale <i>V</i><sub>(BR)CEO</sub> (généralement 40 V). Comparez cette valeur limite à la surtension observée en simulation et concluez sur la conséquence matérielle immédiate si cette coupure sans diode avait lieu sur la paillasse réelle.</li>
+          <li>Quel est le rôle indispensable de la <strong>diode de roue libre</strong> (présente sur le module Grove Relay réel) ? Expliquez son fonctionnement lors de la coupure (polarisation en direct, chemin offert au courant inductif et écrêtage de la tension à <i>V<sub>CC</sub> + V<sub>F</sub> &approx; 5,7 V</i>).</li>
+        </ul>
+      </li>
+    </ol>
+  </div>
+
+  <h3>3.4 Prototypage Réel avec le Raspberry Pi Pico &amp; Banc d'Essai Puissance</h3>
   <ol>
     <li><strong>Simulation Proteus préalable (Projet fourni « Grove Relay moteur ») :</strong> Comme étudié et mesuré au paragraphe 3.2 sur le fichier <strong><code>Grove Relay moteur.pdsprj</code></strong>, vous avez validé le basculement du contact sec, la protection par diode de roue libre et relevé l'ensemble des grandeurs électriques OFF/ON avant de raccorder le matériel réel sur votre paillasse.</li>
     <li><strong>Câblage Réel sur Paillasse :</strong>
@@ -1936,7 +2028,7 @@ relais_grove = Pin(<span class="dv">16</span>, Pin.OUT)  <span class="co"># Port
   </table>
 
   <div class="student-answer">
-    <strong>💡 Question d'ingénierie n°3 (à rédiger dans votre Google Docs Classroom) :</strong><br>
+    <strong>💡 Question d'ingénierie n°3.B — Banc Réel &amp; Caractérisation Électromécanique du Relais :</strong><br>
     1. Pourquoi mesure-t-on environ <strong>5 V aux bornes du contact du relais lorsqu'il est ouvert</strong> et <strong>0,00 V lorsqu'il est fermé</strong> ?<br>
     2. Expliquez physiquement pourquoi le courant <i>I<sub>moteur</sub></i> augmente fortement lorsque vous freinez légèrement l'axe jaune avec les doigts (rappel de Physique Appliquée : modèle de l'induit <i>U = E + R<sub>induit</sub>&middot;I</i> avec <i>E = k&middot;&Omega;</i>).<br>
     3. Pourquoi est-il <strong>impossible</strong> d'utiliser ce relais mécanique pour faire varier la vitesse du moteur par MLI/PWM à 1 000 commutations par seconde (1 kHz) ?
@@ -2683,7 +2775,8 @@ puissance_autorisee = <span class="kw">False</span>          <span class="co"># 
         <p><b>Réponse Question d'ingénierie n°2 (Non-linéarité V_F et différence LED Rouge / Verte) :</b><br>........................................................................................................</p>
 
         <h2 style="color:#0b3c5d;">PARTIE 3 — Commande / Puissance par Relais Grove (Isolation Galvanique)</h2>
-        <p><i>[📷 Insérer ici la capture Proteus du projet fourni « Grove Relay moteur.pdsprj » (OFF et ON) + photo du banc réel Pico + Relais Grove + Varta + Moteur jaune]</i></p>
+        <p><i>[📷 Insérer ici la capture Proteus statique du projet « Grove Relay moteur.pdsprj » (OFF et ON) + la capture du graphe transitoire « ANALOGUE ANALYSIS » (Figure 3.3 : pic de surtension sur Q1(C) sans diode de roue libre) + photo du banc réel Pico + Relais Grove + Varta + Moteur jaune]</i></p>
+        <p><b>Réponses Question d'ingénierie n°3.A (Simulation transitoire Proteus : transition 0V→5V, loi u_L = L·di/dt, pic de surtension/pic négatif à la coupure sans diode, risque de claquage V_CEO et rôle de la diode de roue libre) :</b><br>........................................................................................................</p>
         <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; width:100%;">
           <tr style="background:#fee2e2; font-weight:bold;">
             <th>Zone</th><th>Grandeur</th><th>Proteus (« Grove Relay moteur » : OFF / ON)</th><th>Réel Pico + Varta (OFF / ON)</th>
@@ -2694,7 +2787,7 @@ puissance_autorisee = <span class="kw">False</span>          <span class="co"># 
           <tr><td>Puissance</td><td>I_moteur à vide (mA)</td><td></td><td></td></tr>
           <tr><td>Puissance</td><td>I_moteur freiné au doigt (mA)</td><td>-</td><td></td></tr>
         </table>
-        <p><b>Réponse Question d'ingénierie n°3 (U_contact, hausse de I_moteur en charge, impossibilité du PWM sur relais) :</b><br>........................................................................................................</p>
+        <p><b>Réponse Question d'ingénierie n°3.B (U_contact, hausse de I_moteur en charge, impossibilité du PWM sur relais mécanique) :</b><br>........................................................................................................</p>
 
         <h2 style="color:#0b3c5d;">PARTIE 4 — Commande / Puissance par Transistor TIP31C &amp; Diode 1N4001</h2>
         <p><i>[📷 Insérer ici la capture Proteus TIP31C + photo du câblage Breadboard TIP31C + 1N4001]</i></p>
