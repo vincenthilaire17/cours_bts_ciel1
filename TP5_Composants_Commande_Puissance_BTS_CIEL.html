@@ -2215,24 +2215,30 @@
   <table>
     <thead>
       <tr>
-        <th>Référence TI myParts Kit</th>
-        <th>Boîtier &amp; Brochage (vue de face)</th>
-        <th>Courant Collecteur max <i>I<sub>C,max</sub></i></th>
-        <th>Gain en courant <i>&beta; (h<sub>FE</sub>)</i></th>
-        <th>Verdict pour notre Moteur CC jaune (pics à 600 mA)</th>
+        <th style="width:14%;">Référence TI myParts Kit</th>
+        <th style="width:30%; text-align:center;">Boîtier &amp; Brochage (vue de face)</th>
+        <th style="width:16%;">Courant Collecteur max <i>I<sub>C,max</sub></i></th>
+        <th style="width:12%;">Gain en courant <i>&beta; (h<sub>FE</sub>)</i></th>
+        <th style="width:28%;">Verdict pour notre Moteur CC jaune (pics à 600 mA)</th>
       </tr>
     </thead>
     <tbody>
       <tr>
         <td><strong><code>2N3904L</code></strong></td>
-        <td>TO-92 : <code>1:E | 2:B | 3:C</code></td>
+        <td style="text-align:center; vertical-align:middle; background:#ffffff;">
+          <img src="images/transistor_to92_pinout.png" alt="Boîtier et brochage TO-92 (1: Émetteur, 2: Base, 3: Collecteur)" style="max-height:105px; width:auto; display:block; margin:0 auto 6px auto; border-radius:4px; border:1px solid #cbd5e1; box-shadow:0 1px 4px rgba(0,0,0,0.06);">
+          <strong>TO-92 :</strong> <code>1:E | 2:B | 3:C</code>
+        </td>
         <td><strong>200 mA max</strong></td>
         <td>100 à 300</td>
         <td>❌ <strong>Sous-dimensionné / Risque de destruction thermique</strong> lors du courant d'appel au démarrage ! (Adapté uniquement aux LEDs ou petits relais).</td>
       </tr>
       <tr>
         <td><strong><code>TIP31C</code></strong></td>
-        <td>TO-220 : <strong><code>1:B | 2:C | 3:E</code></strong></td>
+        <td style="text-align:center; vertical-align:middle; background:#ffffff;">
+          <img src="images/transistor_to220_pinout.png" alt="Boîtier et brochage TO-220 (1: Base, 2: Collecteur, 3: Émetteur)" style="max-height:105px; width:auto; display:block; margin:0 auto 6px auto; border-radius:4px; border:1px solid #cbd5e1; box-shadow:0 1px 4px rgba(0,0,0,0.06);">
+          <strong>TO-220 :</strong> <strong><code>1:B | 2:C | 3:E</code></strong>
+        </td>
         <td><strong>3 000 mA (3 A)</strong></td>
         <td>25 à 50</td>
         <td>✅ <strong>Parfaitement dimensionné</strong> pour la Partie Puissance 5 V !</td>
