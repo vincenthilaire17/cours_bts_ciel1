@@ -600,12 +600,12 @@
       <tr>
         <td class="center"><span class="badge badge-bo">C04</span></td>
         <td><strong>Analyser une structure matérielle et logicielle</strong></td>
-        <td>Claquage Zener contrôlé (<code>1N4735A</code>), régulateur série linéaire ajustable à référence interne <code>1,25 V</code> (<code>LM317</code>), comparateurs à fenêtre $\frac{1}{3}V_{DD}$ / $\frac{2}{3}V_{DD}$ du timer <code>TLC555CP</code>, CAN 12 bits à approximations successives (SAR) <code>ADS7816P</code>.</td>
+        <td>Claquage Zener contrôlé (<code>1N4735A</code>), régulateur série linéaire ajustable à référence interne <code>1,25 V</code> (<code>LM317</code>), comparateurs à fenêtre <sup>1</sup>/<sub>3</sub> <i>V<sub>DD</sub></i> / <sup>2</sup>/<sub>3</sub> <i>V<sub>DD</sub></i> du timer <code>TLC555CP</code>, CAN 12 bits à approximations successives (SAR) <code>ADS7816P</code>.</td>
       </tr>
       <tr>
         <td class="center"><span class="badge badge-bo">C05</span></td>
         <td><strong>Concevoir et dimensionner un sous-ensemble</strong></td>
-        <td>Calcul du pont de réglage $V_{\text{out}} = 1,25\,(1 + R_2/R_1)$, calcul des temps de charge/décharge $t_H, t_L$ d'un astable PWM à aiguillage par diodes, simulation transitoire sous <strong>Proteus 8</strong>.</td>
+        <td>Calcul du pont de réglage <i>V<sub>out</sub></i> = 1,25 &times; (1 + <i>R</i><sub>2</sub>/<i>R</i><sub>1</sub>), calcul des temps de charge/décharge $t_H<i>t<sub>H</sub></i>, <i>t<sub>L</sub></i> d'un astable PWM à aiguillage par diodes, simulation transitoire sous <strong>Proteus 8</strong>.</td>
       </tr>
       <tr>
         <td class="center"><span class="badge badge-bo">C06</span></td>
@@ -978,9 +978,9 @@
 <div class="card-block">
   <h3>2.1 Fonctionnement Interne du Timer LinCMOS <code>TLC555CP</code> en Mode Astable</h3>
   <p>
-    Le circuit intégré <strong><code>TLC555CP</code></strong> contient un pont diviseur interne à trois résistances identiques fixant deux seuils de basculement à <strong>$\frac{1}{3}V_{DD}$ (&approx; 1,67 V sous 5 V)</strong> et <strong>$\frac{2}{3}V_{DD}$ (&approx; 3,33 V sous 5 V)</strong> :
-    <br>&bull; Tant que le condensateur <i>C</i> se charge vers <code>+5 V</code> à travers $R_A + R_B$, la sortie <code>OUT [3]</code> vaut <strong><code>1</code> (+5 V)</strong>.
-    <br>&bull; Dès que $V_C(t)$ atteint <strong>$\frac{2}{3}V_{DD}$ (3,33 V)</strong>, le comparateur haut bascule la mémoire interne : <code>OUT [3]</code> passe à <strong><code>0</code> (0 V)</strong> et le transistor <code>DISCH [7]</code> décharge $C$ à travers $R_B$ jusqu'à <strong>$\frac{1}{3}V_{DD}$ (1,67 V)</strong>, où le cycle recommence !
+    Le circuit intégré <strong><code>TLC555CP</code></strong> contient un pont diviseur interne à trois résistances identiques fixant deux seuils de basculement à <strong><sup>1</sup>/<sub>3</sub> <i>V<sub>DD</sub></i> (&approx; 1,67 V sous 5 V)</strong> et <strong><sup>2</sup>/<sub>3</sub> <i>V<sub>DD</sub></i> (&approx; 3,33 V sous 5 V)</strong> :
+    <br>&bull; Tant que le condensateur <i>C</i> se charge vers <code>+5 V</code> à travers <i>R<sub>A</sub></i> + <i>R<sub>B</sub></i>, la sortie <code>OUT [3]</code> vaut <strong><code>1</code> (+5 V)</strong>.
+    <br>&bull; Dès que <i>V<sub>C</sub></i>(<i>t</i>) atteint <strong><sup>2</sup>/<sub>3</sub> <i>V<sub>DD</sub></i> (3,33 V)</strong>, le comparateur haut bascule la mémoire interne : <code>OUT [3]</code> passe à <strong><code>0</code> (0 V)</strong> et le transistor <code>DISCH [7]</code> décharge $C$ à travers $R_B$ jusqu'à <strong><sup>1</sup>/<sub>3</sub> <i>V<sub>DD</sub></i> (1,67 V)</strong>, où le cycle recommence !
   </p>
 
   <div class="formula-box">
@@ -1070,12 +1070,12 @@
       <text x="699" y="253" text-anchor="middle" font-family="Consolas, monospace" font-size="8.5" fill="#fca5a5">t_L (Décharge)</text>
       <text x="722" y="270" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.2" fill="#fde047">f_th ≈ 686 Hz | α_th = (1+10)/(1+20) = 52,4 %</text>
     </svg>
-    <div class="svg-caption">Figure 2.1 — Câblage de l'oscillateur astable à <code>TLC555CP</code> et relevé simultané de $V_C(t)$ (entre 1,67 V et 3,33 V) et de <code>OUT [3]</code> au Scope AD3.</div>
+    <div class="svg-caption">Figure 2.1 — Câblage de l'oscillateur astable à <code>TLC555CP</code> et relevé simultané de <i>V<sub>C</sub></i>(<i>t</i>) (entre 1,67 V et 3,33 V) et de <code>OUT [3]</code> au Scope AD3.</div>
   </div>
 
   <h3>2.2 Mesures au <em>Scope</em> AD3, Puis Extension en Variateur PWM Matériel (10 % &rarr; 90 %)</h3>
   <ol>
-    <li><strong>Astable de base (Figure 2.1) :</strong> Câblez le <code>TLC555CP</code> avec <code>R<sub>A</sub> = 1 k&Omega;</code>, <code>R<sub>B</sub> = 10 k&Omega;</code> et <code>C = 100 nF</code> (reliez bien les broches <code>2</code> et <code>6</code> ensemble, et les broches <code>4</code> et <code>8</code> au <code>+5 V</code> !). Connectez <strong><code>1+</code></strong> sur <code>OUT [3]</code> et <strong><code>2+</code></strong> sur le condensateur <code>C</code> (<code>1-</code> et <code>2-</code> à <code>GND</code>). Relevez au Scope AD3 les tensions min/max de $V_C(t)$, la fréquence <i>f</i> et le rapport cyclique &alpha; (%).</li>
+    <li><strong>Astable de base (Figure 2.1) :</strong> Câblez le <code>TLC555CP</code> avec <code>R<sub>A</sub> = 1 k&Omega;</code>, <code>R<sub>B</sub> = 10 k&Omega;</code> et <code>C = 100 nF</code> (reliez bien les broches <code>2</code> et <code>6</code> ensemble, et les broches <code>4</code> et <code>8</code> au <code>+5 V</code> !). Connectez <strong><code>1+</code></strong> sur <code>OUT [3]</code> et <strong><code>2+</code></strong> sur le condensateur <code>C</code> (<code>1-</code> et <code>2-</code> à <code>GND</code>). Relevez au Scope AD3 les tensions min/max de <i>V<sub>C</sub></i>(<i>t</i>), la fréquence <i>f</i> et le rapport cyclique &alpha; (%).</li>
     <li><strong>Variateur PWM matériel autonome (avec potentiomètre <code>10 k&Omega;</code> + 2 diodes <code>1N5819</code>) :</strong> Remplacez <code>R<sub>B</sub></code> par votre potentiomètre <code>10 k&Omega;</code> équipé de deux diodes Schottky <code>1N5819</code> tête-bêche orientant la charge par le demi-potentiomètre gauche et la décharge par le demi-potentiomètre droit (curseur relié à <code>C [2/6]</code>). Tournez le potentiomètre : observez au Scope que le rapport cyclique varie de <strong>~10 % à ~90 % à fréquence quasi-constante</strong> !</li>
     <li><strong>Essai sur le Moteur CC jaune 5 V Varta :</strong> Reliez la sortie <code>OUT [3]</code> du <code>TLC555CP</code> à la résistance de base <code>R<sub>B</sub> = 330 &Omega;</code> du transistor <strong><code>TIP31C</code></strong> : faites varier la vitesse du moteur CC <strong>100 % matériellement sans aucun microcontrôleur</strong> !</li>
   </ol>
@@ -1137,7 +1137,7 @@
   <h3>3.1 Pourquoi un CAN Externe Dédié face au CAN Interne du Microcontrôleur RP2040 ?</h3>
   <p>
     En instrumentation et métrologie industrielle (épreuve E4/E5 Option B), le CAN intégré d'un microcontrôleur d'entrée de gamme présente souvent des limites notables :
-    le CAN 12 bits du <strong>RP2040</strong> utilise le rail d'alimentation <code>3,3 V</code> (souvent bruité par les commutations numériques) comme référence, ce qui donne un pas de quantification $q \approx 0,806\text{ mV}$ sujet à des non-linéarités différentielles (DNL).
+    le CAN 12 bits du <strong>RP2040</strong> utilise le rail d'alimentation <code>3,3 V</code> (souvent bruité par les commutations numériques) comme référence, ce qui donne un pas de quantification <i>q</i> &approx; 0,806 mV sujet à des non-linéarités différentielles (DNL).
     <br>Le circuit <strong>Texas Instruments / Burr-Brown <code>ADS7816P</code></strong> est un convertisseur 12 bits à <strong>Approximations Successives (SAR)</strong> à échantillonneur-bloqueur interne (<em>Sample &amp; Hold</em>), alimenté sous <code>+5,00 V</code> et cadencé jusqu'à <code>200 kSPS</code>. Grâce à sa broche <strong><code>VREF [1]</code> dédiée</strong> reliée à notre régulateur étalon <code>LM317</code> (calibré à <code>2,500 V</code> en Partie 1), son quantum vaut exactement :
   </p>
 
@@ -1261,18 +1261,18 @@
         Règle d'échantillonnage SPI : DOUT change sur chaque FRONT DESCENDANT (↓) de DCLOCK et se lit stable sur FRONT MONTANT (↑) !
       </text>
     </svg>
-    <div class="svg-caption">Figure 3.1 — Séquence synchrone 15 coups de l'<code>ADS7816P</code> : échantillonnage sur 1,5 coup, bit nul (0), puis émission des 12 bits de $B_{11}$ à $B_0$.</div>
+    <div class="svg-caption">Figure 3.1 — Séquence synchrone 15 coups de l'<code>ADS7816P</code> : échantillonnage sur 1,5 coup, bit nul (0), puis émission des 12 bits de <i>B</i><sub>11</sub> à <i>B</i><sub>0</sub>.</div>
   </div>
 
   <h3>3.2 Câblage de l'<code>ADS7816P</code> &amp; Protection Obligatoire 5 V &rarr; 3,3 V sur <code>DOUT</code></h3>
   <div class="callout callout-danger">
     <strong>⚠️ Règle de sécurité métrologique BTS CIEL (Protection du RP2040) :</strong>
-    L'<code>ADS7816P</code> est alimenté sous <code>+5,00 V</code> (broche 8) pour fonctionner de pair avec la référence $V_{\text{REF}} = 2,50\text{ V}$.
-    À l'état HAUT, sa broche <code>DOUT [6]</code> délivre typiquement <strong>$4,2\text{ V}$ à $4,5\text{ V}$</strong>, ce qui <strong>détruirait l'entrée GPIO du Raspberry Pi Pico</strong> !
+    L'<code>ADS7816P</code> est alimenté sous <code>+5,00 V</code> (broche 8) pour fonctionner de pair avec la référence <i>V<sub>REF</sub></i> = 2,50 V.
+    À l'état HAUT, sa broche <code>DOUT [6]</code> délivre typiquement <strong>4,2 V à 4,5 V</strong>, ce qui <strong>détruirait l'entrée GPIO du Raspberry Pi Pico</strong> !
     <br>Il faut impérativement intercaler le pont diviseur du kit TI :
     <br>&bull; Reliez <code>DOUT [6]</code> à une résistance série <strong><code>1 k&Omega;</code></strong>.
-    <br>&bull; Connectez le point milieu vers <strong><code>GP16</code></strong> du Pico et vers une résistance de <strong><code>2,2 k&Omega;</code> à <code>GND</code></strong> ($V_{\text{Pico}} \approx 4,3\text{ V} \times \frac{2,2}{3,2} \approx 2,95\text{ V} \le 3,3\text{ V}$).
-    <br>&bull; <em>Réciproquement</em>, les sorties 3,3 V du Pico (<code>GP17 /CS</code> et <code>GP18 DCLOCK</code>) pilotent <strong>directement</strong> les entrées CMOS de l'<code>ADS7816P</code> sans adaptation ($V_{IH,\min} = 2,0\text{ V} &le; 3,3\text{ V}$).
+    <br>&bull; Connectez le point milieu vers <strong><code>GP16</code></strong> du Pico et vers une résistance de <strong><code>2,2 k&Omega;</code> à <code>GND</code></strong> (<i>V<sub>Pico</sub></i> &approx; 4,3 V &times; 2,2 / 3,2 &approx; 2,95 V &le; 3,3 V).
+    <br>&bull; <em>Réciproquement</em>, les sorties 3,3 V du Pico (<code>GP17 /CS</code> et <code>GP18 DCLOCK</code>) pilotent <strong>directement</strong> les entrées CMOS de l'<code>ADS7816P</code> sans adaptation (<i>V<sub>IH,min</sub></i> = 2,0 V &le; 3,3 V).
   </div>
 
   <label class="step-check no-print">
@@ -1325,7 +1325,7 @@
     <thead>
       <tr>
         <th>Tension d'entrée analogique <i>V<sub>+In</sub></i> mesurée</th>
-        <th class="center col-calc">Code 12 bits Théorique ($N = \frac{V}{q}$)</th>
+        <th class="center col-calc">Code 12 bits Théorique (<i>N</i> = <i>V</i> / <i>q</i>)</th>
         <th class="center col-calc">Trame Binaire 12 bits attendue</th>
         <th class="center col-ad3">Code 12 bits lu au Logic AD3</th>
         <th class="center col-ad3">Tension recalculée &amp; Écart &epsilon; (mV)</th>
@@ -1365,7 +1365,7 @@
 
   <div class="student-answer">
     <strong>💡 Question d'analyse Option B n°2 (Trame synchrone &amp; Null Bit — Google Docs) :</strong><br>
-    À partir de votre capture d'écran WaveForms Logic, repérez l'état de la ligne <code>DOUT</code> lors du <strong>2<sup>e</sup> front montant de l'horloge</strong> (juste avant l'apparition du bit de poids fort $B_{11}$). Quel est son niveau logique ? Pourquoi le constructeur Burr-Brown impose-t-il ce « Null Bit » de synchronisation avant l'envoi des 12 bits de données ?
+    À partir de votre capture d'écran WaveForms Logic, repérez l'état de la ligne <code>DOUT</code> lors du <strong>2<sup>e</sup> front montant de l'horloge</strong> (juste avant l'apparition du bit de poids fort <i>B</i><sub>11</sub>). Quel est son niveau logique ? Pourquoi le constructeur Burr-Brown impose-t-il ce « Null Bit » de synchronisation avant l'envoi des 12 bits de données ?
   </div>
 
   <label class="step-check no-print">
@@ -1591,7 +1591,7 @@ VREF_LM317 = <span class="dv">2.500</span>   <span class="co"># Référence exte
       <tr>
         <td class="center"><span class="badge badge-bo">C06</span></td>
         <td><strong>Mesurage &amp; Instrumentation AD3</strong></td>
-        <td>Maîtrise autonome de WaveForms (Scope Ch1/Ch2 pour $V_C$ et OUT du 555, Supplies +5V/-5V pour la Zener, décodage SPI synchrone au Logic Analyzer).</td>
+        <td>Maîtrise autonome de WaveForms (Scope Ch1/Ch2 pour <i>V<sub>C</sub></i> et OUT du 555, Supplies +5V/-5V pour la Zener, décodage SPI synchrone au Logic Analyzer).</td>
         <td class="center"><strong>5 pts</strong></td>
         <td class="center"></td>
       </tr>

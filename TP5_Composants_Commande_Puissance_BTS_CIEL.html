@@ -2016,91 +2016,344 @@
     <div class="svg-caption">Figure 3.3 — Synoptique fonctionnel et barrière d'isolation galvanique : séparation stricte entre la Partie Commande (Raspberry Pi Pico 3,3 V) et la Partie Puissance (5 V Powerbank Varta + Moteur CC jaune) avec emplacement des multimètres.</div>
   </div>
 
-  <h3>3.3 Prototypage Réel avec le Raspberry Pi Pico &amp; Banc d'Essai Puissance</h3>
-  <ol>
-    <li><strong>Simulation Proteus préalable (Projet fourni « Grove Relay moteur ») :</strong> Comme étudié et mesuré au paragraphe 3.2 sur le fichier <strong><code>Grove Relay moteur.pdsprj</code></strong>, vous avez validé le basculement du contact sec, la protection par diode de roue libre et relevé l'ensemble des grandeurs électriques OFF/ON avant de raccorder le matériel réel sur votre paillasse.</li>
-    <li><strong>Câblage Réel sur Paillasse :</strong>
-      <ul>
-        <li>Branchez le module <strong>Grove Relay</strong> sur le port <strong><code>D16</code></strong> du <em>Grove Shield for Pi Pico</em> (switch vérifié sur <strong><code>3V3</code></strong> !).</li>
-        <li><strong>Côté bornier vert à vis du relais (Partie Puissance) :</strong> Reliez le fil <code>+5V</code> de la Powerbank Varta (en passant en série par votre multimètre sur la borne <strong><code>10A</code></strong> !) à la borne 1 du bornier vert ; reliez la borne 2 du bornier vert à un fil du <strong>moteur CC jaune 3–6 V</strong> ; reliez le second fil du moteur au <code>GND (&minus;)</code> de la Powerbank Varta. <em>Notez qu'aucun fil ne relie la Varta au Pico !</em></li>
-      </ul>
-    </li>
-    <li><strong>Script MicroPython de test TOR (Tout-Ou-Rien) :</strong> Exécutez sous Thonny le script ci-dessous qui commute lentement toutes les <strong>8 secondes</strong> afin de vous laisser tout le temps de relever vos tensions et courants au multimètre :</li>
-  </ol>
-
-  <div class="code-wrapper">
-    <button type="button" class="copy-code-btn no-print" onclick="copierCode(this)">Copier</button>
-    <pre><code><span class="co"># test_relais_tor.py — Pilotage Partie Commande (GP16) / Partie Puissance isolée (Relais Grove)</span>
-<span class="im">from</span> machine <span class="im">import</span> Pin
-<span class="im">import</span> time
-
-relais_grove = Pin(<span class="dv">16</span>, Pin.OUT)  <span class="co"># Port D16 du Grove Shield (3,3 V logique)</span>
-
-<span class="fu">print</span>(<span class="st">"=== BANC D'ESSAI RELAIS GROVE (8s OFF / 8s ON) ==="</span>)
-<span class="kw">while</span> <span class="kw">True</span>:
-    relais_grove.value(<span class="dv">0</span>)
-    <span class="fu">print</span>(<span class="st">"[COMMANDE = 0 (0V)]   -&gt; Relais OUVERT  | Mesurez l'état REPOS..."</span>)
-    time.sleep(<span class="dv">8</span>)
-
-    relais_grove.value(<span class="dv">1</span>)
-    <span class="fu">print</span>(<span class="st">"[COMMANDE = 1 (3.3V)] -&gt; Relais FERMÉ   | Mesurez l'état TRAVAIL (à vide puis freiné)..."</span>)
-    time.sleep(<span class="dv">8</span>)</code></pre>
+  <div class="callout callout-info" style="border-left:4px solid #0284c7; background:#f0f9ff; padding:14px 18px; border-radius:8px; margin:16px 0;">
+    <h4 style="margin:0 0 10px 0; color:#0369a1;">⚡ Rôle Clé du Transistor NPN : Étage Driver &amp; Amplification en Courant pour la Bobine</h4>
+    <p style="margin:0 0 8px 0; line-height:1.65;">
+      Une question d'ingénierie fondamentale se pose : <strong>pourquoi ne pas brancher directement la bobine du relais sur la broche logique D2 du microcontrôleur ?</strong>
+    </p>
+    <ul style="margin:6px 0 8px 0; padding-left:20px; line-height:1.65;">
+      <li><strong>Incompatibilité en courant des sorties logiques GPIO :</strong>
+        La bobine d'un relais électromécanique 5 V présente une résistance d'enroulement d'environ <i>R<sub>bobine</sub> &approx; 60 à 70 &Omega;</i>. Pour créer un flux magnétique suffisant afin de vaincre le ressort de rappel et fermer le contact sec, la bobine réclame un courant de commande :
+        <div style="margin:4px 0; font-weight:bold; color:#b91c1c;">
+          <i>I<sub>bobine</sub></i> = <span class="frac"><span class="num"><i>V<sub>CC</sub></i> &minus; <i>V<sub>CE,sat</sub></i></span><span class="den"><i>R<sub>bobine</sub></i></span></span> &approx; <span class="frac"><span class="num">5,0 V &minus; 0,2 V</span><span class="den">65 &Omega;</span></span> &approx; <strong>74 mA</strong> (jusqu'à ~80 mA avec la LED témoin).
+        </div>
+        Or, une broche GPIO de microcontrôleur moderne (Raspberry Pi Pico : max <strong>12 mA</strong> ; Arduino Nano : max 20 mA) est totalement incapable de fournir une telle intensité ! Tenter un branchement direct écraserait la tension logique du GPIO et provoquerait la <strong>destruction thermique immédiate du port interne du microcontrôleur</strong>.
+      </li>
+      <li><strong>Le transistor NPN comme multiplicateur de courant (Étage Driver / Buffer) :</strong>
+        Le transistor NPN résout parfaitement cette contradiction énergétique :
+        <ul style="margin:4px 0 0 0;">
+          <li><strong>Courant d'entrée prélevé sur la commande D2 (Base) :</strong>
+            <i>I<sub>B</sub> = <span class="frac"><span class="num"><i>U<sub>cmd</sub></i> &minus; <i>V<sub>BE</sub></i></span><span class="den"><i>R<sub>B</sub></i></span></span> = <span class="frac"><span class="num">5,0 V &minus; 0,7 V</span><span class="den">4 700 &Omega;</span></span> &approx; <strong>0,91 mA</strong></i> (charge infime, sans danger pour le microcontrôleur).
+          </li>
+          <li><strong>Courant de puissance distribué à la bobine (Collecteur) :</strong>
+            <i>I<sub>C</sub> &approx; <strong>74 mA</strong></i>, directement soutiré du rail d'alimentation +5 V.
+          </li>
+          <li><strong>Gain en courant effectif en commutation :</strong>
+            <div style="margin:4px 0; font-weight:bold; color:#0369a1;">
+              <i>k<sub>driver</sub></i> = <span class="frac"><span class="num"><i>I<sub>C</sub></i></span><span class="den"><i>I<sub>B</sub></i></span></span> &approx; <span class="frac"><span class="num">74 mA</span><span class="den">0,91 mA</span></span> &approx; <strong>81</strong> !
+            </div>
+            Le transistor agit comme un <strong>amplificateur de courant</strong> qui multiplie par plus de <strong>80</strong> la capacité du signal logique, permettant à une commande de seulement 4,5 mW de piloter un composant mécanique absorbant près de 370 mW.
+          </li>
+        </ul>
+      </li>
+    </ul>
   </div>
 
-  <table>
+  <table style="margin-top:14px;">
     <thead>
       <tr>
         <th>Zone</th>
-        <th>Grandeur mesurée</th>
-        <th class="col-sim">Proteus (« Grove Relay moteur ») : OFF / ON</th>
-        <th class="col-real">Réel (Pico + Varta) : OFF / ON</th>
+        <th>Grandeur mesurée sous Proteus (Projet fourni « Grove Relay moteur.pdsprj »)</th>
+        <th class="col-sim">État REPOS (Commande D2 = 0 V)</th>
+        <th class="col-sim">État TRAVAIL (Commande D2 = 5 V)</th>
+        <th>Interprétation &amp; Rôle du Transistor Driver</th>
       </tr>
     </thead>
     <tbody>
       <tr>
         <td><span class="badge badge-cmd">Commande</span></td>
-        <td>Tension de sortie logique Pico <i>U<sub>cmd (GP16)</sub></i> (V)</td>
-        <td>____ V &nbsp;/&nbsp; ____ V</td>
-        <td>____ V &nbsp;/&nbsp; ____ V</td>
+        <td>Tension logique de commande <i>U<sub>cmd (D2)</sub></i></td>
+        <td class="center">0,00 V</td>
+        <td class="center">5,00 V</td>
+        <td>Niveau logique de sortie du microcontrôleur</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-cmd">Transistor Q1</span></td>
+        <td>Tension Collecteur-Émetteur <i>V<sub>CE</sub> = V<sub>Q1(C)</sub></i></td>
+        <td class="center">5,00 V</td>
+        <td class="center">&approx; 0,15 à 0,20 V</td>
+        <td>Transistor <strong>Bloqué</strong> (interrupteur ouvert) / <strong>Saturé</strong> (interrupteur fermé)</td>
       </tr>
       <tr>
         <td><span class="badge badge-cmd">Commande</span></td>
-        <td>Courant d'entrée signal <i>I<sub>SIG</sub></i> (mA) / État LED témoin</td>
-        <td>____ mA &nbsp;/&nbsp; ____ mA</td>
-        <td>LED : OFF / ON (clic audible)</td>
+        <td>Courant de base <i>I<sub>B</sub></i> (prélevé sur D2)</td>
+        <td class="center">0,00 mA</td>
+        <td class="center">____ mA (&approx; 0,91 mA)</td>
+        <td>Courant de commande très faible issu du GPIO (inoffensif pour la puce)</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-cmd">Driver Bobine</span></td>
+        <td>Courant collecteur <i>I<sub>C</sub></i> (distribué à la bobine)</td>
+        <td class="center">0,00 mA</td>
+        <td class="center">____ mA (&approx; 74 à 80 mA)</td>
+        <td>Courant indispensable pour magnétiser et coller le relais mécanique</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-cmd">Amplification</span></td>
+        <td>Rapport d'amplification en courant <i>k = I<sub>C</sub> / I<sub>B</sub></i></td>
+        <td class="center">-</td>
+        <td class="center"><strong>&approx; 80 à 85</strong></td>
+        <td><strong>Rôle de driver : amplification en courant x80 !</strong></td>
       </tr>
       <tr>
         <td><span class="badge badge-pwr">Puissance</span></td>
-        <td>Tension aux bornes du contact du relais <i>U<sub>contact (V2)</sub></i> (V)</td>
-        <td>____ V &nbsp;/&nbsp; ____ V</td>
-        <td>____ V &nbsp;/&nbsp; ____ V</td>
+        <td>Tension aux bornes du contact sec <i>U<sub>contact</sub></i></td>
+        <td class="center">____ V</td>
+        <td class="center">____ V</td>
+        <td>5 V au repos (circuit ouvert) / ~0,00 V au travail (contact fermé)</td>
       </tr>
       <tr>
         <td><span class="badge badge-pwr">Puissance</span></td>
-        <td>Tension aux bornes du moteur jaune <i>U<sub>moteur (V3)</sub></i> (V)</td>
-        <td>____ V &nbsp;/&nbsp; ____ V</td>
-        <td>____ V &nbsp;/&nbsp; ____ V</td>
+        <td>Tension aux bornes du moteur jaune <i>U<sub>moteur</sub></i></td>
+        <td class="center">____ V</td>
+        <td class="center">____ V</td>
+        <td>0 V à l'arrêt / ~5 V en rotation active</td>
       </tr>
       <tr>
         <td><span class="badge badge-pwr">Puissance</span></td>
-        <td>Courant moteur <strong>à vide</strong> <i>I<sub>moteur,vide</sub></i> (mA — calibre <code>10A</code>)</td>
-        <td>____ mA &nbsp;/&nbsp; ____ mA</td>
-        <td>____ mA &nbsp;/&nbsp; ____ mA</td>
+        <td>Courant moteur <i>I<sub>moteur</sub></i></td>
+        <td class="center">0,00 mA</td>
+        <td class="center">____ mA</td>
+        <td>Courant de puissance fourni par la source BAT1 5V isolée</td>
       </tr>
       <tr>
-        <td><span class="badge badge-pwr">Puissance</span></td>
-        <td>Courant moteur <strong>légèrement freiné au doigt</strong> <i>I<sub>moteur,charge</sub></i></td>
-        <td><em>(Augmenter charge)</em></td>
-        <td>&rarr; monte jusqu'à ______ mA !</td>
+        <td><span class="badge badge-cmd">Signalisation</span></td>
+        <td>État de la LED rouge témoin du module</td>
+        <td class="center">Éteinte</td>
+        <td class="center">Allumée</td>
+        <td>Visualisation de l'excitation de la bobine</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>3.3 Simulation Transitoire sous Proteus ISIS : Analyseur Graphique ANALOGUE &amp; Surtension Inductive (Sans Diode de Protection)</h3>
+  <p>
+    En régime continu établi (&sect; 3.2), le relais est soit excité en permanence, soit au repos. Cependant, la bobine d'un relais constitue une charge fortement <strong>inductive</strong>.
+    Pour visualiser la dynamique temporelle lors des commutations et appréhender la nécessité absolue des composants de roue libre, nous mettons en œuvre une <strong>analyse transitoire analogique</strong> sous Proteus ISIS sur un schéma où la diode de protection a été retirée.
+  </p>
+
+  <!-- NOUVELLE ILLUSTRATION FOURNIE : SCHÉMA PROTEUS DU RELAIS AVEC INDUCTANCE + ANALYSEUR ANALOGUE -->
+  <div class="image-card">
+    <img src="images/grove_relay_moteur_proteus_transient.png" alt="Schéma Proteus ISIS avec générateur PULSE, inductance L1=100mH, sondes et graphe ANALOGUE ANALYSIS" style="max-width:100%; height:auto; border-radius:8px; border:1px solid #cbd5e1; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+    <div class="image-caption">Figure 3.3 — Simulation transitoire sous Proteus ISIS : schéma modifié du module Grove Relay avec générateur d'impulsions PULSE sur D2, inductance équivalente <i>L</i><sub>1</sub> = 100 mH en série, sondes virtuelles <code>RL1(C1)</code> et <code>Q1(C)</code> sans diode de roue libre, et fenêtre de l'analyseur graphique « ANALOGUE ANALYSIS » (fenêtre temporelle 0,00 à 200 ms).</div>
+  </div>
+
+  <div class="callout callout-info" style="border-left:4px solid #0284c7; background:#f0f9ff; padding:14px 18px; border-radius:8px; margin:16px 0;">
+    <h4 style="margin:0 0 10px 0; color:#0369a1;">🔍 Analyse Détaillée des Modifications du Schéma de Simulation</h4>
+    <p style="margin:0 0 8px 0;">
+      Par rapport au schéma statique initial (Figure 3.1), plusieurs modifications stratégiques ont été apportées sous Proteus ISIS pour observer la réponse dynamique :
+    </p>
+    <ul style="margin:6px 0 0 0; padding-left:20px; line-height:1.65;">
+      <li><strong>Générateur d'impulsions <code>PULSE</code> sur la commande D2 (sonde <code>R5(1)</code>) :</strong> L'interrupteur statique continu est remplacé par un générateur logique impulsionnel <code>PULSE</code>. Ce générateur bascule automatiquement de 0 V à 5 V pendant 100 ms puis revient à 0 V, permettant d'exciter dynamiquement le transistor et de synchroniser le graphe transitoire.</li>
+      <li><strong>Modélisation de l'inductance de bobine <code>L1 = 100mH</code> :</strong> La bobine d'un relais électromécanique réel présente une inductance d'enroulement significative. L'inductance discrète <strong><i>L</i><sub>1</sub> = 100 mH</strong> placée en série avec le bobinage du relais modélise l'accumulation d'énergie électromagnétique sous la forme <i>E<sub>mag</sub></i> = &frac12; &middot; <i>L</i> &middot; <i>I</i><sup>2</sup>.</li>
+      <li><strong>Suppression DÉLIBÉRÉE de la diode de roue libre :</strong> Sur le module Grove Relay commercial standard (voir Figure 3.1), une diode 1N4148 est câblée en anti-parallèle sur la bobine. Dans cette simulation d'étude, <strong>cette diode a été volontairement supprimée</strong> afin d'observer la surtension inductive naturelle (kickback inductif) lors du blocage du transistor.</li>
+      <li><strong>Implantation des sondes de tension virtuelles (Voltage Probes) :</strong>
+        <ul style="margin:4px 0 0 0;">
+          <li><code>R5(1)</code> : Mesure le signal impulsionnel de commande (créneau 0 V &rarr; 5 V &rarr; 0 V) à l'entrée de la résistance de base de 4,7 k&Omega;.</li>
+          <li><code>RL1(C1)</code> : Mesure le potentiel d'alimentation du sommet de la bobine (+5 V DC fixe).</li>
+          <li><code>Q1(C)</code> : Mesure le potentiel du nœud de collecteur du transistor NPN <i>Q</i><sub>1</sub>, situé directement entre l'inductance <i>L</i><sub>1</sub> et le collecteur.</li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+
+  <div class="callout callout-proteus">
+    <strong>🛠️ TUTO PROTEUS ISIS : Paramétrage &amp; Exécution de l'Analyseur « ANALOGUE ANALYSIS »</strong><br>
+    Suivez précisément ces étapes pour reproduire le graphe de la Figure 3.3 sous Proteus ISIS :
+    <ol style="margin:8px 0 0 0; padding-left:22px; line-height:1.65;">
+      <li><strong>Sélection du mode graphique :</strong> Dans la boîte à outils verticale à gauche de Proteus ISIS, cliquez sur l'icône <strong>Graph Mode</strong> (icône représentant des axes avec une courbe).</li>
+      <li><strong>Choix du type d'analyseur :</strong> Cliquez sur <strong><code>ANALOGUE</code></strong> dans la liste des graphes disponibles.</li>
+      <li><strong>Dessin de la fenêtre graphique :</strong> Cliquez sur votre feuille de schéma sous le montage, maintenez le bouton gauche de la souris enfoncé et glissez pour délimiter une zone rectangulaire (environ 14 cm &times; 8 cm). Relâchez le clic.</li>
+      <li><strong>Ajout des sondes de tension (Traces) :</strong>
+        <ul>
+          <li><strong>Méthode Glisser-Déposer (Drag &amp; Drop) :</strong> Cliquez sur la sonde de tension <strong><code>RL1(C1)</code></strong> sur le schéma, maintenez le clic gauche et déposez-la directement sur le bandeau vert supérieur <code>ANALOGUE ANALYSIS</code> du graphique. Le label vert <code>RL1(C1)</code> apparaît en haut à gauche du graphe.</li>
+          <li>Répétez la même opération pour la sonde de collecteur <strong><code>Q1(C)</code></strong> et la sonde de commande <strong><code>R5(1)</code></strong>.</li>
+          <li><em>Alternative :</em> Clic droit sur le graphe &rarr; <strong>Add Traces</strong> &rarr; sélectionnez les sondes <code>RL1(C1)</code>, <code>Q1(C)</code> et <code>R5(1)</code>.</li>
+        </ul>
+      </li>
+      <li><strong>Configuration de l'échelle temporelle (Edit Properties) :</strong>
+        Faites un clic droit sur la barre de titre verte <code>ANALOGUE ANALYSIS</code> et sélectionnez <strong>Edit Properties</strong> (ou double-cliquez sur le graphe) :
+        <ul>
+          <li><strong>Start time :</strong> <code>0.00</code> (instant initial t = 0 s)</li>
+          <li><strong>Stop time :</strong> <code>200m</code> (soit 200 millisecondes, gradué de <code>0.00</code> à <code>200m</code> par pas de <code>50.0m</code>).</li>
+          <li>Cliquez sur <strong>OK</strong> pour valider.</li>
+        </ul>
+      </li>
+      <li><strong>Lancement du tracé SPICE :</strong>
+        Cliquez sur le graphique pour le sélectionner (contour vert mis en surbrillance), puis appuyez simplement sur la touche <strong>Espace (Spacebar)</strong> du clavier (ou faites un clic droit &rarr; <strong>Simulate Graph</strong>). Proteus calcule la réponse transitoire et affiche les courbes.</li>
+      <li><strong>Mesures fines aux curseurs (Maximize) :</strong> Faites un clic droit sur la barre de titre verte du graphe &rarr; <strong>Maximize</strong> pour ouvrir la fenêtre graphique en plein écran. Utilisez la molette pour zoomer sur les fronts de transition et utilisez les curseurs interactifs pour mesurer précisément la tension crête et la durée du phénomène.</li>
+    </ol>
+  </div>
+
+  <div class="callout callout-danger">
+    <strong>⛔ AVERTISSEMENT DE SÉCURITÉ MATÉRIELLE : MANIPULATION STRICTEMENT EN SIMULATION !</strong><br>
+    Cette manipulation sans diode de protection est <strong>RÉALISÉE EXCLUSIVEMENT EN SIMULATION PROTEUS ISIS</strong>.<br>
+    <strong>Il est FORMELLEMENT INTERDIT de réaliser ce montage sans diode de roue libre sur le banc d'essai réel de la paillasse !</strong><br>
+    <em>Explication physique du danger :</em> En situation réelle, lorsqu'on coupe le courant dans une inductance sans voie de décharge, la disparition brutale du courant engendre un pic de surtension de plusieurs dizaines voire centaines de volts. Cette impulsion détruirait instantanément le transistor de commande par claquage d'avalanche de la jonction collecteur-émetteur (claquage <i>V<sub>CEO</sub></i>) et risquerait de remonter vers la carte Raspberry Pi Pico et le port USB du PC hôte ! La simulation Proteus permet d'observer et de quantifier ce phénomène destructeur en toute sécurité.
+  </div>
+
+  <div class="student-answer">
+    <strong>💡 Question d'ingénierie n°3.A — Analyse Transitoire Proteus : Commutation &amp; Surtension Sans Protection :</strong><br>
+    Répondez aux questions suivantes dans votre compte-rendu Google Docs à partir de vos simulations sous Proteus ISIS :
+    <ol style="margin:6px 0 0 0; padding-left:18px; line-height:1.65;">
+      <li><strong>Comportement statique &amp; Isolation galvanique (&sect; 3.2) :</strong>
+        <ul>
+          <li>Pourquoi mesure-t-on environ <strong>5 V aux bornes du contact du relais lorsqu'il est ouvert</strong> et <strong>0,00 V lorsqu'il est fermé</strong> ?</li>
+          <li>Pourquoi est-il <strong>strictement impossible</strong> d'utiliser ce relais électromécanique pour faire varier la vitesse du moteur par MLI/PWM à une fréquence de 1 000 commutations par seconde (1 kHz) ? (Citez les limites physiques : inertie mécanique des lames, rebonds, usure prématurée).</li>
+        </ul>
+      </li>
+      <li><strong>Rôle de driver &amp; amplification en courant du transistor NPN (&sect; 3.2) :</strong>
+        <ul>
+          <li>Comparez la valeur mesurée du courant de base <i>I<sub>B</sub></i> (fourni par la sortie D2) et celle du courant de collecteur <i>I<sub>C</sub></i> (alimentant la bobine). Calculez le rapport d'amplification de courant effectif :
+            <div style="margin:4px 0;"><i>k</i> = <span class="frac"><span class="num"><i>I<sub>C</sub></i></span><span class="den"><i>I<sub>B</sub></i></span></span></div>
+          </li>
+          <li>Que se passerait-il si l'on branchait directement la bobine du relais sur une broche GPIO du microcontrôleur (limitée à 12 mA sur Raspberry Pi Pico) sans passer par le transistor ? Expliquez précisément pourquoi le transistor NPN est qualifié d'étage <strong>Driver de puissance</strong>.</li>
+        </ul>
+      </li>
+      <li><strong>Analyse de la fermeture en régime transitoire (Front montant 0 V &rarr; 5 V sur D2) :</strong>
+        <ul>
+          <li>Lorsque la commande <code>R5(1)</code> passe de 0 V à 5 V, dans quel régime de fonctionnement bascule le transistor <i>Q</i><sub>1</sub> (Bloqué ou Saturé) ? Justifiez avec la valeur mesurée de la tension de saturation <i>V<sub>CE,sat</sub></i>.</li>
+          <li>Pourquoi le courant dans la branche de la bobine ne monte-t-il pas instantanément à sa valeur maximale ? Rappelez l'expression de la constante de temps d'un circuit <i>RL</i> série :
+            <div style="margin:4px 0;">&tau; = <span class="frac"><span class="num"><i>L</i></span><span class="den"><i>R</i></span></span></div>
+            (où <i>R</i> est la résistance totale de la branche de bobine). Décrivez l'allure de la tension aux bornes de la bobine lors de ce front montant.</li>
+        </ul>
+      </li>
+      <li><strong>Analyse de l'ouverture et pic de surtension / pic négatif (Front descendant 5 V &rarr; 0 V sur D2) :</strong>
+        <ul>
+          <li>Lorsque la commande <code>R5(1)</code> retombe brutalement à 0 V, le transistor <i>Q</i><sub>1</sub> se bloque. Le courant <i>i<sub>C</sub></i> tente de s'annuler instantanément (<span class="frac"><span class="num">d<i>i</i></span><span class="den">d<i>t</i></span></span> &ll; 0 en un temps <i>dt &rarr; 0</i>).</li>
+          <li>Rappelez la relation fondamentale de l'inductance :
+            <div style="margin:4px 0;"><i>u<sub>L</sub></i> = <i>L</i> &middot; <span class="frac"><span class="num">d<i>i</i></span><span class="den">d<i>t</i></span></span></div>
+            Expliquez pourquoi le terme <span class="frac"><span class="num">d<i>i</i></span><span class="den">d<i>t</i></span></span> étant très fortement négatif, la tension induite <i>u<sub>L</sub></i> prend une valeur gigantesque et inverse sa polarité par rapport au régime établi (loi de modération de Lenz).</li>
+          <li>En déduire le potentiel au nœud de collecteur <i>V<sub>Q1(C)</sub> = V<sub>CC</sub> &minus; u<sub>L</sub> = V<sub>CC</sub> + L &middot; |<span class="frac"><span class="num">d<i>i</i></span><span class="den">d<i>t</i></span></span>|</i>. Quelle est la valeur crête du pic de surtension mesurée au curseur sur votre graphe Proteus sur la trace <code>Q1(C)</code> ? Pourquoi parle-t-on également de « pic négatif » si l'on mesure la tension aux bornes de la bobine en convention récepteur ?</li>
+          <li>Consultez la documentation technique d'un transistor NPN standard (ex. 2N3904 ou 2N2222) et relevez sa tension de claquage maximale <i>V</i><sub>(BR)CEO</sub> (généralement 40 V). Comparez cette valeur limite à la surtension observée en simulation et concluez sur la conséquence matérielle immédiate si cette coupure sans diode avait lieu sur la paillasse réelle.</li>
+          <li>Quel est le rôle indispensable de la <strong>diode de roue libre</strong> (présente sur le module Grove Relay réel) ? Expliquez son fonctionnement lors de la coupure (polarisation en direct, chemin offert au courant inductif et écrêtage de la tension à <i>V<sub>CC</sub> + V<sub>F</sub> &approx; 5,7 V</i>).</li>
+        </ul>
+      </li>
+    </ol>
+  </div>
+
+  <h3>3.4 Écrêtage &amp; Protection Inductive : Raccordement de la LED Témoin puis Comparaison de Deux Diodes de Roue Libre (1N4001 vs 1N5819)</h3>
+  <p>
+    L'analyse précédente a démontré la dangerosité extrême de la surtension inductive à l'ouverture en l'absence de protection.
+    Nous allons maintenant étudier successivement sous Proteus ISIS l'impact de <strong>la remise en place de la LED témoin</strong>, puis le raccordement d'une <strong>diode de roue libre</strong> en comparant deux technologies de diodes différentes (diode silicium PN standard <code>1N4001</code> vs diode Schottky <code>1N5819</code>) avec confrontation aux données constructeurs (datasheets).
+  </p>
+
+  <div class="callout callout-proteus">
+    <strong>🔬 EXPÉRIMENTATION 1 — Rebranchement de la branche LED témoin (Résistance 1 k&Omega; + LED rouge) :</strong>
+    <ol style="margin:6px 0 0 0; padding-left:20px; line-height:1.65;">
+      <li><strong>Modification sous Proteus :</strong> Dans le schéma de la Figure 3.3, rétablissez le fil reliant la cathode de la LED rouge (en série avec sa résistance de <code>1 k&Omega;</code>) au nœud de collecteur <strong><code>Q1(C)</code></strong>. <em>(Attention : aucune diode de roue libre n'est encore raccordée sur la bobine)</em>.</li>
+      <li><strong>Simulation transitoire :</strong> Cliquez sur le graphe <em>ANALOGUE ANALYSIS</em> et appuyez sur la touche <strong>Espace</strong> pour relancer le tracé SPICE.</li>
+      <li><strong>Observation de la sonde <code>Q1(C)</code> :</strong>
+        <ul>
+          <li>Lorsque la commande <code>R5(1)</code> est à l'état haut (5 V), le transistor est saturé : la LED s'allume avec un courant direct <i>I<sub>F</sub> &approx; (5 &minus; 1,8 &minus; 0,2) / 1 000 &approx; 3 mA</i>.</li>
+          <li>À l'instant de coupure (5 V &rarr; 0 V), observez la tension crête sur <code>Q1(C)</code> : le pic de surtension disparaît-il ?</li>
+        </ul>
+      </li>
+      <li><strong>Analyse physique &amp; Confrontation à la DataSheet de la LED :</strong>
+        L'anode de la LED étant polarisée au rail +5 V et sa cathode au collecteur <i>Q</i><sub>1</sub>(<i>C</i>), dès que le collecteur grimpe au-delà de +5 V, la diode LED se retrouve polarisée en <strong>sens INVERSE</strong> (tension <i>V<sub>AK</sub> = V<sub>anode</sub> &minus; V<sub>cathode</sub> &lt; 0</i>).<br>
+        La LED est donc <strong>bloquée</strong> : elle n'offre strictement aucun passage pour le courant de décharge de l'inductance ! Le pic de surtension persiste intégralement.<br>
+        De plus, en consultant la datasheet d'une LED rouge classique (ex. Kingbright L-7113ID ou Vishay TLHR5400), la tension inverse maximale admissible n'est que de <strong><i>V<sub>R,max</sub></i> = 5 V</strong> ! Une telle surtension risque de détruire la LED par claquage inverse. <em>Une simple LED de signalisation ne protège donc absolument pas l'électronique de puissance.</em>
+      </li>
+    </ol>
+  </div>
+
+  <div class="callout callout-proteus">
+    <strong>🛡️ EXPÉRIMENTATION 2 — Câblage d'une Vraie Diode de Roue Libre &amp; Comparaison de Deux Références :</strong>
+    <p style="margin:6px 0 8px 0; line-height:1.6;">
+      Pour protéger le circuit, une diode de roue libre doit être connectée en <strong>anti-parallèle</strong> aux bornes de l'ensemble inductif bobine + <i>L</i><sub>1</sub> :
+      sa <strong>Cathode (K, anneau repère)</strong> est reliée au rail <code>+5V</code> (sonde <code>RL1(C1)</code>) et son <strong>Anode (A)</strong> est reliée au collecteur <strong><code>Q1(C)</code></strong>.
+      En régime passant, elle est bloquée (cathode à 5 V, anode à 0,2 V) ; lors du blocage du transistor, elle devient immédiatement passante et bride la tension au collecteur à :
+      <span style="font-weight:bold; color:#0369a1;"><i>V</i><sub><i>Q</i>1(<i>C</i>),max</sub> = <i>V<sub>CC</sub></i> + <i>V<sub>F</sub></i></span>.
+    </p>
+    <p style="margin:0 0 8px 0;">
+      Testez successivement sous Proteus les deux diodes suivantes en relevant la tension crête maximale d'écrêtage au curseur sur la trace <code>Q1(C)</code> :
+    </p>
+    <ul style="margin:6px 0 0 0; padding-left:20px; line-height:1.65;">
+      <li><strong>Diode Référence 1 : <code>1N4001</code> (Diode de redressement silicium standard à jonction PN — fournie dans le kit TI) :</strong>
+        <ul>
+          <li><strong>Technologie :</strong> Jonction PN Silicium standard.</li>
+          <li><strong>DataSheet constructeur (Vishay / Diodes Inc.) :</strong> Tension directe <i>V<sub>F</sub> &le; 1,1 V</i> à <i>I<sub>F</sub> = 1 A</i> ; pour un courant d'excitation de bobine de relais de l'ordre de <i>I<sub>bobine</sub> &approx; 70 à 100 mA</i>, la caractéristique directe donne typiquement <strong><i>V<sub>F</sub></i> &approx; 0,75 à 0,82 V</strong> (à 25 &deg;C). Temps de recouvrement <i>t<sub>rr</sub> &approx; 2 &mu;s</i>.</li>
+          <li><strong>Seuil d'écrêtage théorique :</strong> <i>V<sub>Q1(C),clamp</sub> = 5,0 V + 0,80 V &approx; <strong>5,80 V</strong></i>.</li>
+        </ul>
+      </li>
+      <li><strong>Diode Référence 2 : <code>1N5819</code> (Diode Schottky de puissance à barrière métal-semiconducteur) :</strong>
+        <ul>
+          <li><strong>Technologie :</strong> Jonction Schottky (métal / silicium dopé N), conduction exclusive par porteurs majoritaires.</li>
+          <li><strong>DataSheet constructeur (STMicroelectronics / Vishay) :</strong> Tension directe crête extrêmement basse : <strong><i>V<sub>F</sub></i> &approx; 0,34 à 0,38 V</strong> pour <i>I<sub>F</sub> = 100 mA</i> (et <i>V<sub>F</sub> &le; 0,60 V</i> à plein courant 1 A). Temps de recouvrement inverse quasi-nul <strong><i>t<sub>rr</sub> &lt; 10 ns</i></strong> (absence de stockage de porteurs minoritaires).</li>
+          <li><strong>Seuil d'écrêtage théorique :</strong> <i>V<sub>Q1(C),clamp</sub> = 5,0 V + 0,38 V &approx; <strong>5,38 V</strong></i>.</li>
+        </ul>
+      </li>
+    </ul>
+    <p style="margin:8px 0 0 0; font-size:9.2pt; color:#475569;">
+      <em>Note documentaire :</em> Le module commercial <em>Seeed Grove Relay</em> intègre quant à lui une diode <strong><code>1N4148</code></strong> (diode rapide petit signal au silicium, <i>V<sub>F</sub> &approx; 0,72 V</i>, <i>t<sub>rr</sub> = 4 ns</i>, <i>I<sub>F,max</sub> = 200 mA</i>), optimisée pour commuter très rapidement sur de petits relais dont le courant reste sous 150 mA.
+    </p>
+  </div>
+
+  <!-- TABLEAU COMPARATIF DES ÉCRÊTAGES -->
+  <table style="margin-top:14px;">
+    <thead>
+      <tr>
+        <th>Configuration de Protection testée</th>
+        <th>Composant inséré</th>
+        <th>Technologie de Jonction</th>
+        <th>Tension directe <i>V<sub>F</sub></i> (Datasheet)</th>
+        <th class="col-sim">Tension crête mesurée <i>V</i><sub><i>Q</i>1(<i>C</i>),max</sub> (Proteus)</th>
+        <th>Verdict Protection &amp; Sécurité Transistor (<i>V<sub>CEO,max</sub> = 40 V</i>)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Sans aucune protection (&sect; 3.3)</strong></td>
+        <td>Aucun</td>
+        <td>-</td>
+        <td>-</td>
+        <td class="center" style="color:#b91c1c; font-weight:bold;">&gt;&gt; 40 V (pic destructeur)</td>
+        <td>❌ <strong>Destruction immédiate par claquage d'avalanche</strong></td>
+      </tr>
+      <tr>
+        <td><strong>Avec LED témoin seule (Expér. 1)</strong></td>
+        <td>LED Rouge + 1 k&Omega;</td>
+        <td>GaP / GaAsP (LED)</td>
+        <td><i>V<sub>F</sub> &approx; 1,8 V</i> (en direct) / <strong><i>V<sub>R,max</sub> = 5 V</i></strong></td>
+        <td class="center" style="color:#b91c1c; font-weight:bold;">&gt;&gt; 40 V (non écrêté)</td>
+        <td>❌ <strong>Inopérant : LED polarisée en inverse, risque de claquage LED</strong></td>
+      </tr>
+      <tr>
+        <td><strong>Diode de roue libre Silicium (Expér. 2A)</strong></td>
+        <td><strong><code>1N4001</code></strong> (Kit TI)</td>
+        <td>Jonction PN Silicium standard</td>
+        <td><i>V<sub>F</sub> &approx; 0,78 V</i> (à 100 mA)</td>
+        <td class="center" style="color:#166534; font-weight:bold;">&approx; 5,78 V à 5,82 V</td>
+        <td>✅ <strong>Sécurisé : Écrêtage propre à <i>V<sub>CC</sub> + V<sub>F</sub></i></strong></td>
+      </tr>
+      <tr>
+        <td><strong>Diode de roue libre Schottky (Expér. 2B)</strong></td>
+        <td><strong><code>1N5819</code></strong> (Schottky)</td>
+        <td>Barrière Métal-Semiconducteur</td>
+        <td><i>V<sub>F</sub> &approx; 0,36 V</i> (à 100 mA)</td>
+        <td class="center" style="color:#166534; font-weight:bold;">&approx; 5,36 V à 5,40 V</td>
+        <td>✅ <strong>Optimal : Seuil d'écrêtage au plus bas, zéro pertes de commutation</strong></td>
       </tr>
     </tbody>
   </table>
 
   <div class="student-answer">
-    <strong>💡 Question d'ingénierie n°3 (à rédiger dans votre Google Docs Classroom) :</strong><br>
-    1. Pourquoi mesure-t-on environ <strong>5 V aux bornes du contact du relais lorsqu'il est ouvert</strong> et <strong>0,00 V lorsqu'il est fermé</strong> ?<br>
-    2. Expliquez physiquement pourquoi le courant <i>I<sub>moteur</sub></i> augmente fortement lorsque vous freinez légèrement l'axe jaune avec les doigts (rappel de Physique Appliquée : modèle de l'induit <i>U = E + R<sub>induit</sub>&middot;I</i> avec <i>E = k&middot;&Omega;</i>).<br>
-    3. Pourquoi est-il <strong>impossible</strong> d'utiliser ce relais mécanique pour faire varier la vitesse du moteur par MLI/PWM à 1 000 commutations par seconde (1 kHz) ?
+    <strong>💡 Question d'ingénierie n°3.B — Comparaison des Seuils d'Écrêtage &amp; Validation par les DataSheets :</strong><br>
+    Répondez aux questions suivantes dans votre compte-rendu Google Docs :
+    <ol style="margin:6px 0 0 0; padding-left:18px; line-height:1.65;">
+      <li><strong>Comportement de la LED témoin :</strong>
+        Pourquoi la LED témoin rouge normale ne participe-t-elle à aucun moment à l'écrêtage de la surtension lors de l'ouverture du circuit ? Comparez la tension appliquée à ses bornes lors de la coupure avec la tension inverse limite <i>V<sub>R,max</sub></i> issue de sa documentation technique.
+      </li>
+      <li><strong>Confrontation Simulation Proteus vs Datasheets constructeur :</strong>
+        Relevez sur votre analyseur graphique <em>ANALOGUE ANALYSIS</em> la tension d'écrêtage exacte avec la diode <code>1N4001</code> puis avec la diode <code>1N5819</code>.
+        Calculez la différence de seuil mesurée :
+        <div style="margin:4px 0;">&Delta;<i>V<sub>clamp</sub></i> = <i>V</i><sub><i>Q</i>1(<i>C</i>),1N4001</sub> &minus; <i>V</i><sub><i>Q</i>1(<i>C</i>),1N5819</sub></div>
+        Cette différence correspond-elle à l'écart de tension directe &Delta;<i>V<sub>F</sub></i> issu des courbes des deux datasheets ? Justifiez précisément.
+      </li>
+      <li><strong>Choix technologique en génie électronique :</strong>
+        Pourquoi privilégie-t-on impérativement une <strong>diode Schottky</strong> (comme la <code>1N5819</code>) plutôt qu'une diode standard PN (comme la <code>1N4001</code>) lorsqu'on commute une charge inductive à fréquence élevée (par exemple dans un variateur PWM à plusieurs dizaines de kilohertz ou une alimentation à découpage) ? (Indice : comparez les temps de recouvrement inverse <i>t<sub>rr</sub></i> et les pertes de commutation).
+      </li>
+    </ol>
   </div>
 
   <!-- ===================================================================== -->
@@ -2407,7 +2660,7 @@ relais_grove = Pin(<span class="dv">16</span>, Pin.OUT)  <span class="co"># Port
 
   <label class="step-check no-print">
     <input type="checkbox" class="tp-step-cb" data-step="3" onchange="updateProgress()">
-    <span>Partie 3 validée : Mesures Relais Grove, Simulation Proteus One-Shot du pic de surtension, Écrêtage Zener et Démonstration Réelle AD3 complétées dans Google Docs.</span>
+    <span>Partie 3 validée : Mesures du Relais Grove, simulations Proteus statique et transitoire (pic de surtension), comparaison des diodes d'écrêtage, écrêtage Zener et démonstration réelle AD3 complétés dans Google Docs.</span>
   </label>
 </div>
 
@@ -2425,24 +2678,30 @@ relais_grove = Pin(<span class="dv">16</span>, Pin.OUT)  <span class="co"># Port
   <table>
     <thead>
       <tr>
-        <th>Référence TI myParts Kit</th>
-        <th>Boîtier &amp; Brochage (vue de face)</th>
-        <th>Courant Collecteur max <i>I<sub>C,max</sub></i></th>
-        <th>Gain en courant <i>&beta; (h<sub>FE</sub>)</i></th>
-        <th>Verdict pour notre Moteur CC jaune (pics à 600 mA)</th>
+        <th style="width:14%;">Référence TI myParts Kit</th>
+        <th style="width:30%; text-align:center;">Boîtier &amp; Brochage (vue de face)</th>
+        <th style="width:16%;">Courant Collecteur max <i>I<sub>C,max</sub></i></th>
+        <th style="width:12%;">Gain en courant <i>&beta; (h<sub>FE</sub>)</i></th>
+        <th style="width:28%;">Verdict pour notre Moteur CC jaune (pics à 600 mA)</th>
       </tr>
     </thead>
     <tbody>
       <tr>
         <td><strong><code>2N3904L</code></strong></td>
-        <td>TO-92 : <code>1:E | 2:B | 3:C</code></td>
+        <td style="text-align:center; vertical-align:middle; background:#ffffff;">
+          <img src="images/transistor_to92_pinout.png" alt="Boîtier et brochage TO-92 (1: Émetteur, 2: Base, 3: Collecteur)" style="max-height:105px; width:auto; display:block; margin:0 auto 6px auto; border-radius:4px; border:1px solid #cbd5e1; box-shadow:0 1px 4px rgba(0,0,0,0.06);">
+          <strong>TO-92 :</strong> <code>1:E | 2:B | 3:C</code>
+        </td>
         <td><strong>200 mA max</strong></td>
         <td>100 à 300</td>
         <td>❌ <strong>Sous-dimensionné / Risque de destruction thermique</strong> lors du courant d'appel au démarrage ! (Adapté uniquement aux LEDs ou petits relais).</td>
       </tr>
       <tr>
         <td><strong><code>TIP31C</code></strong></td>
-        <td>TO-220 : <strong><code>1:B | 2:C | 3:E</code></strong></td>
+        <td style="text-align:center; vertical-align:middle; background:#ffffff;">
+          <img src="images/transistor_to220_pinout.png" alt="Boîtier et brochage TO-220 (1: Base, 2: Collecteur, 3: Émetteur)" style="max-height:105px; width:auto; display:block; margin:0 auto 6px auto; border-radius:4px; border:1px solid #cbd5e1; box-shadow:0 1px 4px rgba(0,0,0,0.06);">
+          <strong>TO-220 :</strong> <strong><code>1:B | 2:C | 3:E</code></strong>
+        </td>
         <td><strong>3 000 mA (3 A)</strong></td>
         <td>25 à 50</td>
         <td>✅ <strong>Parfaitement dimensionné</strong> pour la Partie Puissance 5 V !</td>
@@ -3145,19 +3404,35 @@ puissance_autorisee = <span class="kw">False</span>          <span class="co"># 
         </table>
         <p><b>Réponse Question d'ingénierie n°2 (Non-linéarité V_F et différence LED Rouge / Verte) :</b><br>........................................................................................................</p>
 
-        <h2 style="color:#0b3c5d;">PARTIE 3 — Commande / Puissance par Relais Grove (Isolation Galvanique &amp; Surtension Inductive)</h2>
-        <p><i>[📷 Insérer ici la capture Proteus du projet fourni « Grove Relay moteur.pdsprj » (OFF et ON) + photo du banc réel Pico + Relais Grove + Varta + Moteur jaune]</i></p>
-        <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; width:100%;">
+        <h2 style="color:#0b3c5d;">PARTIE 3 — Commande / Puissance par Relais Grove (Simulation Proteus, Isolation Galvanique &amp; Démonstration Réelle)</h2>
+        <p><i>[📷 Insérer ici les captures Proteus du projet « Grove Relay moteur.pdsprj » (OFF et ON), du graphe transitoire sans diode (Figure 3.3) et de la comparaison des écrêtages avec 1N4001 et 1N5819, ainsi que la photo du banc réel Pico + Relais Grove + Varta + Moteur jaune]</i></p>
+        <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; width:100%; margin-bottom:10px;">
           <tr style="background:#fee2e2; font-weight:bold;">
-            <th>Zone</th><th>Grandeur</th><th>Proteus (« Grove Relay moteur » : OFF / ON)</th><th>Réel Pico + Varta (OFF / ON)</th>
+            <th>Zone</th><th>Grandeur mesurée sous Proteus (Régime Statique)</th><th>État REPOS (D2 = 0 V)</th><th>État TRAVAIL (D2 = 5 V)</th>
           </tr>
-          <tr><td>Commande</td><td>U_cmd GP16 / D2 (V)</td><td></td><td></td></tr>
-          <tr><td>Puissance</td><td>U_contact bornier relais (V)</td><td></td><td></td></tr>
+          <tr><td>Commande</td><td>U_cmd D2 (V)</td><td>0,00 V</td><td>5,00 V</td></tr>
+          <tr><td>Transistor Q1</td><td>V_CE collecteur-émetteur (V)</td><td>5,00 V</td><td>~0,18 V (saturé)</td></tr>
+          <tr><td>Commande</td><td>I_B base transistor (fourni par D2) (mA)</td><td>0,00 mA</td><td></td></tr>
+          <tr><td>Driver Bobine</td><td>I_C collecteur (distribué à la bobine) (mA)</td><td>0,00 mA</td><td></td></tr>
+          <tr><td>Amplification</td><td>Facteur de gain driver k = I_C / I_B</td><td>-</td><td></td></tr>
+          <tr><td>Puissance</td><td>U_contact contact sec relais (V)</td><td></td><td></td></tr>
           <tr><td>Puissance</td><td>U_moteur (V)</td><td></td><td></td></tr>
-          <tr><td>Puissance</td><td>I_moteur à vide (mA)</td><td></td><td></td></tr>
-          <tr><td>Puissance</td><td>I_moteur freiné au doigt (mA)</td><td>-</td><td></td></tr>
+          <tr><td>Puissance</td><td>I_moteur (mA)</td><td></td><td></td></tr>
+          <tr><td>Signalisation</td><td>État LED rouge témoin</td><td>Éteinte</td><td>Allumée</td></tr>
         </table>
-        <p><b>Réponse Question d'ingénierie n°3 (U_contact, hausse de I_moteur en charge, impossibilité du PWM sur relais) :</b><br>........................................................................................................</p>
+        <p><b>Réponses Question d'ingénierie n°3.A (Rôle du transistor driver en courant k = I_C / I_B, fermeture 0V→5V, loi u_L = L·di/dt et surtension sans diode, risque V_CEO) :</b><br>........................................................................................................</p>
+        
+        <h3>Comparatif des seuils d'écrêtage (Simulation Proteus vs Datasheets) :</h3>
+        <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; width:100%; margin-bottom:10px;">
+          <tr style="background:#fee2e2; font-weight:bold;">
+            <th>Configuration</th><th>Composant</th><th>Technologie</th><th>V_F Datasheet</th><th>V_Q1(C),max Proteus</th><th>Verdict protection</th>
+          </tr>
+          <tr><td>Sans protection</td><td>Aucun</td><td>-</td><td>-</td><td></td><td>Destruction V_CEO</td></tr>
+          <tr><td>LED témoin seule</td><td>LED Rouge + 1 kΩ</td><td>LED</td><td>V_R,max = 5 V</td><td></td><td>Inopérant (bloquée en inverse)</td></tr>
+          <tr><td>Diode Silicium standard</td><td>1N4001</td><td>PN Silicium</td><td>~0,80 V</td><td></td><td>Sécurisé (écrêtage V_CC + V_F)</td></tr>
+          <tr><td>Diode Schottky</td><td>1N5819</td><td>Barrière Schottky</td><td>~0,36 V</td><td></td><td>Optimal (faible seuil, rapide)</td></tr>
+        </table>
+        <p><b>Réponses Question d'ingénierie n°3.B (LED témoin en inverse, comparaison des seuils 1N4001 vs 1N5819, confrontation aux datasheets et supériorité Schottky en haute fréquence) :</b><br>........................................................................................................</p>
 
         <h3 style="color:#0b3c5d;">3.2 Architecture Interne &amp; Décharge de la Bobine du Relais (Simulation Proteus)</h3>
         <p><i>[📷 Insérer ici la capture Proteus de l'oscillogramme au collecteur de Q1 : avec diode D2 (5,7 V) vs sans diode D2 (pic de surtension &gt; 50 V)]</i></p>
