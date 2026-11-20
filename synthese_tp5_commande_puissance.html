@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Synthèse TP 5 : Commande / Puissance — Relais, Transistor NPN &amp; Diode de Roue Libre</title>
+  <style>
+    :root {
+      --primary: #0b3c5d;
+      --secondary: #1d4ed8;
+      --cmd-blue: #0284c7;
+      --cmd-bg: #f0f9ff;
+      --pwr-red: #dc2626;
+      --pwr-bg: #fef2f2;
+      --ok-green: #15803d;
+      --ok-bg: #f0fdf4;
+      --warn-amber: #d97706;
+      --warn-bg: #fffbeb;
+      --bg-page: #f8fafc;
+      --bg-card: #ffffff;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --border: #cbd5e1;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.55;
+      color: var(--text-main);
+      background-color: var(--bg-page);
+      max-width: 940px;
+      margin: 0 auto;
+      padding: 18px 20px 60px 20px;
+    }
+
+    @page { margin: 1.2cm; size: A4; }
+
+    @media print {
+      body { max-width: 100%; padding: 0; font-size: 9.5pt; background: #fff; color: #000; }
+      .no-print { display: none !important; }
+      .card { box-shadow: none !important; border: 1px solid #cbd5e1 !important; page-break-inside: avoid; }
+      details { page-break-inside: avoid; }
+    }
+
+    /* Barre supérieure */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .nav-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 9pt;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: #ffffff;
+      color: var(--primary);
+      font-family: inherit;
+    }
+    .nav-btn:hover { background: #e2e8f0; }
+
+    /* En-tête */
+    header {
+      background: linear-gradient(135deg, #0b3c5d 0%, #1e3a8a 100%);
+      color: #ffffff;
+      border-radius: 12px;
+      padding: 22px 26px;
+      margin-bottom: 20px;
+      box-shadow: 0 5px 16px rgba(11, 60, 93, 0.2);
+    }
+    .kicker {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.16);
+      padding: 3px 11px;
+      border-radius: 999px;
+      font-size: 8.2pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+    header h1 {
+      margin: 0 0 6px 0;
+      font-size: 18pt;
+      line-height: 1.25;
+      color: #ffffff;
+    }
+    header p {
+      margin: 0;
+      color: #dbeafe;
+      font-size: 10pt;
+    }
+
+    /* Cartes et titres */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 18px 22px;
+      margin-bottom: 18px;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+    }
+    h2 {
+      font-size: 13.5pt;
+      color: var(--primary);
+      margin: 0 0 12px 0;
+      padding: 5px 0 5px 12px;
+      border-left: 5px solid var(--secondary);
+      background: linear-gradient(90deg, #eff6ff 0%, transparent 100%);
+      border-radius: 0 6px 6px 0;
+    }
+    h3 {
+      font-size: 10.8pt;
+      color: #0f3a5d;
+      margin: 14px 0 6px 0;
+    }
+    p { margin: 0.55em 0; font-size: 9.6pt; }
+    ul, ol { margin: 6px 0; padding-left: 20px; font-size: 9.5pt; }
+    li { margin-bottom: 4px; }
+
+    /* Grilles */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin: 12px 0;
+    }
+    @media (max-width: 720px) {
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+
+    .box {
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 9.3pt;
+    }
+    .box-cmd { background: var(--cmd-bg); border: 1px solid #bae6fd; border-top: 4px solid var(--cmd-blue); }
+    .box-pwr { background: var(--pwr-bg); border: 1px solid #fecaca; border-top: 4px solid var(--pwr-red); }
+    .box-ok  { background: var(--ok-bg);  border: 1px solid #bbf7d0; border-top: 4px solid var(--ok-green); }
+    .box-warn{ background: var(--warn-bg);border: 1px solid #fde68a; border-left: 5px solid var(--warn-amber); }
+    .box-danger { background: var(--pwr-bg); border: 1px solid #fecaca; border-left: 5px solid var(--pwr-red); }
+    .box h4 { margin: 0 0 6px 0; font-size: 10pt; }
+    .box-cmd h4 { color: #0369a1; }
+    .box-pwr h4 { color: #b91c1c; }
+    .box-ok h4  { color: #166534; }
+
+    /* Formules propres hors-ligne */
+    .formula-box {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-left: 4px solid var(--primary);
+      border-radius: 6px;
+      padding: 10px 14px;
+      margin: 10px 0;
+      font-family: 'Cambria Math', Georgia, serif;
+      font-size: 10.5pt;
+      text-align: center;
+      color: #0f172a;
+    }
+    .frac {
+      display: inline-block;
+      vertical-align: middle;
+      text-align: center;
+      margin: 0 3px;
+    }
+    .frac > span { display: block; padding: 0 4px; }
+    .frac span.num { border-bottom: 1.2px solid #0f172a; }
+    .frac span.den { padding-top: 1px; }
+
+    /* Tableaux */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+      font-size: 9.2pt;
+    }
+    th, td {
+      border: 1px solid #cbd5e1;
+      padding: 7px 10px;
+      text-align: left;
+      vertical-align: middle;
+    }
+    th { background: #f1f5f9; color: var(--primary); font-weight: 700; }
+    tr:nth-child(even) { background: #f8fafc; }
+    .center { text-align: center; }
+
+    /* Figures SVG / Images */
+    .figure-card {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 12px;
+      margin: 12px 0;
+      text-align: center;
+    }
+    .figure-card svg, .figure-card img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
+    .caption {
+      font-size: 8.6pt;
+      color: var(--text-muted);
+      font-style: italic;
+      margin-top: 6px;
+    }
+
+    code {
+      background: #f1f5f9;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-family: Consolas, 'Courier New', monospace;
+      font-size: 8.8pt;
+      color: #0f172a;
+    }
+
+    /* Exercices */
+    .exo-card {
+      border: 1px solid #cbd5e1;
+      border-left: 5px solid var(--secondary);
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin: 14px 0;
+      background: #ffffff;
+    }
+    .exo-title {
+      font-weight: 800;
+      color: var(--primary);
+      font-size: 10.2pt;
+      margin-bottom: 6px;
+    }
+    .exo-data {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 7px 10px;
+      font-size: 9pt;
+      margin: 6px 0 8px 0;
+    }
+    details {
+      margin-top: 10px;
+      border: 1px solid #bbf7d0;
+      border-radius: 6px;
+      background: #f0fdf4;
+      padding: 8px 12px;
+    }
+    summary {
+      cursor: pointer;
+      font-weight: 700;
+      color: #166534;
+      font-size: 9.2pt;
+      user-select: none;
+    }
+    .sol-body {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px dashed #86efac;
+      font-size: 9.2pt;
+    }
+  </style>
+</head>
+<body>
+
+<div class="top-bar no-print">
+  <div>
+    <a class="nav-btn" href="TP5_Composants_Commande_Puissance_BTS_CIEL.html">← Retour au TP 5</a>
+    <a class="nav-btn" href="index.html">🏠 Portail BTS CIEL 1</a>
+  </div>
+  <button class="nav-btn" onclick="window.print()">🖨️ Imprimer / PDF</button>
+</div>
+
+<header>
+  <span class="kicker">Fiche de Synthèse &amp; Exercices — TP 5</span>
+  <h1>Partie Commande / Partie Puissance : Relais, Transistor NPN &amp; Diode de Roue Libre</h1>
+  <p>L'essentiel à retenir sur les composants de commutation, le calcul des courants (loi des mailles &amp; loi d'Ohm) et le dimensionnement.</p>
+</header>
+
+<!-- 1. ARCHITECTURE COMMANDE / PUISSANCE -->
+<section class="card">
+  <h2>1. Pourquoi séparer Partie Commande et Partie Puissance ?</h2>
+  <p>
+    Une broche GPIO de microcontrôleur (ex. Raspberry Pi Pico) fournit une tension logique faible (<strong>3,3 V</strong>) et un courant très limité (<strong>&le; 12 mA</strong>). Un actionneur comme un moteur CC 5 V consomme <strong>150 à 600 mA</strong> : le brancher directement sur le GPIO détruirait le microcontrôleur. On intercale donc un <strong>préactionneur</strong> (relais ou transistor) entre les deux zones.
+  </p>
+
+  <div class="grid-2">
+    <div class="box box-cmd">
+      <h4>🔵 Partie Commande (Logique)</h4>
+      <ul>
+        <li>Tension faible : <strong>3,3 V</strong> (Raspberry Pi Pico).</li>
+        <li>Courant faible : quelques milliampères (<code>I &lt; 12 mA</code>).</li>
+        <li>Rôle : décider quand activer ou varier l'actionneur.</li>
+      </ul>
+    </div>
+    <div class="box box-pwr">
+      <h4>🔴 Partie Puissance (Énergie)</h4>
+      <ul>
+        <li>Tension d'alimentation dédiée : <strong>5 V</strong> (Powerbank Varta).</li>
+        <li>Courant fort : <strong>180 mA à 600 mA</strong> (moteur CC).</li>
+        <li>Rôle : fournir l'énergie mécanique à l'actionneur.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 2. RÔLE DU RELAIS -->
+<section class="card">
+  <h2>2. Le Relais Électromécanique (Isolation Galvanique)</h2>
+  <p>
+    Un relais est un <strong>interrupteur mécanique commandé par un électroaimant</strong>. Lorsqu'un courant traverse sa bobine (côté commande), le champ magnétique attire une palette métallique qui ferme le contact <strong>NO (Normalement Ouvert)</strong> côté puissance.
+  </p>
+
+  <div class="figure-card">
+    <img src="images/synthese_grove_relay_proteus.png" alt="Schéma Proteus du module Grove Relay pilotant un moteur CC 5 V" style="max-width:740px; border-radius:6px; border:1px solid #cbd5e1;">
+    <div class="caption">Figure 1 — Schéma Proteus du module <em>Grove Relay</em> : à gauche, la Partie Commande (broche <code>D2</code>, résistance 4,7 k&Omega;, transistor NPN driver, LED témoin, diode de roue libre et bobine) ; à droite, la Partie Puissance isolée galvaniquement (contact NO, batterie <code>BAT1 5V</code> et moteur).</div>
+  </div>
+
+  <ul>
+    <li><strong>Atout majeur :</strong> <strong>isolation galvanique</strong> (aucune liaison électrique ni masse commune entre commande et puissance) et capacité à commuter de fortes puissances (jusqu'à 250 V AC / 10 A).</li>
+    <li><strong>Limites :</strong> commutation lente (quelques ms, <strong>impossible de faire du PWM</strong>), bruit mécanique (« clic ») et usure des contacts.</li>
+  </ul>
+</section>
+
+<!-- 3. RÔLE DU TRANSISTOR NPN -->
+<section class="card">
+  <h2>3. Le Transistor Bipolaire NPN (Commutation Statique)</h2>
+
+  <div class="grid-2" style="align-items:center;">
+    <div>
+      <p>
+        En électronique de commutation, le transistor NPN joue le rôle d'un <strong>interrupteur statique commandé par un faible courant de base <i>I<sub>B</sub></i></strong> (entre la Base <strong>B</strong> et l'Émetteur <strong>E</strong>) pour autoriser un courant important <i>I<sub>C</sub></i> (entre le Collecteur <strong>C</strong> et l'Émetteur <strong>E</strong>) :
+      </p>
+      <ul>
+        <li><strong>Bloqué (interrupteur ouvert) :</strong> si <i>I<sub>B</sub> = 0</i>, alors <i>I<sub>C</sub> = 0</i> (le moteur est à l'arrêt).</li>
+        <li><strong>Saturé (interrupteur fermé) :</strong> si <i>I<sub>B</sub></i> est suffisant, le transistor laisse passer tout le courant demandé par la charge avec une tension résiduelle très faible <i>V<sub>CE,sat</sub> &approx; 0,2 V</i>.</li>
+      </ul>
+    </div>
+    <div class="figure-card" style="margin:0;">
+      <img src="images/transistor_npn_broches.png" alt="Broches Base Collecteur Émetteur d'un transistor NPN" style="max-width:210px;">
+      <div class="caption">Broches d'un transistor NPN : Base (B), Collecteur (C), Émetteur (E).</div>
+    </div>
+  </div>
+
+  <!-- Schéma complet Commande / Puissance par Transistor NPN + Diode roue libre -->
+  <div class="figure-card">
+    <svg viewBox="0 0 860 275" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Montage de commutation à transistor NPN avec mailles, courants IB et IC, et diode de roue libre">
+      <rect width="860" height="275" rx="8" fill="#ffffff"/>
+      <!-- Zones -->
+      <rect x="10" y="10" width="380" height="255" rx="8" fill="#f0f9ff" stroke="#38bdf8" stroke-width="1.5"/>
+      <text x="200" y="30" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11.5" font-weight="bold" fill="#0369a1">MAILLE DE COMMANDE (3,3 V)</text>
+      <rect x="400" y="10" width="450" height="255" rx="8" fill="#fef2f2" stroke="#f87171" stroke-width="1.5"/>
+      <text x="625" y="30" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11.5" font-weight="bold" fill="#b91c1c">MAILLE DE PUISSANCE (5 V)</text>
+
+      <!-- Pico -->
+      <rect x="28" y="110" width="100" height="110" rx="6" fill="#0f172a"/>
+      <text x="78" y="148" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#38bdf8">Pico</text>
+      <text x="120" y="168" text-anchor="end" font-family="Consolas, monospace" font-size="10" fill="#fde047">U_GPIO</text>
+      <text x="120" y="205" text-anchor="end" font-family="Consolas, monospace" font-size="10" fill="#94a3b8">GND</text>
+
+      <!-- Fil vers RB + flèche IB -->
+      <line x1="128" y1="164" x2="205" y2="164" stroke="#0284c7" stroke-width="2.5"/>
+      <polygon points="175,164 165,159 165,169" fill="#0284c7"/>
+      <text x="168" y="152" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#0369a1">I_B</text>
+
+      <!-- RB -->
+      <rect x="205" y="152" width="76" height="24" fill="#ffffff" stroke="#1e293b" stroke-width="2"/>
+      <text x="243" y="168" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10.5" font-weight="bold" fill="#1e293b">R_B</text>
+      <text x="243" y="143" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#0369a1">U_RB = R_B · I_B</text>
+      <line x1="281" y1="164" x2="405" y2="164" stroke="#0284c7" stroke-width="2.5"/>
+
+      <!-- Tension V_BE -->
+      <line x1="355" y1="172" x2="355" y2="218" stroke="#0284c7" stroke-width="1.6"/>
+      <polygon points="355,168 351,176 359,176" fill="#0284c7"/>
+      <text x="346" y="200" text-anchor="end" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#0369a1">V_BE,sat</text>
+
+      <!-- Transistor NPN -->
+      <circle cx="430" cy="164" r="26" fill="#ffffff" stroke="#1e293b" stroke-width="2.2"/>
+      <line x1="418" y1="147" x2="418" y2="181" stroke="#1e293b" stroke-width="3.2"/>
+      <line x1="405" y1="164" x2="418" y2="164" stroke="#1e293b" stroke-width="2.4"/>
+      <line x1="418" y1="155" x2="442" y2="138" stroke="#1e293b" stroke-width="2.2"/>
+      <line x1="418" y1="173" x2="442" y2="190" stroke="#1e293b" stroke-width="2.2"/>
+      <polygon points="442,190 432,187 437,179" fill="#1e293b"/>
+      <text x="410" y="133" font-family="Segoe UI, sans-serif" font-size="10.5" font-weight="bold" fill="#0f172a">TIP31 (NPN)</text>
+      <text x="404" y="156" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#0284c7">B</text>
+      <text x="451" y="136" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#dc2626">C</text>
+      <text x="451" y="198" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#15803d">E</text>
+
+      <!-- Tension V_CE -->
+      <line x1="485" y1="145" x2="485" y2="220" stroke="#7c3aed" stroke-width="1.6"/>
+      <polygon points="485,140 481,148 489,148" fill="#7c3aed"/>
+      <text x="493" y="186" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#6d28d9">V_CE,sat</text>
+
+      <!-- Collecteur -> Moteur + Diode RL -> +5V -->
+      <line x1="442" y1="138" x2="442" y2="122" stroke="#dc2626" stroke-width="2.5"/>
+      <line x1="442" y1="122" x2="640" y2="122" stroke="#dc2626" stroke-width="2.5"/>
+      <!-- Flèche I_C -->
+      <polygon points="508,122 518,117 518,127" fill="#dc2626"/>
+      <text x="515" y="113" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11" font-weight="bold" fill="#b91c1c">I_C</text>
+
+      <!-- Moteur -->
+      <line x1="560" y1="54" x2="560" y2="66" stroke="#dc2626" stroke-width="2.5"/>
+      <circle cx="560" cy="88" r="22" fill="#fef08a" stroke="#ca8a04" stroke-width="2.5"/>
+      <text x="560" y="92" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="13" font-weight="bold" fill="#854d0e">M</text>
+      <line x1="560" y1="110" x2="560" y2="122" stroke="#dc2626" stroke-width="2.5"/>
+      <text x="526" y="92" text-anchor="end" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#854d0e">U_mot</text>
+
+      <!-- Diode de roue libre 1N4001 -->
+      <line x1="640" y1="54" x2="640" y2="75" stroke="#1e293b" stroke-width="2"/>
+      <line x1="628" y1="75" x2="652" y2="75" stroke="#dc2626" stroke-width="3.5"/>
+      <polygon points="640,75 628,99 652,99" fill="#1e293b"/>
+      <line x1="640" y1="99" x2="640" y2="122" stroke="#1e293b" stroke-width="2"/>
+      <text x="658" y="83" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#b91c1c">1N4001</text>
+      <text x="658" y="96" font-family="Segoe UI, sans-serif" font-size="8.5" fill="#7f1d1d">(Cathode vers +5V)</text>
+
+      <!-- Rail +5V + Alim -->
+      <line x1="560" y1="54" x2="775" y2="54" stroke="#dc2626" stroke-width="2.5"/>
+      <line x1="775" y1="54" x2="775" y2="108" stroke="#dc2626" stroke-width="2.5"/>
+      <rect x="725" y="108" width="102" height="76" rx="6" fill="#1e293b"/>
+      <text x="776" y="138" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#ffffff">Alim. 5 V</text>
+      <text x="776" y="156" text-anchor="middle" font-family="Consolas, monospace" font-size="9.5" fill="#fde047">+5 V / GND</text>
+
+      <!-- Masse commune -->
+      <line x1="128" y1="201" x2="152" y2="201" stroke="#1e293b" stroke-width="2.5"/>
+      <line x1="152" y1="201" x2="152" y2="225" stroke="#1e293b" stroke-width="2.5"/>
+      <line x1="152" y1="225" x2="775" y2="225" stroke="#1e293b" stroke-width="3"/>
+      <line x1="442" y1="190" x2="442" y2="225" stroke="#15803d" stroke-width="2.5"/>
+      <line x1="775" y1="184" x2="775" y2="225" stroke="#1e293b" stroke-width="2.5"/>
+      <rect x="330" y="234" width="210" height="22" rx="4" fill="#dcfce7" stroke="#15803d"/>
+      <text x="435" y="249" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#166534">MASSE COMMUNE (GND) OBLIGATOIRE</text>
+    </svg>
+    <div class="caption">Figure 2 — Montage de commutation par transistor NPN avec ses deux mailles, ses courants <i>I<sub>B</sub></i> / <i>I<sub>C</sub></i> et la diode de roue libre.</div>
+  </div>
+
+  <h3>Comparatif rapide : Relais vs Transistor NPN</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Critère</th>
+        <th>Relais électromécanique</th>
+        <th>Transistor NPN (<code>TIP31</code> / <code>2N3904</code>)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Liaison des masses</strong></td>
+        <td>✅ <strong>Isolation galvanique</strong> (masses séparées)</td>
+        <td>⚠️ <strong>Masse commune (GND)</strong> obligatoire</td>
+      </tr>
+      <tr>
+        <td><strong>Vitesse / Variation PWM</strong></td>
+        <td>❌ Lent (quelques ms) — <strong>Tout ou Rien uniquement</strong></td>
+        <td>✅ Très rapide (&mu;s) — <strong>Idéal pour le PWM</strong></td>
+      </tr>
+      <tr>
+        <td><strong>Usure &amp; Bruit</strong></td>
+        <td>⚠️ Contacts mécaniques (usure + « clic »)</td>
+        <td>✅ Silencieux, aucune pièce en mouvement</td>
+      </tr>
+      <tr>
+        <td><strong>Choix du calibre</strong></td>
+        <td>Selon courant/tension du contact (ex. 10 A / 250 V)</td>
+        <td><code>2N3904</code> (&le; 200 mA : LED/relais) | <code>TIP31</code> (&le; 3 A : moteur)</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- 4. DIODES, ÉLÉMENTS BOBINÉS & ÉCRÊTAGE -->
+<section class="card">
+  <h2>4. Les Diodes, les Charges Bobinées (Relais / Moteur) &amp; l'Écrêtage</h2>
+
+  <div class="grid-2">
+    <div class="box box-cmd">
+      <h4>➡️ Rôle d'une diode (<code>1N4001</code>, LED)</h4>
+      <ul>
+        <li>Composant <strong>polarisé</strong> (Anode <strong>A</strong> &rarr; Cathode <strong>K</strong>, repérée par une <strong>bague argentée</strong> sur la <code>1N4001</code>).</li>
+        <li><strong>Sens passant (A &rarr; K) :</strong> laisse passer le courant dès que sa tension atteint son seuil <i>V<sub>F</sub></i> (&approx; <strong>0,7 V</strong> pour une diode silicium <code>1N4001</code> ; 1,8 à 3 V pour une LED).</li>
+        <li><strong>Sens bloquant (K &rarr; A) :</strong> se comporte comme un interrupteur ouvert (<i>I = 0</i>).</li>
+      </ul>
+    </div>
+    <div class="box box-pwr">
+      <h4>🧲 Comportement d'un élément bobiné (Relais / Moteur)</h4>
+      <ul>
+        <li>Une bobine d'inductance <i>L</i> stocke de l'énergie magnétique (<i>E = &frac12;&middot;L&middot;i&sup2;</i>) et <strong>s'oppose aux variations brutales du courant</strong>.</li>
+        <li>Lors de la coupure brutale du transistor, <i>di/dt</i> devient énorme et la bobine génère une <strong>surtension induite</strong> :
+          <strong><i>u<sub>L</sub> = L &middot; di/dt</i></strong> (pouvant dépasser 50 à 100 V !).</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="box box-danger" style="margin:10px 0;">
+    <strong>⚠️ Risques pour le circuit SANS diode de roue libre :</strong>
+    <ul style="margin-bottom:0;">
+      <li><strong>Destruction (claquage) du transistor</strong> : la surtension dépasse sa tension limite <i>V<sub>CE,max</sub></i> et perce la jonction.</li>
+      <li><strong>Arc électrique</strong> sur les contacts mécaniques (usure ou soudure des contacts d'un relais).</li>
+      <li><strong>Perturbations électromagnétiques (CEM)</strong> pouvant provoquer un plantage ou un redémarrage intempestif du microcontrôleur (Pico).</li>
+    </ul>
+  </div>
+
+  <p>
+    <strong>Solution : la diode de roue libre (<code>1N4001</code>) en antiparallèle</strong> sur la bobine ou le moteur (<strong>Cathode / bague vers le <code>+5 V</code></strong>). En fonctionnement normal, elle est bloquée. À l'ouverture du transistor, elle devient passante, offre un chemin fermé au courant inductif et <strong>écrête la surtension</strong> à <i>V<sub>alim</sub> + V<sub>F</sub> &approx; 5,7 V</i>.
+  </p>
+
+  <div class="figure-card">
+    <svg viewBox="0 0 860 245" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Comparaison du signal V_CE à la coupure : non écrêté sans diode vs écrêté avec diode de roue libre">
+      <rect width="860" height="245" rx="8" fill="#ffffff"/>
+
+      <!-- PANNEAU GAUCHE : SIGNAL NON ÉCRÊTÉ -->
+      <rect x="10" y="10" width="410" height="225" rx="8" fill="#fef2f2" stroke="#fca5a5" stroke-width="1.5"/>
+      <text x="215" y="30" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11.5" font-weight="bold" fill="#b91c1c">❌ SANS diode de roue libre (Signal NON écrêté)</text>
+
+      <!-- Axes gauche -->
+      <line x1="55" y1="195" x2="395" y2="195" stroke="#475569" stroke-width="1.6"/>
+      <polygon points="399,195 391,191 391,199" fill="#475569"/>
+      <text x="392" y="212" text-anchor="end" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#475569">Temps t</text>
+      <line x1="55" y1="195" x2="55" y2="48" stroke="#475569" stroke-width="1.6"/>
+      <polygon points="55,43 51,51 59,51" fill="#475569"/>
+      <text x="48" y="54" text-anchor="end" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#1e293b">V_CE</text>
+
+      <!-- Ligne 5V et 0V -->
+      <line x1="55" y1="158" x2="385" y2="158" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="48" y="161" text-anchor="end" font-family="Consolas, monospace" font-size="9" fill="#475569">5 V</text>
+      <text x="48" y="198" text-anchor="end" font-family="Consolas, monospace" font-size="9" fill="#475569">0 V</text>
+
+      <!-- Seuil danger V_CE,max -->
+      <line x1="55" y1="88" x2="385" y2="88" stroke="#dc2626" stroke-width="1.2" stroke-dasharray="5,4"/>
+      <text x="383" y="83" text-anchor="end" font-family="Segoe UI, sans-serif" font-size="8.5" font-weight="bold" fill="#dc2626">Limite V_CE,max transistor</text>
+
+      <!-- Instant coupure t_off -->
+      <line x1="175" y1="195" x2="175" y2="52" stroke="#64748b" stroke-width="1" stroke-dasharray="3,3"/>
+      <text x="175" y="211" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9" font-weight="bold" fill="#334155">t_off (coupure)</text>
+
+      <!-- Courbe non écrêtée avec pic violent -->
+      <path d="M 55 190 L 175 190 L 182 54 L 194 142 L 204 166 L 214 154 L 224 160 L 236 158 L 380 158"
+            fill="none" stroke="#dc2626" stroke-width="2.8" stroke-linejoin="round"/>
+      <!-- Étiquette pic -->
+      <rect x="198" y="47" width="166" height="30" rx="5" fill="#fee2e2" stroke="#dc2626"/>
+      <text x="281" y="60" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#991b1b">Pic &gt; 50 à 100 V !</text>
+      <text x="281" y="72" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.5" fill="#b91c1c">DANGER : claquage transistor</text>
+      <text x="112" y="183" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.5" fill="#475569">Transistor saturé</text>
+
+      <!-- PANNEAU DROIT : SIGNAL ÉCRÊTÉ -->
+      <rect x="440" y="10" width="410" height="225" rx="8" fill="#f0fdf4" stroke="#86efac" stroke-width="1.5"/>
+      <text x="645" y="30" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11.5" font-weight="bold" fill="#166534">✅ AVEC diode de roue libre 1N4001 (Signal ÉCRÊTÉ)</text>
+
+      <!-- Axes droit -->
+      <line x1="485" y1="195" x2="825" y2="195" stroke="#475569" stroke-width="1.6"/>
+      <polygon points="829,195 821,191 821,199" fill="#475569"/>
+      <text x="822" y="212" text-anchor="end" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#475569">Temps t</text>
+      <line x1="485" y1="195" x2="485" y2="48" stroke="#475569" stroke-width="1.6"/>
+      <polygon points="485,43 481,51 489,51" fill="#475569"/>
+      <text x="478" y="54" text-anchor="end" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#1e293b">V_CE</text>
+
+      <!-- Lignes 5,7V, 5V et 0V -->
+      <line x1="485" y1="138" x2="815" y2="138" stroke="#16a34a" stroke-width="1.2" stroke-dasharray="4,3"/>
+      <text x="480" y="140" text-anchor="end" font-family="Consolas, monospace" font-size="8.5" font-weight="bold" fill="#15803d">5,7 V</text>
+      <line x1="485" y1="158" x2="815" y2="158" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="480" y="161" text-anchor="end" font-family="Consolas, monospace" font-size="9" fill="#475569">5 V</text>
+      <text x="480" y="198" text-anchor="end" font-family="Consolas, monospace" font-size="9" fill="#475569">0 V</text>
+
+      <!-- Instant coupure t_off -->
+      <line x1="605" y1="195" x2="605" y2="52" stroke="#64748b" stroke-width="1" stroke-dasharray="3,3"/>
+      <text x="605" y="211" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9" font-weight="bold" fill="#334155">t_off (coupure)</text>
+
+      <!-- Courbe écrêtée proprement à 5,7 V -->
+      <path d="M 485 190 L 605 190 L 610 138 L 695 138 Q 715 158 730 158 L 810 158"
+            fill="none" stroke="#15803d" stroke-width="2.8" stroke-linejoin="round"/>
+      <!-- Étiquette écrêtage -->
+      <rect x="622" y="64" width="194" height="44" rx="5" fill="#dcfce7" stroke="#16a34a"/>
+      <text x="719" y="80" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="bold" fill="#166534">Tension écrêtée à 5,7 V</text>
+      <text x="719" y="93" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.5" fill="#15803d">(V_alim + V_F = 5 V + 0,7 V)</text>
+      <text x="719" y="104" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.3" fill="#166534">Décharge douce dans la diode</text>
+      <line x1="670" y1="108" x2="655" y2="134" stroke="#15803d" stroke-width="1.4"/>
+      <text x="542" y="183" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8.5" fill="#475569">Transistor saturé</text>
+    </svg>
+    <div class="caption">Figure 3 — Effet de la diode de roue libre à la coupure d'une bobine ou d'un moteur : suppression du pic destructeur sur le collecteur (<i>V<sub>CE</sub></i>).</div>
+  </div>
+</section>
+
+<!-- 5. CALCUL DES COURANTS & FORMULES CLÉS -->
+<section class="card">
+  <h2>5. Formulaire : Loi des Mailles, Loi d'Ohm &amp; Saturation</h2>
+
+  <h3>A. Limitation de courant d'une LED</h3>
+  <div class="formula-box">
+    Loi des mailles : <i>U<sub>alim</sub></i> &minus; <i>U<sub>R</sub></i> &minus; <i>U<sub>F</sub></i> = 0
+    &nbsp;&nbsp;&rArr;&nbsp;&nbsp;
+    Loi d'Ohm : <strong><i>R</i> =
+    <span class="frac"><span class="num"><i>U<sub>alim</sub></i> &minus; <i>U<sub>F</sub></i></span><span class="den"><i>I<sub>F</sub></i></span></span></strong>
+    &nbsp;&nbsp;et&nbsp;&nbsp;
+    <i>I<sub>F</sub></i> =
+    <span class="frac"><span class="num"><i>U<sub>alim</sub></i> &minus; <i>U<sub>F</sub></i></span><span class="den"><i>R</i></span></span>
+  </div>
+
+  <h3>B. Dimensionnement d'un Transistor NPN en saturation</h3>
+  <div class="formula-box">
+    <strong>Condition de saturation :</strong>
+    <i>I<sub>B</sub></i> &gt;
+    <span class="frac"><span class="num"><i>I<sub>C</sub></i></span><span class="den"><i>&beta;</i></span></span>
+    &nbsp;&nbsp;(en pratique avec un facteur de sursaturation <i>k</i> = 2 à 5 :
+    <strong><i>I<sub>B</sub></i> &ge; <i>k</i> &middot;
+    <span class="frac"><span class="num"><i>I<sub>C</sub></i></span><span class="den"><i>&beta;<sub>min</sub></i></span></span></strong>)
+    <div style="margin-top:8px; padding-top:8px; border-top:1px dashed #cbd5e1;">
+      <strong>Maille de Commande (Base) :</strong>
+      <i>U<sub>GPIO</sub></i> &minus; <i>R<sub>B</sub></i> &middot; <i>I<sub>B</sub></i> &minus; <i>V<sub>BE,sat</sub></i> = 0
+      &nbsp;&rArr;&nbsp;
+      <strong><i>R<sub>B</sub></i> =
+      <span class="frac"><span class="num"><i>U<sub>GPIO</sub></i> &minus; <i>V<sub>BE,sat</sub></i></span><span class="den"><i>I<sub>B</sub></i></span></span></strong>
+      &nbsp;&nbsp;ou&nbsp;&nbsp;
+      <i>I<sub>B</sub></i> =
+      <span class="frac"><span class="num"><i>U<sub>GPIO</sub></i> &minus; <i>V<sub>BE,sat</sub></i></span><span class="den"><i>R<sub>B</sub></i></span></span>
+    </div>
+    <div style="margin-top:8px; padding-top:8px; border-top:1px dashed #cbd5e1;">
+      <strong>Maille de Puissance (Collecteur) :</strong>
+      <i>U<sub>alim</sub></i> &minus; <i>U<sub>charge</sub></i> &minus; <i>V<sub>CE,sat</sub></i> = 0
+      &nbsp;&rArr;&nbsp;
+      <strong><i>U<sub>charge</sub></i> = <i>U<sub>alim</sub></i> &minus; <i>V<sub>CE,sat</sub></i></strong>
+      &nbsp;&nbsp;(si charge résistive <i>R<sub>ch</sub></i> :
+      <i>I<sub>C</sub></i> = <span class="frac"><span class="num"><i>U<sub>alim</sub></i> &minus; <i>V<sub>CE,sat</sub></i></span><span class="den"><i>R<sub>ch</sub></i></span></span>)
+    </div>
+  </div>
+
+  <div class="box box-warn">
+    <strong>📌 Méthode de dimensionnement en 4 étapes :</strong>
+    (1) Identifier <i>I<sub>C</sub></i> de la charge et choisir un transistor avec <i>I<sub>C,max</sub></i> &gt; <i>I<sub>C</sub></i>.
+    (2) Calculer <i>I<sub>B</sub></i> nécessaire à la saturation avec <i>&beta;<sub>min</sub></i> et le coefficient <i>k</i>.
+    (3) Vérifier que <i>I<sub>B</sub></i> ne dépasse pas le courant max de la broche GPIO (12 mA sur Pico).
+    (4) Calculer <i>R<sub>B</sub></i> par la loi des mailles et la loi d'Ohm, puis choisir la valeur normalisée immédiatement inférieure.
+  </div>
+</section>
+
+<!-- 6. EXERCICES D'APPLICATION -->
+<section class="card">
+  <h2>6. Exercices de Dimensionnement (Loi des Mailles &amp; Loi d'Ohm)</h2>
+
+  <!-- EXERCICE 1 -->
+  <div class="exo-card">
+    <div class="exo-title">Exercice 1 — Résistance de limitation d'une LED sur Raspberry Pi Pico</div>
+    <p>On souhaite allumer une LED rouge directement depuis une broche GPIO d'un Raspberry Pi Pico.</p>
+    <div class="exo-data">
+      <strong>Données :</strong> <i>U<sub>GPIO</sub></i> = 3,3 V &nbsp;|&nbsp; Tension directe LED <i>U<sub>F</sub></i> = 2,0 V &nbsp;|&nbsp; Courant souhaité <i>I<sub>F</sub></i> = 10 mA &nbsp;|&nbsp; Série E12 disponible : <code>100 &Omega;, 120 &Omega;, 150 &Omega;, 180 &Omega;, 220 &Omega;</code>.
+    </div>
+    <ol>
+      <li>Écrire la loi des mailles du circuit série (GPIO, résistance <i>R</i>, LED) et en déduire la tension <i>U<sub>R</sub></i> aux bornes de la résistance.</li>
+      <li>Calculer la valeur théorique de <i>R</i> à l'aide de la loi d'Ohm.</li>
+      <li>Choisir la valeur normalisée immédiatement supérieure dans la série E12, puis calculer le courant réel <i>I<sub>F,réel</sub></i> traversant la LED.</li>
+    </ol>
+    <details>
+      <summary>👁️ Afficher la correction de l'Exercice 1</summary>
+      <div class="sol-body">
+        <ol>
+          <li><strong>Loi des mailles :</strong> <i>U<sub>GPIO</sub></i> &minus; <i>U<sub>R</sub></i> &minus; <i>U<sub>F</sub></i> = 0 &rArr; <i>U<sub>R</sub></i> = 3,3 &minus; 2,0 = <strong>1,3 V</strong>.</li>
+          <li><strong>Loi d'Ohm :</strong> <i>R</i> = <i>U<sub>R</sub></i> / <i>I<sub>F</sub></i> = 1,3 / 0,010 = <strong>130 &Omega;</strong>.</li>
+          <li><strong>Valeur normalisée :</strong> on choisit <strong><code>150 &Omega;</code></strong> (pour ne pas dépasser 10 mA).<br>
+          Courant réel : <i>I<sub>F,réel</sub></i> = 1,3 / 150 = 0,00867 A &approx; <strong>8,7 mA</strong> (&lt; 12 mA max du Pico : conforme).</li>
+        </ol>
+      </div>
+    </details>
+  </div>
+
+  <!-- EXERCICE 2 -->
+  <div class="exo-card">
+    <div class="exo-title">Exercice 2 — Vérification de la saturation d'un transistor <code>TIP31</code> (Montage du TP 5)</div>
+    <p>Un moteur CC est commandé par un transistor NPN <code>TIP31</code> piloté par le Pico via une résistance de base <i>R<sub>B</sub></i> = 330 &Omega; (voir Figure 2).</p>
+    <div class="exo-data">
+      <strong>Données :</strong> <i>U<sub>GPIO</sub></i> = 3,3 V &nbsp;|&nbsp; <i>U<sub>alim</sub></i> = 5,0 V &nbsp;|&nbsp; <i>R<sub>B</sub></i> = 330 &Omega; &nbsp;|&nbsp; <i>V<sub>BE,sat</sub></i> = 0,8 V &nbsp;|&nbsp; <i>V<sub>CE,sat</sub></i> = 0,2 V &nbsp;|&nbsp; <i>I<sub>C</sub></i> = 180 mA &nbsp;|&nbsp; <i>&beta;<sub>min</sub></i> = 25.
+    </div>
+    <ol>
+      <li>En appliquant la loi des mailles sur la partie commande puis la loi d'Ohm, calculer le courant de base <i>I<sub>B</sub></i>.</li>
+      <li>Calculer le courant de base minimal <i>I<sub>B,min</sub></i> = <i>I<sub>C</sub></i> / <i>&beta;<sub>min</sub></i>. Le transistor est-il saturé ?</li>
+      <li>Par la loi des mailles sur la partie puissance, calculer la tension réelle <i>U<sub>mot</sub></i> appliquée aux bornes du moteur.</li>
+    </ol>
+    <details>
+      <summary>👁️ Afficher la correction de l'Exercice 2</summary>
+      <div class="sol-body">
+        <ol>
+          <li><strong>Maille de commande :</strong> <i>U<sub>GPIO</sub></i> &minus; <i>R<sub>B</sub></i>&middot;<i>I<sub>B</sub></i> &minus; <i>V<sub>BE,sat</sub></i> = 0 &rArr; <i>I<sub>B</sub></i> = (3,3 &minus; 0,8) / 330 = 2,5 / 330 &approx; <strong>7,58 mA</strong> (&lt; 12 mA max du Pico).</li>
+          <li><strong>Condition de saturation :</strong> <i>I<sub>B,min</sub></i> = 180 mA / 25 = <strong>7,2 mA</strong>.<br>
+          Comme <i>I<sub>B</sub></i> (7,58 mA) &gt; <i>I<sub>B,min</sub></i> (7,2 mA), le transistor est <strong>juste saturé</strong> (en pratique, pour un pic moteur à 600 mA, il faudrait un courant de base plus fort ou un MOSFET).</li>
+          <li><strong>Maille de puissance :</strong> <i>U<sub>alim</sub></i> &minus; <i>U<sub>mot</sub></i> &minus; <i>V<sub>CE,sat</sub></i> = 0 &rArr; <i>U<sub>mot</sub></i> = 5,0 &minus; 0,2 = <strong>4,8 V</strong>.</li>
+        </ol>
+      </div>
+    </details>
+  </div>
+
+  <!-- EXERCICE 3 -->
+  <div class="exo-card">
+    <div class="exo-title">Exercice 3 — Dimensionnement complet d'un étage driver de relais avec un <code>2N3904</code></div>
+    <p>On veut piloter la bobine d'un relais 5 V à l'aide d'un transistor NPN <code>2N3904</code> commandé par une sortie logique 3,3 V.</p>
+    <div class="exo-data">
+      <strong>Données :</strong> <i>U<sub>alim</sub></i> = 5,0 V &nbsp;|&nbsp; Résistance interne de la bobine <i>R<sub>bob</sub></i> = 100 &Omega; &nbsp;|&nbsp; <i>U<sub>GPIO</sub></i> = 3,3 V &nbsp;|&nbsp; <code>2N3904</code> : <i>I<sub>C,max</sub></i> = 200 mA, <i>&beta;<sub>min</sub></i> = 100, <i>V<sub>BE,sat</sub></i> = 0,7 V, <i>V<sub>CE,sat</sub></i> = 0,2 V &nbsp;|&nbsp; Coefficient de sursaturation <i>k</i> = 3.
+    </div>
+    <ol>
+      <li>Calculer le courant <i>I<sub>C</sub></i> dans la bobine lorsque le transistor est saturé (loi des mailles + loi d'Ohm). Le <code>2N3904</code> convient-il ?</li>
+      <li>Calculer le courant de base <i>I<sub>B</sub></i> nécessaire pour garantir une saturation franche avec <i>k</i> = 3.</li>
+      <li>En déduire la valeur maximale de la résistance de base <i>R<sub>B</sub></i>, puis choisir une valeur normalisée (ex. <code>1 k&Omega;</code>, <code>1,5 k&Omega;</code>, <code>2,2 k&Omega;</code>).</li>
+      <li>Quel composant doit-on impérativement ajouter en parallèle de la bobine du relais, et dans quel sens ?</li>
+    </ol>
+    <details>
+      <summary>👁️ Afficher la correction de l'Exercice 3</summary>
+      <div class="sol-body">
+        <ol>
+          <li><strong>Maille de puissance :</strong> <i>U<sub>bob</sub></i> = <i>U<sub>alim</sub></i> &minus; <i>V<sub>CE,sat</sub></i> = 5,0 &minus; 0,2 = 4,8 V.<br>
+          <strong>Loi d'Ohm :</strong> <i>I<sub>C</sub></i> = 4,8 / 100 = <strong>48 mA</strong>.<br>
+          Comme 48 mA &lt; 200 mA (<i>I<sub>C,max</sub></i>), le <strong><code>2N3904</code> convient parfaitement</strong>.</li>
+          <li><strong>Courant de base saturé :</strong> <i>I<sub>B</sub></i> = <i>k</i> &middot; (<i>I<sub>C</sub></i> / <i>&beta;<sub>min</sub></i>) = 3 &times; (48 mA / 100) = <strong>1,44 mA</strong> (&lt; 12 mA du Pico).</li>
+          <li><strong>Résistance de base :</strong> <i>R<sub>B</sub></i> = (<i>U<sub>GPIO</sub></i> &minus; <i>V<sub>BE,sat</sub></i>) / <i>I<sub>B</sub></i> = (3,3 &minus; 0,7) / 0,00144 = 2,6 / 0,00144 &approx; <strong>1 805 &Omega;</strong>.<br>
+          On choisit la valeur normalisée immédiatement inférieure : <strong><code>R_B = 1,5 k&Omega;</code></strong> (ou <code>1 k&Omega;</code>), ce qui assure <i>I<sub>B</sub></i> &approx; 1,73 mA &gt; 1,44 mA.</li>
+          <li><strong>Protection :</strong> une <strong>diode de roue libre</strong> (ex. <code>1N4001</code>) en antiparallèle sur la bobine, <strong>Cathode (bague) reliée au <code>+5 V</code></strong> et Anode vers le Collecteur.</li>
+        </ol>
+      </div>
+    </details>
+  </div>
+</section>
+
+</body>
+</html>
