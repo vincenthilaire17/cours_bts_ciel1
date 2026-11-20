@@ -2207,16 +2207,16 @@
 <h2 id="sec-p4">PARTIE 4 : Partie Commande / Partie Puissance n°2 — Commutation Statique par Transistor NPN (<code>TIP31C</code>) <span class="badge badge-time">1h00</span></h2>
 
 <div class="card-block">
-  <h3>4.1 Choix du Transistor dans le TI myParts Kit (<code>2N3904</code> vs <code>TIP31C</code>) &amp; Dimensionnement</h3>
+  <h3>4.1 Choix du Transistor dans le TI myParts Kit (<code>2N3904</code> vs <code>TIP31</code>) &amp; Dimensionnement</h3>
   <p>
-    Pour commuter rapidement et silencieusement le moteur sans pièce mécanique en mouvement, nous remplaçons le relais par un <strong>transistor bipolaire NPN fonctionnant en commutation (Bloqué / Saturé)</strong> sur la breadboard. Le <em>TI myParts Kit</em> contient deux références NPN :
+    Pour commuter rapidement et silencieusement le moteur sans pièce mécanique en mouvement, nous remplaçons le relais par un <strong>transistor bipolaire NPN fonctionnant en commutation (Bloqué / Saturé)</strong> sur la breadboard. Le <em>TI myParts Kit</em> (et Proteus) propose deux références NPN :
   </p>
 
   <table>
     <thead>
       <tr>
-        <th style="width:14%;">Référence TI myParts Kit</th>
-        <th style="width:30%; text-align:center;">Boîtier &amp; Brochage (vue de face)</th>
+        <th style="width:14%;">Référence Transistor</th>
+        <th style="width:30%; text-align:center;">Symbole Proteus</th>
         <th style="width:16%;">Courant Collecteur max <i>I<sub>C,max</sub></i></th>
         <th style="width:12%;">Gain en courant <i>&beta; (h<sub>FE</sub>)</i></th>
         <th style="width:28%;">Verdict pour notre Moteur CC jaune (pics à 600 mA)</th>
@@ -2224,20 +2224,18 @@
     </thead>
     <tbody>
       <tr>
-        <td><strong><code>2N3904L</code></strong></td>
+        <td><strong><code>2N3904</code></strong></td>
         <td style="text-align:center; vertical-align:middle; background:#ffffff;">
-          <img src="images/transistor_to92_pinout.png" alt="Boîtier et brochage TO-92 (1: Émetteur, 2: Base, 3: Collecteur)" style="max-height:105px; width:auto; display:block; margin:0 auto 6px auto; border-radius:4px; border:1px solid #cbd5e1; box-shadow:0 1px 4px rgba(0,0,0,0.06);">
-          <strong>TO-92 :</strong> <code>1:E | 2:B | 3:C</code>
+          <img src="images/proteus_2n3904.png" alt="Symbole Proteus du transistor NPN 2N3904" style="max-height:105px; width:auto; display:block; margin:0 auto; border-radius:4px; border:1px solid #cbd5e1; box-shadow:0 1px 4px rgba(0,0,0,0.06);">
         </td>
         <td><strong>200 mA max</strong></td>
         <td>100 à 300</td>
         <td>❌ <strong>Sous-dimensionné / Risque de destruction thermique</strong> lors du courant d'appel au démarrage ! (Adapté uniquement aux LEDs ou petits relais).</td>
       </tr>
       <tr>
-        <td><strong><code>TIP31C</code></strong></td>
+        <td><strong><code>TIP31</code></strong></td>
         <td style="text-align:center; vertical-align:middle; background:#ffffff;">
-          <img src="images/transistor_to220_pinout.png" alt="Boîtier et brochage TO-220 (1: Base, 2: Collecteur, 3: Émetteur)" style="max-height:105px; width:auto; display:block; margin:0 auto 6px auto; border-radius:4px; border:1px solid #cbd5e1; box-shadow:0 1px 4px rgba(0,0,0,0.06);">
-          <strong>TO-220 :</strong> <strong><code>1:B | 2:C | 3:E</code></strong>
+          <img src="images/proteus_tip31.png" alt="Symbole Proteus du transistor NPN TIP31" style="max-height:105px; width:auto; display:block; margin:0 auto; border-radius:4px; border:1px solid #cbd5e1; box-shadow:0 1px 4px rgba(0,0,0,0.06);">
         </td>
         <td><strong>3 000 mA (3 A)</strong></td>
         <td>25 à 50</td>
@@ -2246,22 +2244,9 @@
     </tbody>
   </table>
 
-  <div class="formula-box">
-    Maille de Commande (Base) : <i>I<sub>B</sub></i> =
-    <span class="frac"><span class="num"><i>U<sub>GPIO</sub></i> &minus; <i>V<sub>BE,sat</sub></i></span><span class="den"><i>R<sub>B</sub></i></span></span>
-    =
-    <span class="frac"><span class="num">3,3 V &minus; 0,8 V</span><span class="den">330 &Omega;</span></span>
-    &approx; <strong>7,6 mA</strong> (&lt; 12 mA max du Pico !)
-    &nbsp;&nbsp;|&nbsp;&nbsp;
-    Maille de Puissance : <i>U<sub>Varta</sub></i> = <i>U<sub>moteur</sub></i> + <i>V<sub>CE,sat</sub></i>
-  </div>
-
-  <div class="callout callout-danger">
-    <strong>⚠️ DEUX RÈGLES DE CÂBLAGE VITALES SUR LA BREADBOARD :</strong>
-    <ol style="margin:6px 0 0 0;">
-      <li><strong>Diode de roue libre <code>1N4001</code> OBLIGATOIRE aux bornes du moteur :</strong> Un moteur comporte un bobinage inductif. À l'ouverture du transistor, la coupure brutale du courant génère une surtension <i>u<sub>L</sub> = L&middot;di/dt</i> pouvant dépasser 50 V et percer le transistor ! Placez la diode <code>1N4001</code> en parallèle avec le moteur, <strong>bague argentée (Cathode) impérativement vers le <code>+5V</code> Varta</strong> ! (À l'envers, elle créerait un court-circuit franc !).</li>
-      <li><strong>MASSE COMMUNE (<code>GND</code>) OBLIGATOIRE :</strong> Contrairement au relais isolé galvaniquement, le courant de commande <i>I<sub>B</sub></i> entre par la Base et ressort par l'Émetteur vers le <code>GND</code> ! Vous devez <strong>relier par un fil noir le <code>GND</code> du Raspberry Pi Pico au rail <code>&minus; (GND)</code> de la Powerbank Varta</strong> (sans jamais relier <code>3V3</code> et <code>+5V</code> !).</li>
-    </ol>
+  <div class="image-card">
+    <img src="images/transistor_npn_broches.png" alt="Broches d'un transistor NPN : Base (B), Collecteur (C) et Émetteur (E)" style="max-width:280px;">
+    <div class="image-caption">Repérage des trois broches d'un transistor NPN : <strong>Base (B)</strong>, <strong>Collecteur (C)</strong> et <strong>Émetteur (E)</strong> (la flèche sortante indique l'émetteur).</div>
   </div>
 
   <!-- SVG 3 : MONTAGE TRANSISTOR TIP31C COMMANDE / PUISSANCE -->
@@ -2381,6 +2366,32 @@
       <text x="477" y="309" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10" font-weight="bold" fill="#166534">LIAISON GND COMMUNE OBLIGATOIRE !</text>
     </svg>
     <div class="svg-caption">Figure 4.1 — Commutation statique par transistor NPN <code>TIP31C</code> (TI myParts Kit) avec diode de roue libre <code>1N4001</code>, masse commune et points de mesure Commande / Puissance.</div>
+  </div>
+
+  <div class="formula-box">
+    <strong>Condition de saturation d'un transistor NPN :</strong>
+    <i>I<sub>B</sub></i> &gt;
+    <span class="frac"><span class="num"><i>I<sub>C</sub></i></span><span class="den"><i>&beta;</i></span></span>
+    &nbsp;&nbsp;(en pratique avec un coefficient de sursaturation <i>k</i> = 2 à 5 :
+    <strong><i>I<sub>B</sub></i> &ge; <i>k</i> &middot;
+    <span class="frac"><span class="num"><i>I<sub>C</sub></i></span><span class="den"><i>&beta;<sub>min</sub></i></span></span></strong>)
+    <div style="margin-top:8px; padding-top:8px; border-top:1px dashed #cbd5e1;">
+      Maille de Commande (Base) : <i>I<sub>B</sub></i> =
+      <span class="frac"><span class="num"><i>U<sub>GPIO</sub></i> &minus; <i>V<sub>BE,sat</sub></i></span><span class="den"><i>R<sub>B</sub></i></span></span>
+      =
+      <span class="frac"><span class="num">3,3 V &minus; 0,8 V</span><span class="den">330 &Omega;</span></span>
+      &approx; <strong>7,6 mA</strong> (&lt; 12 mA max du Pico !)
+      &nbsp;&nbsp;|&nbsp;&nbsp;
+      Maille de Puissance : <i>U<sub>Varta</sub></i> = <i>U<sub>moteur</sub></i> + <i>V<sub>CE,sat</sub></i>
+    </div>
+  </div>
+
+  <div class="callout callout-danger">
+    <strong>⚠️ DEUX RÈGLES DE CÂBLAGE VITALES SUR LA BREADBOARD :</strong>
+    <ol style="margin:6px 0 0 0;">
+      <li><strong>Diode de roue libre <code>1N4001</code> OBLIGATOIRE aux bornes du moteur :</strong> Un moteur comporte un bobinage inductif. À l'ouverture du transistor, la coupure brutale du courant génère une surtension <i>u<sub>L</sub> = L&middot;di/dt</i> pouvant dépasser 50 V et percer le transistor ! Placez la diode <code>1N4001</code> en parallèle avec le moteur, <strong>bague argentée (Cathode) impérativement vers le <code>+5V</code> Varta</strong> ! (À l'envers, elle créerait un court-circuit franc !).</li>
+      <li><strong>MASSE COMMUNE (<code>GND</code>) OBLIGATOIRE :</strong> Contrairement au relais isolé galvaniquement, le courant de commande <i>I<sub>B</sub></i> entre par la Base et ressort par l'Émetteur vers le <code>GND</code> ! Vous devez <strong>relier par un fil noir le <code>GND</code> du Raspberry Pi Pico au rail <code>&minus; (GND)</code> de la Powerbank Varta</strong> (sans jamais relier <code>3V3</code> et <code>+5V</code> !).</li>
+    </ol>
   </div>
 
   <h3>4.2 Simulation Proteus, Câblage Breadboard &amp; Campagne de Mesures</h3>
